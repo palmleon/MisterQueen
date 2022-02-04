@@ -1,14 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include "search.h"
-#include "book.h"
-#include "eval.h"
-#include "gen.h"
-#include "move.h"
-#include "table.h"
-#include "tinycthread.h"
-#include "util.h"
+#include "GPUsearch.h"
 
 #define XOR_SWAP(a, b) a = a ^ b; b = a ^ b; a = a ^ b;
 
@@ -189,19 +179,7 @@ static int thread_func(void *arg) {
     return 0;
 }
 
-static void thread_start(Search *search) {
-    thrd_t thrd;
-    thrd_create(&thrd, thread_func, search);
-}
-
 int do_search(Search *search, Board *board) {
-    if (search->use_book && book_move(board, &search->move)) {
-        sleep(1);
-        char move_string[16];
-        move_to_string(&search->move, move_string);
-        printf("bestmove %s\n", move_string);
-        return 1;
-    }
     search->stop = 0;
     int result = 1;
     table_alloc(&search->table, 20);
@@ -209,7 +187,7 @@ int do_search(Search *search, Board *board) {
     double start = now();
     double duration = search->duration;
     if (duration > 0) {
-        thread_start(search);
+        //far partire un thread kernel
     }
     int score = 0;
     search->nodes = 0;
@@ -246,7 +224,7 @@ int do_search(Search *search, Board *board) {
             move_to_string(&search->move, move_string);
             int millis = elapsed * 1000;
             printf("info depth %d score cp %d nodes %d time %d pv",
-                depth, score, search->nodes, millis);
+                   depth, score, search->nodes, millis);
             print_pv(search, board, depth);
             printf("\n");
         }

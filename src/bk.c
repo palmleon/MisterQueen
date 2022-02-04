@@ -2,7 +2,7 @@
 #include <string.h>
 #include "board.h"
 #include "move.h"
-#include "search.h"
+#include "GPUsearch.h"
 
 static char *TESTS[];
 static int NTESTS;
