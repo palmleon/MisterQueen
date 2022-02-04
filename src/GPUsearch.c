@@ -179,6 +179,11 @@ static int thread_func(void *arg) {
     return 0;
 }
 
+static void thread_start(Search *search) {
+    thrd_t thrd;
+    thrd_create(&thrd, thread_func, search);
+}
+
 int do_search(Search *search, Board *board) {
     search->stop = 0;
     int result = 1;
@@ -187,7 +192,7 @@ int do_search(Search *search, Board *board) {
     double start = now();
     double duration = search->duration;
     if (duration > 0) {
-        //far partire un thread kernel
+        thread_start(search);
     }
     int score = 0;
     search->nodes = 0;

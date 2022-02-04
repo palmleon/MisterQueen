@@ -11,6 +11,7 @@
 #include "move.h"
 #include "table.h"
 #include "util.h"
+#include "deps/tinycthread/tinycthread.h"
 
 #define INF 1000000
 #define MATE 100000
