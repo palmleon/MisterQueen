@@ -4,8 +4,7 @@
 #include "board.h"
 
 #define MAX_FEN 87
-#define ROW_LEN 16
-
+#define ROW_LEN 17
 void board_clear(Board *board) {
     memset(board, 0, sizeof(Board));
     board->castle = CASTLE_ALL;
@@ -404,7 +403,7 @@ void board_load_square(Board *board, char *filename) {
     char line[ROW_LEN];
     int row = 7, column = 0;
     board_clear(board);
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 8; i++) {
         fgets(line, ROW_LEN, file_ptr);
         for (int j = 0; j < ROW_LEN && line[j] != '\n'; j++) {
             char c = line[j];
@@ -453,11 +452,22 @@ void board_load_square(Board *board, char *filename) {
             }
         }
         row--;
+        column = 0;
     }
-    /*
     fgets(line, ROW_LEN, file_ptr);
-    board->castle = 0;
     int i = 0;
+    switch (line[i++]) {
+        case 'w':
+            board->color = WHITE;
+            break;
+        case 'b':
+            board->color = BLACK;
+            board->hash ^= HASH_COLOR;
+            board->pawn_hash ^= HASH_COLOR;
+            break;
+        default: return;
+    }
+    board->castle = 0;
     for (; i < ROW_LEN; i++) {
         int done = 0;
         switch (line[i]) {
@@ -466,7 +476,7 @@ void board_load_square(Board *board, char *filename) {
             case 'k': board->castle |= CASTLE_BLACK_KING; break;
             case 'q': board->castle |= CASTLE_BLACK_QUEEN; break;
             case '-': done = 1; break;
-            case ' ': done = 1; break;
+            case ' ': break;
             default: return;
         }
         if (done) {
@@ -487,7 +497,7 @@ void board_load_square(Board *board, char *filename) {
             board->hash ^= HASH_EP[LSB(board->ep) % 8];
             board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8];
         }
-    }*/
+    }
     fclose(file_ptr);
 }
 
