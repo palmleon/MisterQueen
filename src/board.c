@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "board.h"
 
 #define MAX_FEN 87
@@ -10,6 +11,7 @@ void board_clear(Board *board) {
     board->castle = CASTLE_ALL;
 }
 
+/*  Reset the board, set it in the initial configuration */
 void board_reset(Board *board) {
     board_clear(board);
     for (int file = 0; file < 8; file++) {
@@ -34,6 +36,7 @@ void board_reset(Board *board) {
     board_set(board, RF(7, 7), BLACK_ROOK);
 }
 
+/* Given a square and a piece, place that piece onto that square */
 void board_set(Board *board, int sq, int piece) {
     int previous = board->squares[sq];
     board->squares[sq] = piece;
@@ -219,6 +222,7 @@ void board_set(Board *board, int sq, int piece) {
     }
 }
 
+/*  Print the board  */
 void board_print(Board *board) {
     for (int rank = 7; rank >= 0; rank--) {
         for (int file = 0; file < 8; file++) {
@@ -237,13 +241,23 @@ void board_print(Board *board) {
                 c |= 0x20;
             }
             putchar(c);
+            putchar(' ');
         }
         putchar('\n');
     }
     putchar('\n');
 }
 
-void board_load_fen(Board *board, char *fen) {
+/*  Load the whole board, starting from a string whose format can be seen in perft.c */
+void board_load_fen(Board *board, char *filename) {
+    FILE* file_ptr = fopen(filename, "r");
+    if (file_ptr == NULL) {
+        printf("ERROR: error while opening file %s\n", filename);
+        printf("Program failed: exit\n");
+        exit(EXIT_FAILURE);
+    }
+    char fen[MAX_FEN];
+    fgets(fen, MAX_FEN, file_ptr);
     board_clear(board);
     int i = 0;
     int n = strlen(fen);
@@ -252,29 +266,75 @@ void board_load_fen(Board *board, char *fen) {
     for (; i < n; i++) {
         int done = 0;
         switch (fen[i]) {
-            case 'P': board_set(board, RF(rank, file++), WHITE_PAWN); break;
-            case 'N': board_set(board, RF(rank, file++), WHITE_KNIGHT); break;
-            case 'B': board_set(board, RF(rank, file++), WHITE_BISHOP); break;
-            case 'R': board_set(board, RF(rank, file++), WHITE_ROOK); break;
-            case 'Q': board_set(board, RF(rank, file++), WHITE_QUEEN); break;
-            case 'K': board_set(board, RF(rank, file++), WHITE_KING); break;
-            case 'p': board_set(board, RF(rank, file++), BLACK_PAWN); break;
-            case 'n': board_set(board, RF(rank, file++), BLACK_KNIGHT); break;
-            case 'b': board_set(board, RF(rank, file++), BLACK_BISHOP); break;
-            case 'r': board_set(board, RF(rank, file++), BLACK_ROOK); break;
-            case 'q': board_set(board, RF(rank, file++), BLACK_QUEEN); break;
-            case 'k': board_set(board, RF(rank, file++), BLACK_KING); break;
-            case '/': file = 0; rank--; break;
-            case '1': file += 1; break;
-            case '2': file += 2; break;
-            case '3': file += 3; break;
-            case '4': file += 4; break;
-            case '5': file += 5; break;
-            case '6': file += 6; break;
-            case '7': file += 7; break;
-            case '8': file += 8; break;
-            case ' ': done = 1; break;
-            default: return;
+            case 'P':
+                board_set(board, RF(rank, file++), WHITE_PAWN);
+                break;
+            case 'N':
+                board_set(board, RF(rank, file++), WHITE_KNIGHT);
+                break;
+            case 'B':
+                board_set(board, RF(rank, file++), WHITE_BISHOP);
+                break;
+            case 'R':
+                board_set(board, RF(rank, file++), WHITE_ROOK);
+                break;
+            case 'Q':
+                board_set(board, RF(rank, file++), WHITE_QUEEN);
+                break;
+            case 'K':
+                board_set(board, RF(rank, file++), WHITE_KING);
+                break;
+            case 'p':
+                board_set(board, RF(rank, file++), BLACK_PAWN);
+                break;
+            case 'n':
+                board_set(board, RF(rank, file++), BLACK_KNIGHT);
+                break;
+            case 'b':
+                board_set(board, RF(rank, file++), BLACK_BISHOP);
+                break;
+            case 'r':
+                board_set(board, RF(rank, file++), BLACK_ROOK);
+                break;
+            case 'q':
+                board_set(board, RF(rank, file++), BLACK_QUEEN);
+                break;
+            case 'k':
+                board_set(board, RF(rank, file++), BLACK_KING);
+                break;
+            case '/':
+                file = 0;
+                rank--;
+                break;
+            case '1':
+                file += 1;
+                break;
+            case '2':
+                file += 2;
+                break;
+            case '3':
+                file += 3;
+                break;
+            case '4':
+                file += 4;
+                break;
+            case '5':
+                file += 5;
+                break;
+            case '6':
+                file += 6;
+                break;
+            case '7':
+                file += 7;
+                break;
+            case '8':
+                file += 8;
+                break;
+            case ' ':
+                done = 1;
+                break;
+            default:
+                return;
         }
         if (done) {
             if (rank != 0 || file != 8) {
@@ -327,7 +387,108 @@ void board_load_fen(Board *board, char *fen) {
             board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8];
         }
     }
+    fclose(file_ptr);
+}
+
+/*
+ * Load a board from a file; the file contains a board, represented as a squared matrix of pieces
+ * Rows go from 8 to 1, column go from A to H, in this order.
+ */
+void board_load_square(Board *board, char *filename) {
+    FILE* file_ptr = fopen(filename, "r");
+    if (file_ptr == NULL) {
+        printf("ERROR: error while opening file %s\n", filename);
+        printf("Program failed: exit\n");
+        exit(EXIT_FAILURE);
+    }
+    char line[ROW_LEN];
+    int row = 7, column = 0;
+    board_clear(board);
+    for (int i = 0; i < 16; i++) {
+        fgets(line, ROW_LEN, file_ptr);
+        for (int j = 0; j < ROW_LEN && line[j] != '\n'; j++) {
+            char c = line[j];
+            switch (c) {
+                case '.':
+                    column++;
+                    break;
+                case 'p':
+                    board_set(board, RF(row, column++), BLACK_PAWN);
+                    break;
+                case 'n':
+                    board_set(board, RF(row, column++), BLACK_KNIGHT);
+                    break;
+                case 'b':
+                    board_set(board, RF(row, column++), BLACK_BISHOP);
+                    break;
+                case 'r':
+                    board_set(board, RF(row, column++), BLACK_ROOK);
+                    break;
+                case 'q':
+                    board_set(board, RF(row, column++), BLACK_QUEEN);
+                    break;
+                case 'k':
+                    board_set(board, RF(row, column++), BLACK_KING);
+                    break;
+                case 'P':
+                    board_set(board, RF(row, column++), WHITE_PAWN);
+                    break;
+                case 'N':
+                    board_set(board, RF(row, column++), WHITE_KNIGHT);
+                    break;
+                case 'B':
+                    board_set(board, RF(row, column++), WHITE_BISHOP);
+                    break;
+                case 'R':
+                    board_set(board, RF(row, column++), WHITE_ROOK);
+                    break;
+                case 'Q':
+                    board_set(board, RF(row, column++), WHITE_QUEEN);
+                    break;
+                case 'K':
+                    board_set(board, RF(row, column++), WHITE_KING);
+                    break;
+                default:
+                    break;
+            }
+        }
+        row--;
+    }
+    /*
+    fgets(line, ROW_LEN, file_ptr);
+    board->castle = 0;
+    int i = 0;
+    for (; i < ROW_LEN; i++) {
+        int done = 0;
+        switch (line[i]) {
+            case 'K': board->castle |= CASTLE_WHITE_KING; break;
+            case 'Q': board->castle |= CASTLE_WHITE_QUEEN; break;
+            case 'k': board->castle |= CASTLE_BLACK_KING; break;
+            case 'q': board->castle |= CASTLE_BLACK_QUEEN; break;
+            case '-': done = 1; break;
+            case ' ': done = 1; break;
+            default: return;
+        }
+        if (done) {
+            break;
+        }
+    }
+    board->hash ^= HASH_CASTLE[CASTLE_ALL];
+    board->hash ^= HASH_CASTLE[board->castle];
+    board->pawn_hash ^= HASH_CASTLE[CASTLE_ALL];
+    board->pawn_hash ^= HASH_CASTLE[board->castle];
     i++;
+    if (line[i] >= 'a' && line[i] <= 'h') {
+        int ep_file = line[i] - 'a';
+        i++;
+        if (line[i] >= '1' && line[i] <= '8') {
+            int ep_rank = line[i] - '1';
+            board->ep = BIT(RF(ep_rank, ep_file));
+            board->hash ^= HASH_EP[LSB(board->ep) % 8];
+            board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8];
+        }
+    }*/
+    fclose(file_ptr);
 }
 
 const int POSITION_WHITE_PAWN[64] = {
