@@ -2,6 +2,9 @@
 #include <string.h>
 #include "board.h"
 
+#define MAX_FEN 87
+#define ROW_LEN 16
+
 void board_clear(Board *board) {
     memset(board, 0, sizeof(Board));
     board->castle = CASTLE_ALL;
@@ -314,10 +317,7 @@ void board_load_fen(Board *board, char *fen) {
     board->pawn_hash ^= HASH_CASTLE[CASTLE_ALL];
     board->pawn_hash ^= HASH_CASTLE[board->castle];
     i++;
-    if (fen[i] == '-') {
-        i++;
-    }
-    else if (fen[i] >= 'a' && fen[i] <= 'h') {
+    if (fen[i] >= 'a' && fen[i] <= 'h') {
         int ep_file = fen[i] - 'a';
         i++;
         if (fen[i] >= '1' && fen[i] <= '8') {
@@ -325,7 +325,6 @@ void board_load_fen(Board *board, char *fen) {
             board->ep = BIT(RF(ep_rank, ep_file));
             board->hash ^= HASH_EP[LSB(board->ep) % 8];
             board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8];
-            i++;
         }
     }
     i++;

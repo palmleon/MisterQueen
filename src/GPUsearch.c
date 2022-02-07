@@ -243,11 +243,11 @@ int do_search(Search *search, Board *board) {
     if (now() - start < 1) {
         sleep(1);
     }
-    if (search->uci) {
+    //if (search->uci) {
         char move_string[16];
         move_to_string(&search->move, move_string);
         printf("bestmove %s\n", move_string);
-    }
+    //}
     table_free(&search->table);
     pawn_table_free(&search->pawn_table);
     return result;
