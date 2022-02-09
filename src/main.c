@@ -1,4 +1,3 @@
-#include "bb.h"
 #include "GPUsearch.h"
 #include <stdlib.h>
 
