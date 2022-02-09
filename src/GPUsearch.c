@@ -196,10 +196,11 @@ int do_search(Search *search, Board *board) {
     }
     int score = 0;
     search->nodes = 0;
-    for (int depth = 1; depth < 100; depth++) {
-        int lo = 20;
-        int hi = 20;
-        while (1) {
+    //for (int depth = 1; depth < 100; depth++) {
+        int depth = 12;
+        int lo = INF; //20;
+        int hi = INF; //20;
+        //while (1) {
             int alpha = score - lo;
             int beta = score + hi;
             score = root_search(search, board, depth, 0, alpha, beta, &search->move);
@@ -232,8 +233,8 @@ int do_search(Search *search, Board *board) {
                    depth, score, search->nodes, millis);
             print_pv(search, board, depth);
             printf("\n");
-        }
-        if (duration > 0 && elapsed > duration) {
+        //}
+        /*if (duration > 0 && elapsed > duration) {
             break;
         }
         if (score <= -MATE + depth || score >= MATE - depth) {
