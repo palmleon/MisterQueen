@@ -5,6 +5,7 @@
 
 #define MAX_FEN 87
 #define ROW_LEN 17
+
 void board_clear(Board *board) {
     memset(board, 0, sizeof(Board));
     board->castle = CASTLE_ALL;

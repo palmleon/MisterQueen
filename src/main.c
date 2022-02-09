@@ -3,16 +3,6 @@
 
 static Board board;
 static Search search;
-static thrd_t thrd;
-
-static int thread_func(void *arg) {
-    do_search(&search, &board);
-    return 0;
-}
-
-static void thread_start() {
-    thrd_create(&thrd, thread_func, NULL);
-}
 
 void handle_go(char *line) {
     search.uci = 0;
@@ -29,12 +19,9 @@ void handle_go(char *line) {
             char *arg = tokenize(NULL, " ", &key);
             search.duration = atoi(arg) / 1000.0;
         }
-        else if (strcmp(token, "ponder") == 0) {
-            return; // no pondering yet
-        }
         token = tokenize(NULL, " ", &key);
     }
-    thread_start();
+    do_search(&search, &board);
 }
 
 void print_menu(void) {
@@ -45,7 +32,7 @@ void print_menu(void) {
 }
 
 int main(int argc, char **argv) {
-    if (argc == 3) {
+    if (argc == 3) { // load board from file
         if (strcmp(argv[2], "fen") == 0)
             board_load_file_fen(&board, argv[1]);
         else if (strcmp(argv[2], "square") == 0)
