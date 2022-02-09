@@ -248,7 +248,98 @@ void board_print(Board *board) {
 }
 
 /*  Load the whole board, starting from a string whose format can be seen in perft.c */
-void board_load_fen(Board *board, char *filename) {
+void board_load_fen(Board *board, char *fen) {
+    board_clear(board);
+    int i = 0;
+    int n = strlen(fen);
+    int rank = 7;
+    int file = 0;
+    for (; i < n; i++) {
+        int done = 0;
+        switch (fen[i]) {
+            case 'P': board_set(board, RF(rank, file++), WHITE_PAWN); break;
+            case 'N': board_set(board, RF(rank, file++), WHITE_KNIGHT); break;
+            case 'B': board_set(board, RF(rank, file++), WHITE_BISHOP); break;
+            case 'R': board_set(board, RF(rank, file++), WHITE_ROOK); break;
+            case 'Q': board_set(board, RF(rank, file++), WHITE_QUEEN); break;
+            case 'K': board_set(board, RF(rank, file++), WHITE_KING); break;
+            case 'p': board_set(board, RF(rank, file++), BLACK_PAWN); break;
+            case 'n': board_set(board, RF(rank, file++), BLACK_KNIGHT); break;
+            case 'b': board_set(board, RF(rank, file++), BLACK_BISHOP); break;
+            case 'r': board_set(board, RF(rank, file++), BLACK_ROOK); break;
+            case 'q': board_set(board, RF(rank, file++), BLACK_QUEEN); break;
+            case 'k': board_set(board, RF(rank, file++), BLACK_KING); break;
+            case '/': file = 0; rank--; break;
+            case '1': file += 1; break;
+            case '2': file += 2; break;
+            case '3': file += 3; break;
+            case '4': file += 4; break;
+            case '5': file += 5; break;
+            case '6': file += 6; break;
+            case '7': file += 7; break;
+            case '8': file += 8; break;
+            case ' ': done = 1; break;
+            default: return;
+        }
+        if (done) {
+            if (rank != 0 || file != 8) {
+                return;
+            }
+            break;
+        }
+    }
+    i++;
+    switch (fen[i++]) {
+        case 'w':
+            board->color = WHITE;
+            break;
+        case 'b':
+            board->color = BLACK;
+            board->hash ^= HASH_COLOR;
+            board->pawn_hash ^= HASH_COLOR;
+            break;
+        default: return;
+    }
+    i++;
+    board->castle = 0;
+    for (; i < n; i++) {
+        int done = 0;
+        switch (fen[i]) {
+            case 'K': board->castle |= CASTLE_WHITE_KING; break;
+            case 'Q': board->castle |= CASTLE_WHITE_QUEEN; break;
+            case 'k': board->castle |= CASTLE_BLACK_KING; break;
+            case 'q': board->castle |= CASTLE_BLACK_QUEEN; break;
+            case '-': done = 1; break;
+            case ' ': done = 1; break;
+            default: return;
+        }
+        if (done) {
+            break;
+        }
+    }
+    board->hash ^= HASH_CASTLE[CASTLE_ALL];
+    board->hash ^= HASH_CASTLE[board->castle];
+    board->pawn_hash ^= HASH_CASTLE[CASTLE_ALL];
+    board->pawn_hash ^= HASH_CASTLE[board->castle];
+    i++;
+    if (fen[i] == '-') {
+        i++;
+    }
+    else if (fen[i] >= 'a' && fen[i] <= 'h') {
+        int ep_file = fen[i] - 'a';
+        i++;
+        if (fen[i] >= '1' && fen[i] <= '8') {
+            int ep_rank = fen[i] - '1';
+            board->ep = BIT(RF(ep_rank, ep_file));
+            board->hash ^= HASH_EP[LSB(board->ep) % 8];
+            board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8];
+            i++;
+        }
+    }
+    i++;
+}
+
+void board_load_file_fen(Board *board, char *filename) {
     FILE* file_ptr = fopen(filename, "r");
     if (file_ptr == NULL) {
         printf("ERROR: error while opening file %s\n", filename);
@@ -393,7 +484,7 @@ void board_load_fen(Board *board, char *filename) {
  * Load a board from a file; the file contains a board, represented as a squared matrix of pieces
  * Rows go from 8 to 1, column go from A to H, in this order.
  */
-void board_load_square(Board *board, char *filename) {
+void board_load_file_square(Board *board, char *filename) {
     FILE* file_ptr = fopen(filename, "r");
     if (file_ptr == NULL) {
         printf("ERROR: error while opening file %s\n", filename);

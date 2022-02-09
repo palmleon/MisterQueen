@@ -48,9 +48,9 @@ void print_menu(void) {
 int main(int argc, char **argv) {
     if (argc == 3) {
         if (strcmp(argv[2], "fen") == 0)
-            board_load_fen(&board, argv[1]);
+            board_load_file_fen(&board, argv[1]);
         else if (strcmp(argv[2], "square") == 0)
-            board_load_square(&board, argv[1]); // load board from file
+            board_load_file_square(&board, argv[1]);
     }
     else
         board_reset(&board); // load the board as in the initial position

@@ -92,6 +92,7 @@ void board_reset(Board *board);
 void board_set(Board *board, int sq, int piece);
 void board_print(Board *board);
 void board_load_fen(Board *board, char *fen);
-void board_load_square(Board *board, char *filename);
+void board_load_file_fen(Board *board, char *filename);
+void board_load_file_square(Board *board, char *filename);
 
 #endif
