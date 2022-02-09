@@ -204,7 +204,7 @@ int do_search(Search *search, Board *board) {
             int alpha = score - lo;
             int beta = score + hi;
             score = root_search(search, board, depth, 0, alpha, beta, &search->move);
-            if (search->stop) {
+            /*if (search->stop) {
                 break;
             }
             if (score == alpha) {
@@ -223,13 +223,13 @@ int do_search(Search *search, Board *board) {
         if (score == -INF) {
             result = 0;
             break;
-        }
+        }*/
         double elapsed = now() - start;
-        if (search->uci) {
+        //if (search->uci) {
             char move_string[16];
             move_to_string(&search->move, move_string);
             int millis = elapsed * 1000;
-            printf("info depth %d score cp %d nodes %d time %d pv",
+            printf("info: depth %d, score cp %d, nodes %d, time %d ms, pv",
                    depth, score, search->nodes, millis);
             print_pv(search, board, depth);
             printf("\n");
@@ -239,15 +239,15 @@ int do_search(Search *search, Board *board) {
         }
         if (score <= -MATE + depth || score >= MATE - depth) {
             break;
-        }
-    }
+        }*/
+    //}
     if (now() - start < 1) {
         sleep(1);
     }
     //if (search->uci) {
-        char move_string[16];
+        //char move_string[16];
         move_to_string(&search->move, move_string);
-        printf("bestmove %s\n", move_string);
+        printf("bestmove: %s\n", move_string);
     //}
     table_free(&search->table);
     pawn_table_free(&search->pawn_table);
