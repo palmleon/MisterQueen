@@ -47,7 +47,6 @@ int quiesce(Search *search, Board *board, int alpha, int beta) {
     }
     Undo undo;
     Move moves[MAX_MOVES];
-    // TODO: only good attacks
     int count = gen_attacks(board, moves);
     sort_moves(search, board, moves, count);
     for (int i = 0; i < count; i++) {
