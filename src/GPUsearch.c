@@ -228,9 +228,9 @@ int do_search(Search *search, Board *board) {
             char move_string[16];
             move_to_string(&search->move, move_string);
             int millis = elapsed * 1000;
-            printf("info: depth %d, score cp %d, nodes %d, time %d ms, pv",
+            printf("info: depth %d, score cp %d, nodes %d, time %d ms", //, pv",
                    depth, score, search->nodes, millis);
-            print_pv(search, board, depth);
+            //print_pv(search, board, depth);
             printf("\n");
         //}
         /*if (duration > 0 && elapsed > duration) {
