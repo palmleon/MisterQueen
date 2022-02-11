@@ -1,11 +1,16 @@
-#include "GPUsearch.h"
+#include "search.h"
+#include "bk.h"
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <time.h>
+
 
 static Board board;
 static Search search;
 
 void handle_go(char *line) {
-    search.uci = 0;
+    search.uci = 1;
     search.use_book = 0;
     search.duration = 4;
     char *key;
@@ -27,11 +32,13 @@ void handle_go(char *line) {
 void print_menu(void) {
     printf("insert a command\n");
     printf("bm: generate the best move\n");
+    printf("bk: do bk tests\n");
     printf("pb: print the board\n");
     printf("q: quit\n");
 }
 
 int main(int argc, char **argv) {
+    bb_init();
     if (argc == 3) { // load board from file
         if (strcmp(argv[2], "fen") == 0)
             board_load_file_fen(&board, argv[1]);
@@ -50,6 +57,8 @@ int main(int argc, char **argv) {
             handle_go(command + 3);
         else if (strncmp(command, "pb", 2) == 0)
             board_print(&board);
+        else if (strncmp(command, "bk", 2) == 0)
+            bk_tests();
         else if (strncmp(command, "q", 1) == 0)
             return 0;
     }

@@ -1,4 +1,13 @@
-#include "GPUsearch.h"
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include "search.h"
+#include "eval.h"
+#include "gen.h"
+#include "move.h"
+#include "table.h"
+#include "tinycthread.h"
+#include "util.h"
 
 #define XOR_SWAP(a, b) a = a ^ b; b = a ^ b; a = a ^ b;
 
@@ -34,10 +43,10 @@ int quiesce(Search *search, Board *board, int alpha, int beta) {
         return INF;
     }
     int pawn_score = 0;
-    if (!pawn_table_get(&search->pawn_table, board->pawn_hash, &pawn_score)) {
-        pawn_score = evaluate_pawns(board);
-        pawn_table_set(&search->pawn_table, board->pawn_hash, pawn_score);
-    }
+    //if (!pawn_table_get(&search->pawn_table, board->pawn_hash, &pawn_score)) {
+    pawn_score = evaluate_pawns(board);
+    //pawn_table_set(&search->pawn_table, board->pawn_hash, pawn_score);
+    //}
     int score = evaluate(board) + pawn_score;
     if (score >= beta) {
         return beta;
@@ -75,7 +84,7 @@ int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int 
     }
     if (depth <= 0) {
         int value = quiesce(search, board, alpha, beta);
-        table_set(&search->table, board->hash, depth, value, TABLE_EXACT);
+        //table_set(&search->table, board->hash, depth, value, TABLE_EXACT);
         return value;
     }
     Undo undo;
@@ -84,7 +93,7 @@ int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int 
     int score = -alpha_beta(search, board, depth - 1 - 2, ply + 1, -beta, -beta + 1);
     undo_null_move(board, &undo);
     if (score >= beta) {
-        table_set(&search->table, board->hash, depth, beta, TABLE_BETA);
+        //table_set(&search->table, board->hash, depth, beta, TABLE_BETA);
         return beta;
     }
     Move moves[MAX_MOVES];
@@ -105,14 +114,14 @@ int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int 
             can_move = 1;
         }
         if (score >= beta) {
-            table_set(&search->table, board->hash, depth, beta, TABLE_BETA);
-            table_set_move(&search->table, board->hash, depth, move);
+            //table_set(&search->table, board->hash, depth, beta, TABLE_BETA);
+            //table_set_move(&search->table, board->hash, depth, move);
             return beta;
         }
         if (score > alpha) {
             alpha = score;
             flag = TABLE_EXACT;
-            table_set_move(&search->table, board->hash, depth, move);
+            //table_set_move(&search->table, board->hash, depth, move);
         }
     }
     if (!can_move) {
@@ -123,7 +132,7 @@ int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int 
             return 0;
         }
     }
-    table_set(&search->table, board->hash, depth, alpha, flag);
+    //table_set(&search->table, board->hash, depth, alpha, flag);
     return alpha;
 }
 
@@ -149,7 +158,7 @@ int root_search(Search *search, Board *board, int depth, int ply, int alpha, int
     }
     if (best) {
         memcpy(result, best, sizeof(Move));
-        table_set_move(&search->table, board->hash, depth, best);
+        //table_set_move(&search->table, board->hash, depth, best);
     }
     return alpha;
 }
@@ -184,6 +193,13 @@ static void thread_start(Search *search) {
 }
 
 int do_search(Search *search, Board *board) {
+    /*if (search->use_book && book_move(board, &search->move)) {
+        sleep(1);
+        char move_string[16];
+        move_to_string(&search->move, move_string);
+        printf("bestmove %s\n", move_string);
+        return 1;
+    }*/
     search->stop = 0;
     int result = 1;
     table_alloc(&search->table, 20);
@@ -195,15 +211,14 @@ int do_search(Search *search, Board *board) {
     }
     int score = 0;
     search->nodes = 0;
-    //for (int depth = 1; depth < 100; depth++) {
-        int depth = 12;
-        int lo = INF; //20;
-        int hi = INF; //20;
-        //while (1) {
+    for (int depth = 1; depth <= 12; depth++) {
+        int lo = 20;
+        int hi = 20;
+        while (1) {
             int alpha = score - lo;
             int beta = score + hi;
             score = root_search(search, board, depth, 0, alpha, beta, &search->move);
-            /*if (search->stop) {
+            if (search->stop) {
                 break;
             }
             if (score == alpha) {
@@ -222,32 +237,32 @@ int do_search(Search *search, Board *board) {
         if (score == -INF) {
             result = 0;
             break;
-        }*/
+        }
         double elapsed = now() - start;
-        //if (search->uci) {
+        if (search->uci) {
             char move_string[16];
             move_to_string(&search->move, move_string);
             int millis = elapsed * 1000;
-            printf("info: depth %d, score cp %d, nodes %d, time %d ms", //, pv",
+            printf("info depth %d score cp %d nodes %d time %d pv",
                    depth, score, search->nodes, millis);
             //print_pv(search, board, depth);
             printf("\n");
-        //}
-        /*if (duration > 0 && elapsed > duration) {
+        }
+        if (duration > 0 && elapsed > duration) {
             break;
         }
         if (score <= -MATE + depth || score >= MATE - depth) {
             break;
-        }*/
-    //}
+        }
+    }
     if (now() - start < 1) {
         sleep(1);
     }
-    //if (search->uci) {
-        //char move_string[16];
+    if (search->uci) {
+        char move_string[16];
         move_to_string(&search->move, move_string);
-        printf("bestmove: %s\n", move_string);
-    //}
+        printf("bestmove %s\n", move_string);
+    }
     table_free(&search->table);
     pawn_table_free(&search->pawn_table);
     return result;
