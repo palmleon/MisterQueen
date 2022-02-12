@@ -11,21 +11,21 @@ static Search search;
 
 void handle_go(char *line) {
     search.uci = 1;
-    search.use_book = 0;
+    /*//search.use_book = 0;
     search.duration = 4;
     char *key;
     char *token = tokenize(line, " ", &key);
     while (token) {
         if (strcmp(token, "infinite") == 0) {
             search.duration = 0;
-            search.use_book = 0;
+            //search.use_book = 0;
         }
         else if (strcmp(token, "movetime") == 0) {
             char *arg = tokenize(NULL, " ", &key);
             search.duration = atoi(arg) / 1000.0;
         }
         token = tokenize(NULL, " ", &key);
-    }
+    }*/
     do_search(&search, &board);
 }
 
@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     else
         board_reset(&board); // load the board as in the initial position
     printf("the board is : \n");
-    board_print(&board);
+    //board_print(&board);
     char command[10];
     while(1) {
         print_menu();

@@ -13,16 +13,16 @@
 typedef struct {
     // input
     int uci;
-    int use_book;
-    double duration;
+    //int use_book;
+    //double duration;
     // output
     Move move;
     // control
-    int stop;
+    //int stop;
     // internal
     int nodes;
-    Table table;
-    PawnTable pawn_table;
+    //Table table;
+    //PawnTable pawn_table;
 } Search;
 
 int do_search(Search *search, Board *board);
