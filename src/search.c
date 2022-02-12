@@ -202,8 +202,8 @@ int do_search(Search *search, Board *board) {
     }*/
     //search->stop = 0;
     int result = 1;
-    table_alloc(&search->table, 20);
-    pawn_table_alloc(&search->pawn_table, 20);
+    //table_alloc(&search->table, 20);
+    //pawn_table_alloc(&search->pawn_table, 20);
     double start = now();
     /*double duration = search->duration;
     if (duration > 0) {
@@ -211,17 +211,17 @@ int do_search(Search *search, Board *board) {
     }*/
     int score = 0;
     search->nodes = 0;
-    for (int depth = 1; depth <= 12; depth++) {
-        int lo = 20;
-        int hi = 20;
-        while (1) {
+    for (int depth = 1; depth <= 9; depth++) {
+        int lo = INF;
+        int hi = INF;
+        //while (1) {
             int alpha = score - lo;
             int beta = score + hi;
             score = root_search(search, board, depth, 0, alpha, beta, &search->move);
-            if (search->stop) {
+            /*if (search->stop) {
                 break;
-            }
-            if (score == alpha) {
+            }*/
+            /*if (score == alpha) {
                 lo *= 5;
             }
             else if (score == beta) {
@@ -248,12 +248,13 @@ int do_search(Search *search, Board *board) {
             //print_pv(search, board, depth);
             printf("\n");
         }
-        if (duration > 0 && elapsed > duration) {
+        /*if (duration > 0 && elapsed > duration) {
             break;
-        }
+        }*/
+        /*
         if (score <= -MATE + depth || score >= MATE - depth) {
             break;
-        }
+        }*/
     }
     if (now() - start < 1) {
         sleep(1);
@@ -263,7 +264,7 @@ int do_search(Search *search, Board *board) {
         move_to_string(&search->move, move_string);
         printf("bestmove %s\n", move_string);
     }
-    table_free(&search->table);
-    pawn_table_free(&search->pawn_table);
+    //table_free(&search->table);
+    //pawn_table_free(&search->pawn_table);
     return result;
 }
