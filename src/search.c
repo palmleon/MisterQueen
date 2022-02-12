@@ -37,7 +37,7 @@ void sort_moves(Search *search, Board *board, Move *moves, int count) {
     }
 }
 
-int quiesce(Search *search, Board *board, int alpha, int beta) {
+/*int quiesce(Search *search, Board *board, int alpha, int beta) {
     if (is_illegal(board)) {
         return INF;
     }
@@ -71,7 +71,7 @@ int quiesce(Search *search, Board *board, int alpha, int beta) {
         }
     }
     return alpha;
-}
+}*/
 
 int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int beta) {
     if (is_illegal(board)) {
@@ -82,7 +82,8 @@ int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int 
         return value;
     }*/
     if (depth <= 0) {
-        int value = quiesce(search, board, alpha, beta);
+        //int value = quiesce(search, board, alpha, beta);
+        int value = evaluate(board) + evaluate_pawns(board);
         //table_set(&search->table, board->hash, depth, value, TABLE_EXACT);
         return value;
     }
@@ -234,10 +235,10 @@ int do_search(Search *search, Board *board) {
         /*if (search->stop) {
             break;
         }*/
-        if (score == -INF) {
+        /*if (score == -INF) {
             result = 0;
             break;
-        }
+        }*/
         double elapsed = now() - start;
         if (search->uci) {
             char move_string[16];
@@ -255,7 +256,7 @@ int do_search(Search *search, Board *board) {
         if (score <= -MATE + depth || score >= MATE - depth) {
             break;
         }*/
-    }
+    //}
     if (now() - start < 1) {
         sleep(1);
     }
