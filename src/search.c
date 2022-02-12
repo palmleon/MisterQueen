@@ -87,14 +87,14 @@ int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int 
         return value;
     }
     Undo undo;
-    search->nodes++;
+    /*search->nodes++;
     do_null_move(board, &undo);
     int score = -alpha_beta(search, board, depth - 1 - 2, ply + 1, -beta, -beta + 1);
     undo_null_move(board, &undo);
     if (score >= beta) {
         //table_set(&search->table, board->hash, depth, beta, TABLE_BETA);
         return beta;
-    }
+    }*/
     Move moves[MAX_MOVES];
     int count = gen_moves(board, moves);
     sort_moves(search, board, moves, count);
@@ -104,7 +104,7 @@ int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int 
         Move *move = &moves[i];
         search->nodes++;
         do_move(board, move, &undo);
-        score = -alpha_beta(search, board, depth - 1, ply + 1, -beta, -alpha);
+        int score = -alpha_beta(search, board, depth - 1, ply + 1, -beta, -alpha);
         undo_move(board, move, &undo);
         /*if (search->stop) {
             return 0;
@@ -210,7 +210,8 @@ int do_search(Search *search, Board *board) {
     }*/
     int score = 0;
     search->nodes = 0;
-    for (int depth = 1; depth <= 9; depth++) {
+    //for (int depth = 8; depth <= 8; depth++) {
+    int depth = 8;
         int lo = INF;
         int hi = INF;
         //while (1) {
