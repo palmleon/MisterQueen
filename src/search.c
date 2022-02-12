@@ -33,8 +33,9 @@ void sort_moves(Board *board, Move *moves, int count) {
 }
 
 int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int beta) {
+    int result;
     if (is_illegal(board)) {
-        return INF;
+        result = INF;
     }
     else if (depth <= 0) {
         result = evaluate(board) + evaluate_pawns(board);
@@ -80,7 +81,6 @@ int root_search(Search *search, Board *board, int depth, int ply, int alpha, int
     Move *best = NULL;
     for (int i = 0; i < count; i++) {
         Move *move = &moves[i];
-        search->nodes++;
         do_move(board, move, &undo);
         int score = -alpha_beta(search, board, depth - 1, ply + 1, -beta, -alpha);
         undo_move(board, move, &undo);

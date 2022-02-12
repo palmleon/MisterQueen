@@ -30,8 +30,6 @@ int main(int argc, char **argv) {
     }
     else
         board_reset(&board); // load the board as in the initial position
-    printf("the board is : \n");
-    //board_print(&board);
     char command[10];
     while(1) {
         print_menu();
