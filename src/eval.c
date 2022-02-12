@@ -1,6 +1,4 @@
 #include "eval.h"
-#include "gen.h"
-#include "move.h"
 
 int evaluate(Board *board) {
     int score = 0;

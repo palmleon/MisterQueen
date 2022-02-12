@@ -1,31 +1,14 @@
 #include "search.h"
 #include "bk.h"
-#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <time.h>
 
 
 static Board board;
 static Search search;
 
-void handle_go(char *line) {
+void handle_go(void) {
     search.uci = 1;
-    /*//search.use_book = 0;
-    search.duration = 4;
-    char *key;
-    char *token = tokenize(line, " ", &key);
-    while (token) {
-        if (strcmp(token, "infinite") == 0) {
-            search.duration = 0;
-            //search.use_book = 0;
-        }
-        else if (strcmp(token, "movetime") == 0) {
-            char *arg = tokenize(NULL, " ", &key);
-            search.duration = atoi(arg) / 1000.0;
-        }
-        token = tokenize(NULL, " ", &key);
-    }*/
     do_search(&search, &board);
 }
 
@@ -54,7 +37,7 @@ int main(int argc, char **argv) {
         print_menu();
         scanf("%s", command);
         if (strncmp(command, "bm", 2) == 0)
-            handle_go(command + 3);
+            handle_go();
         else if (strncmp(command, "pb", 2) == 0)
             board_print(&board);
         else if (strncmp(command, "bk", 2) == 0)

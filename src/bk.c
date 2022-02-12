@@ -12,7 +12,6 @@ int bk_test(int index, char *fen, char *bm) {
     board_load_fen(&board, fen);
     Search search;
     search.uci = 0;
-    //search.duration = 1;
     do_search(&search, &board);
     char notation[16];
     notate_move(&board, &search.move, notation);
@@ -45,7 +44,6 @@ void test_position(int index) {
     board_load_fen(&board, TESTS[index * 2]);
     Search search;
     search.uci = 1;
-    //search.duration = 0;
     do_search(&search, &board);
 }
 
