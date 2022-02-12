@@ -5,7 +5,6 @@
 #include "eval.h"
 #include "gen.h"
 #include "move.h"
-#include "table.h"
 #include "tinycthread.h"
 #include "util.h"
 

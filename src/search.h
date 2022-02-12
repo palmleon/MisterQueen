@@ -3,7 +3,6 @@
 
 #include "board.h"
 #include "move.h"
-#include "table.h"
 #include "util.h"
 
 
