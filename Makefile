@@ -2,13 +2,13 @@
 # The name of the executable to be created
 BIN_NAME := main
 # Compiler used
-C ?= gcc
+C ?= nvcc
 # Extension of source files used in the project
 SRC_EXT = c
 # Path to the source directory, relative to the makefile
 SRC_PATH = src
 # General compiler flags
-COMPILE_FLAGS = -std=c99 -Wall -O3
+COMPILE_FLAGS =
 # Additional release-specific flags
 RCOMPILE_FLAGS = -D NDEBUG
 # Additional debug-specific flags
@@ -174,4 +174,4 @@ $(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
 # dependency files to provide header dependencies
 $(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT)
 	@echo "Compiling: $< -> $@"
-	$(CMD_PREFIX)$(C) $(CFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
+	$(CMD_PREFIX)$(C) $(CFLAGS) $(INCLUDES) -MMD -c $< -o $@
