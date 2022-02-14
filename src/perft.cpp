@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 #include "gen.h"
 #include "move.h"
 #include "perft.h"
@@ -53,7 +53,7 @@ void perft_test(char *fen, unsigned long long *expected, int count) {
     for (int depth = 0; depth < count; depth++) {
         hits = 0;
         unsigned long long actual = perft(&board, depth);
-        char *result = actual == expected[depth] ? "PASS" : "FAIL";
+        const char *result = actual == expected[depth] ? "PASS" : "FAIL";
         double elapsed = now() - start;
         printf("%s: depth = %2d, time = %.3f, expected = %12llu, actual = %12llu, hits = %g%%\n",
             result, depth, elapsed, expected[depth], actual, 100.0 * hits / actual);

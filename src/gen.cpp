@@ -1,4 +1,4 @@
-#include <string.h>
+#include <cstring>
 #include "gen.h"
 
 #define EMIT_MOVE(m, a, b) \

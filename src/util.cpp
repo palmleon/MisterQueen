@@ -1,6 +1,6 @@
 #include <ctype.h>
-#include <string.h>
-#include <time.h>
+#include <cstring>
+#include <ctime>
 
 static unsigned int m_w = 0x8eeee9fb; // must not be zero, nor 0x464fffff
 static unsigned int m_z = 0x433072e9; // must not be zero, nor 0x9068ffff
