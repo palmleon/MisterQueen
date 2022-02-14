@@ -1,51 +1,8 @@
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include "board.h"
 #include "move.h"
-#include "search.h"
-
-static char *TESTS[];
-static int NTESTS;
-
-int bk_test(int index, char *fen, char *bm) {
-    Board board;
-    board_load_fen(&board, fen);
-    Search search;
-    search.uci = 0;
-    do_search(&search, &board);
-    char notation[16];
-    notate_move(&board, &search.move, notation);
-    char padded[16];
-    sprintf(padded, " %s ", notation);
-    int result = strstr(bm, padded) != NULL;
-    printf("%4d) %s: %8s [%s]\n",
-        index + 1, result ? "PASS" : "FAIL", notation, bm);
-    return result;
-}
-
-void bk_tests() {
-    int count = 0;
-    int passed = 0;
-    for (int i = 0; i < NTESTS; i++) {
-        char *fen = TESTS[i * 2];
-        char *bm = TESTS[i * 2 + 1];
-        int result = bk_test(i, fen, bm);
-        passed += result;
-        count += 1;
-        printf("%4d of %d tests passed.\r", passed, count);
-    }
-}
-
-void test_position(int index) {
-    if (index < 0 || index >= NTESTS) {
-        return;
-    }
-    Board board;
-    board_load_fen(&board, TESTS[index * 2]);
-    Search search;
-    search.uci = 1;
-    do_search(&search, &board);
-}
+#include "search.cuh"
 
 static char *TESTS[] = {
     // https://chessprogramming.wikispaces.com/Win+at+Chess
@@ -442,3 +399,44 @@ static char *TESTS[] = {
 };
 
 static int NTESTS = sizeof(TESTS) / sizeof(char *) / 2;
+
+int bk_test(int index, char *fen, char *bm) {
+    Board board;
+    board_load_fen(&board, fen);
+    Search search;
+    search.uci = 0;
+    do_search(&search, &board);
+    char notation[16];
+    notate_move(&board, &search.move, notation);
+    char padded[16];
+    sprintf(padded, " %s ", notation);
+    int result = strstr(bm, padded) != NULL;
+    printf("%4d) %s: %8s [%s]\n",
+        index + 1, result ? "PASS" : "FAIL", notation, bm);
+    return result;
+}
+
+void bk_tests() {
+    int count = 0;
+    int passed = 0;
+    for (int i = 0; i < NTESTS; i++) {
+        char *fen = TESTS[i * 2];
+        char *bm = TESTS[i * 2 + 1];
+        int result = bk_test(i, fen, bm);
+        passed += result;
+        count += 1;
+        printf("%4d of %d tests passed.\r", passed, count);
+    }
+}
+
+void test_position(int index) {
+    if (index < 0 || index >= NTESTS) {
+        return;
+    }
+    Board board;
+    board_load_fen(&board, TESTS[index * 2]);
+    Search search;
+    search.uci = 1;
+    do_search(&search, &board);
+}
+

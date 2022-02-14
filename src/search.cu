@@ -1,11 +1,13 @@
-#include <stdio.h>
-#include <string.h>
+#include "search.cuh"
+#include <cstdio>
+#include <cstring>
 #include <unistd.h>
-#include "search.h"
 #include "eval.h"
 #include "gen.h"
 #include "move.h"
 #include "util.h"
+
+
 
 #define XOR_SWAP(a, b) a = a ^ b; b = a ^ b; a = a ^ b;
 
@@ -99,7 +101,7 @@ int do_search(Search *search, Board *board) {
     int result = 1;
     double start = now();
     int score = 0;
-    int depth = 8;
+    int depth = 5;
     int lo = INF;
     int hi = INF;
     int alpha = score - lo;

@@ -4,12 +4,12 @@ BIN_NAME := main
 # Compiler used
 C ?= nvcc
 # Extension of source files used in the project
-SRC_EXT = c
+SRC_EXT = cpp
 SRC_EXT_CU = cu
 # Path to the source directory, relative to the makefile
 SRC_PATH = src
 # General compiler flags
-COMPILE_FLAGS =
+COMPILE_FLAGS = 
 # Additional release-specific flags
 RCOMPILE_FLAGS = -D NDEBUG
 # Additional debug-specific flags
@@ -17,7 +17,7 @@ DCOMPILE_FLAGS = -D DEBUG
 # Add additional include paths
 INCLUDES = -I $(SRC_PATH)/ -I $(SRC_PATH)/deps/tinycthread
 # General linker settings
-LINK_FLAGS = -lpthread
+LINK_FLAGS = -lpthread -lcudart
 # Additional release-specific linker settings
 RLINK_FLAGS = 
 # Additional debug-specific linker settings
@@ -166,11 +166,13 @@ all: $(BIN_PATH)/$(BIN_NAME)
 	@echo "Making symlink: $(BIN_NAME) -> $<"
 	@$(RM) $(BIN_NAME)
 	@ln -s $(BIN_PATH)/$(BIN_NAME) $(BIN_NAME)
+	@$(RM) main.o
 
 # Link the executable
 $(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
 	@echo "Linking: $@"
-	$(CMD_PREFIX)$(C) $(OBJECTS) $(LDFLAGS) -o $@
+	$(CMD_PREFIX)$(C) -dlink $(OBJECTS) $(LDFLAGS) -o main.o
+	$(CMD_PREFIX)$(C) main.o $(LDFLAGS) $(OBJECTS) -o $@ 
 
 # Add dependency files, if they exist
 -include $(DEPS)
@@ -186,7 +188,7 @@ printobj:
 
 $(BUILD_PATH)/%.o : $(SRC_PATH)/%.$(SRC_EXT_CU)
 	@echo "Compiling: $< -> $@"
-	$(CMD_PREFIX)$(C) $(CFLAGS) $(INCLUDES) -MMD $< -o $@
+	$(CMD_PREFIX)$(C) $(CFLAGS) $(INCLUDES) -MMD -c $< -o $@
 	
 $(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT)
 	@echo "Compiling: $< -> $@"

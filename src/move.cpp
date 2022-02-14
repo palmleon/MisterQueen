@@ -1,6 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include "gen.h"
 #include "move.h"
 #include "util.h"
@@ -483,7 +483,7 @@ int parse_move(Board *board, const char *notation, Move *move) {
 
 int parse_pgn(Board *board, const char *pgn) {
     board_reset(board);
-    char *temp = calloc(strlen(pgn) + 1, sizeof(char));
+    char *temp = (char *) calloc(strlen(pgn) + 1, sizeof(char));
     strcpy(temp, pgn);
     char *key;
     char *token = tokenize(temp, " ", &key);

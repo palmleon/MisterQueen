@@ -1,7 +1,7 @@
-#include "search.h"
+#include "search.cuh"
 #include "bk.h"
-#include <string.h>
-#include <stdio.h>
+#include <cstring>
+#include <cstdio>
 
 
 static Board board;
