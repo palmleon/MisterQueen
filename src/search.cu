@@ -2,16 +2,16 @@
 #include <cstdio>
 #include <cstring>
 #include <unistd.h>
-#include "eval.h"
-#include "gen.h"
-#include "move.h"
+#include "eval.cuh"
+#include "gen.cuh"
+#include "move.cuh"
 #include "util.h"
-
-
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
 
 #define XOR_SWAP(a, b) a = a ^ b; b = a ^ b; a = a ^ b;
 
-void sort_moves(Board *board, Move *moves, int count) {
+__device__ __host__ void sort_moves(Board *board, Move *moves, int count) {
     int scores[MAX_MOVES];
     int indexes[MAX_MOVES];
     for (int i = 0; i < count; i++) {
@@ -34,7 +34,7 @@ void sort_moves(Board *board, Move *moves, int count) {
     }
 }
 
-int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int beta) {
+__device__ int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int beta) {
     int result;
     if (is_illegal(board)) {
         result = INF;
@@ -75,26 +75,284 @@ int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int 
     return result;
 }
 
+__global__ void GPU_alpha_beta(Search *search, Board *board, Move *moves, int depth, int ply, int alpha, int beta, int *scores) {
+    
+    int tid = threadIdx.x + (blockDim.x * blockIdx.x);
+	int local_index = threadIdx.x;
+    
+    int result;
+    if (is_illegal(board)) {
+        result = INF;
+    }
+    else if (depth <= 0) {
+        result = evaluate(board) + evaluate_pawns(board);
+    }
+    else {
+        Undo undo;
+        int can_move = 0;
+        do_move(board, &moves[local_index], &undo);
+        scores[local_index] = -alpha_beta(search, board, depth - 1, ply + 1, -beta, -alpha);
+        undo_move(board, &moves[local_index], &undo);
+    }
+    return;
+}
+
+int CPU_alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int beta) { 
+    int result;
+    if (is_illegal(board)) {
+        result = INF;
+    }
+    else if (depth <= 0) {
+        result = evaluate(board) + evaluate_pawns(board);
+    }
+    else {
+        Undo undo;
+        Move moves[MAX_MOVES];
+        int *scores = NULL; 
+
+        Search *dev_search = NULL;
+	    Board *dev_board = NULL;
+	    Move *dev_moves = NULL;
+        int *dev_scores = NULL;
+	    cudaError_t cudaStatus;
+
+        int count = gen_moves(board, moves);
+        sort_moves(board, moves, count);
+        int can_move = 0; 
+        do_move(board, &moves[0], &undo);
+        int score = -CPU_alpha_beta(search, board, depth - 1, ply + 1, -beta, -alpha);
+        undo_move(board, &moves[0], &undo);
+        if (score > -INF) {
+            can_move = 1;
+        }
+        if (score >= beta) {
+            return beta;
+        }
+        if (score > alpha) {
+            alpha = score;
+        }
+
+        scores = (int *) malloc(count-1 * sizeof(int));
+        if (scores == NULL) {
+            fprintf(stderr, "malloc failed!");
+            alpha = -1;
+            goto Error;
+        }
+
+        // Choose which GPU to run on, change this on a multi-GPU system.
+        cudaStatus = cudaSetDevice(0);
+        if (cudaStatus != cudaSuccess) {
+            fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
+            alpha = -1;
+            goto Error;
+        }
+
+        // Allocate GPU buffers for three vectors (two input, one output)    .
+        cudaStatus = cudaMalloc((void**)&dev_search, sizeof(Search));
+        if (cudaStatus != cudaSuccess) {
+            fprintf(stderr, "cudaMalloc failed!");
+            alpha = -1;
+            goto Error;
+        }
+
+        cudaStatus = cudaMalloc((void**)&dev_board, sizeof(Board));
+        if (cudaStatus != cudaSuccess) {
+            fprintf(stderr, "cudaMalloc failed!");
+            alpha = -1;
+            goto Error;
+        }
+
+        cudaStatus = cudaMalloc((void**)&dev_moves, count-1 * sizeof(Move));
+        if (cudaStatus != cudaSuccess) {
+            fprintf(stderr, "cudaMalloc failed!");
+            alpha = -1;
+            goto Error;
+        }
+
+        cudaStatus = cudaMalloc((void**)&dev_scores, count-1 * sizeof(int));
+        if (cudaStatus != cudaSuccess) {
+            fprintf(stderr, "cudaMalloc failed!");
+            alpha = -1;
+            goto Error;
+        }
+
+        // Copy input vectors from host memory to GPU buffers.
+        cudaStatus = cudaMemcpy(dev_search, search, sizeof(Search), cudaMemcpyHostToDevice);
+        if (cudaStatus != cudaSuccess) {
+            fprintf(stderr, "cudaMemcpy failed!");
+            alpha = -1;
+            goto Error;
+        }
+
+        cudaStatus = cudaMemcpy(dev_board, board, sizeof(Board), cudaMemcpyHostToDevice);
+        if (cudaStatus != cudaSuccess) {
+            fprintf(stderr, "cudaMemcpy failed!");
+            alpha = -1;
+            goto Error;
+        }
+
+        cudaStatus = cudaMemcpy(dev_moves, moves+1, count-1 * sizeof(Move), cudaMemcpyHostToDevice);
+        if (cudaStatus != cudaSuccess) {
+            fprintf(stderr, "cudaMemcpy failed!");
+            alpha = -1;
+            goto Error;
+        }
+
+        
+        GPU_alpha_beta <<<1, count-1>>> (dev_search, dev_board, moves, depth -1, ply +1, -beta, -alpha, dev_scores);
+        
+        cudaStatus = cudaMemcpy(scores, dev_scores, count-1 * sizeof(int), cudaMemcpyDeviceToHost);
+        if (cudaStatus != cudaSuccess) {
+            fprintf(stderr, "cudaMemcpy failed!");
+            alpha = -1;
+            goto Error;
+        }
+
+        for (int i = 1; i < count; i++) {
+            if (scores[i] > -INF) {
+                can_move = 1;
+            }
+            if (scores[i] >= beta) {
+                return beta;
+            }
+            if (scores[i] > alpha) {
+                alpha = score;
+            }
+        }
+        result = alpha;
+        if (!can_move) {
+            if (is_check(board)) {
+                result = -MATE + ply;
+            } else {
+                result = 0;
+            }
+        }
+    Error:
+        free(scores);
+        cudaFree(dev_search);
+        cudaFree(dev_board);
+        cudaFree(dev_moves);
+        cudaFree(dev_scores);
+    }
+    return result;
+}
+
 int root_search(Search *search, Board *board, int depth, int ply, int alpha, int beta, Move *result) {
     Undo undo;
     Move moves[MAX_MOVES];
     int count = gen_moves(board, moves);
     sort_moves(board, moves, count);
     Move *best = NULL;
-    for (int i = 0; i < count; i++) {
-        Move *move = &moves[i];
-        do_move(board, move, &undo);
-        int score = -alpha_beta(search, board, depth - 1, ply + 1, -beta, -alpha);
-        undo_move(board, move, &undo);
-        if (score > alpha) {
-            alpha = score;
-            best = move;
+    int *scores = NULL; 
+
+    Search *dev_search = NULL;
+	Board *dev_board = NULL;
+	Move *dev_moves = NULL;
+    int *dev_scores = NULL;
+	cudaError_t cudaStatus;
+
+    do_move(board, &moves[0], &undo);
+    int score = -CPU_alpha_beta(search, board, depth - 1, ply + 1, -beta, -alpha);
+    undo_move(board, &moves[0], &undo);
+    if (score > alpha) {
+        alpha = score;
+        *best = moves[0];
+    }
+
+    scores = (int *) malloc(count-1 * sizeof(int));
+    if (scores == NULL) {
+        fprintf(stderr, "malloc failed!");
+		alpha = -1;
+		goto Error;
+    }
+
+	// Choose which GPU to run on, change this on a multi-GPU system.
+	cudaStatus = cudaSetDevice(0);
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
+        alpha = -1;
+		goto Error;
+	}
+
+	// Allocate GPU buffers for three vectors (two input, one output)    .
+	cudaStatus = cudaMalloc((void**)&dev_search, sizeof(Search));
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaMalloc failed!");
+		alpha = -1;
+		goto Error;
+	}
+
+	cudaStatus = cudaMalloc((void**)&dev_board, sizeof(Board));
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaMalloc failed!");
+		alpha = -1;
+		goto Error;
+	}
+
+	cudaStatus = cudaMalloc((void**)&dev_moves, count-1 * sizeof(Move));
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaMalloc failed!");
+		alpha = -1;
+		goto Error;
+	}
+
+    cudaStatus = cudaMalloc((void**)&dev_scores, count-1 * sizeof(int));
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaMalloc failed!");
+		alpha = -1;
+		goto Error;
+	}
+
+	// Copy input vectors from host memory to GPU buffers.
+	cudaStatus = cudaMemcpy(dev_search, search, sizeof(Search), cudaMemcpyHostToDevice);
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaMemcpy failed!");
+		alpha = -1;
+		goto Error;
+	}
+
+	cudaStatus = cudaMemcpy(dev_board, board, sizeof(Board), cudaMemcpyHostToDevice);
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaMemcpy failed!");
+		alpha = -1;
+		goto Error;
+	}
+
+    cudaStatus = cudaMemcpy(dev_moves, moves+1, count-1 * sizeof(Move), cudaMemcpyHostToDevice);
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaMemcpy failed!");
+		alpha = -1;
+		goto Error;
+	}
+
+    
+    GPU_alpha_beta <<<1, count-1>>> (dev_search, dev_board, moves, depth -1, ply +1, -beta, -alpha, dev_scores);
+    
+    cudaStatus = cudaMemcpy(scores, dev_scores, count-1 * sizeof(int), cudaMemcpyDeviceToHost);
+    if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaMemcpy failed!");
+		alpha = -1;
+		goto Error;
+	}
+
+    for (int i = 1; i < count; i++) {
+        if (scores[i] > alpha) {
+            alpha = scores[i];
+            *best = moves[i];
         }
     }
     if (best) {
         memcpy(result, best, sizeof(Move));
     }
-    return alpha;
+
+Error:
+    free(scores);
+	cudaFree(dev_search);
+	cudaFree(dev_board);
+	cudaFree(dev_moves);
+    cudaFree(dev_scores);
+
+	return alpha;
 }
 
 int do_search(Search *search, Board *board) {

@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
-#include "bb.h"
+#include "bb.cuh"
 #include "util.h"
 
 bb BB_KNIGHT[64];

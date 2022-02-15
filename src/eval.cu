@@ -1,6 +1,6 @@
-#include "eval.h"
+#include "eval.cuh"
 
-int evaluate(Board *board) {
+__device__ __host__ int evaluate(Board *board) {
     int score = 0;
     score += board->white_material;
     score -= board->black_material;
@@ -38,7 +38,7 @@ int evaluate_black_pawns(Board *board) {
     return score;
 }
 
-int evaluate_pawns(Board *board) {
+__device__ __host__ int evaluate_pawns(Board *board) {
     int score = 0;
     score += evaluate_white_pawns(board);
     score -= evaluate_black_pawns(board);

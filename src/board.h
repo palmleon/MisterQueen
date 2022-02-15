@@ -1,7 +1,7 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include "bb.h"
+#include "bb.cuh"
 
 #define WHITE 0x00
 #define BLACK 0x10

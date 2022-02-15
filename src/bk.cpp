@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstring>
 #include "board.h"
-#include "move.h"
+#include "move.cuh"
 #include "search.cuh"
 
 static char *TESTS[] = {

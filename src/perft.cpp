@@ -1,6 +1,6 @@
 #include <cstdio>
-#include "gen.h"
-#include "move.h"
+#include "gen.cuh"
+#include "move.cuh"
 #include "perft.h"
 #include "util.h"
 

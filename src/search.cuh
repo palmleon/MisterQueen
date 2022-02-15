@@ -2,9 +2,8 @@
 #define SEARCH_H
 
 #include "board.h"
-#include "move.h"
 #include "util.h"
-
+#include "move.cuh"
 
 #define INF 1000000
 #define MATE 100000
