@@ -37,12 +37,6 @@ extern bb BB_KING[64];
 extern bb BB_BISHOP_6[64];
 extern bb BB_ROOK_6[64];
 
-extern const bb MAGIC_BISHOP[64];
-extern const bb MAGIC_ROOK[64];
-
-extern const int SHIFT_BISHOP[64];
-extern const int SHIFT_ROOK[64];
-
 extern int OFFSET_BISHOP[64];
 extern int OFFSET_ROOK[64];
 
@@ -72,5 +66,7 @@ bb bb_random();
 bb bb_bishop(int sq, bb obstacles);
 bb bb_rook(int sq, bb obstacles);
 bb bb_queen(int sq, bb obstacles);
+bb bb_knight(int sq);
+bb bb_king(int sq);
 
 #endif

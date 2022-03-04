@@ -25,7 +25,7 @@ __device__ __host__ int gen_knight_moves(Move *moves, bb srcs, bb mask) {
     int src, dst;
     while (srcs) {
         POP_LSB(src, srcs);
-        bb dsts = BB_KNIGHT[src] & mask;
+        bb dsts = bb_knight(src) & mask;
         while (dsts) {
             POP_LSB(dst, dsts);
             EMIT_MOVE(moves, src, dst);
@@ -81,7 +81,7 @@ __device__ __host__ int gen_king_moves(Move *moves, bb srcs, bb mask) {
     int src, dst;
     while (srcs) {
         POP_LSB(src, srcs);
-        bb dsts = BB_KING[src] & mask;
+        bb dsts = bb_king(src) & mask;
         while (dsts) {
             POP_LSB(dst, dsts);
             EMIT_MOVE(moves, src, dst);

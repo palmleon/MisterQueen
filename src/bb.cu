@@ -6,10 +6,16 @@
 bb BB_KNIGHT[64];
 bb BB_KING[64];
 
+__device__ bb GPU_BB_KNIGHT[64];
+__device__ bb GPU_BB_KING[64];
+
 bb BB_BISHOP_6[64];
 bb BB_ROOK_6[64];
 
-const bb MAGIC_BISHOP[64] = {
+__device__ bb GPU_BB_BISHOP_6[64];
+__device__ bb GPU_BB_ROOK_6[64];
+
+__constant__ bb MAGIC_BISHOP[64] = {
     0x010a0a1023020080L, 0x0050100083024000L, 0x8826083200800802L,
     0x0102408100002400L, 0x0414242008000000L, 0x0414242008000000L,
     0x0804230108200880L, 0x0088840101012000L, 0x0400420202041100L,
@@ -34,7 +40,7 @@ const bb MAGIC_BISHOP[64] = {
     0x010a0a1023020080L
 };
 
-const bb MAGIC_ROOK[64] = {
+__constant__ bb MAGIC_ROOK[64] = {
     0x0080004000608010L, 0x2240100040012002L, 0x008008a000841000L,
     0x0100204900500004L, 0x020008200200100cL, 0x40800c0080020003L,
     0x0080018002000100L, 0x4200042040820d04L, 0x10208008a8400480L,
@@ -59,7 +65,7 @@ const bb MAGIC_ROOK[64] = {
     0x800a208440230402L
 };
 
-const int SHIFT_BISHOP[64] = {
+__constant__ int SHIFT_BISHOP[64] = {
     58, 59, 59, 59, 59, 59, 59, 58,
     59, 59, 59, 59, 59, 59, 59, 59,
     59, 59, 57, 57, 57, 57, 59, 59,
@@ -70,7 +76,7 @@ const int SHIFT_BISHOP[64] = {
     58, 59, 59, 59, 59, 59, 59, 58
 };
 
-const int SHIFT_ROOK[64] = {
+__constant__ int SHIFT_ROOK[64] = {
     52, 53, 53, 53, 53, 53, 53, 52,
     53, 54, 54, 54, 54, 54, 54, 53,
     53, 54, 54, 54, 54, 54, 54, 53,
@@ -84,8 +90,14 @@ const int SHIFT_ROOK[64] = {
 int OFFSET_BISHOP[64];
 int OFFSET_ROOK[64];
 
+__device__ int GPU_OFFSET_BISHOP[64];
+__device__ int GPU_OFFSET_ROOK[64];
+
 bb ATTACK_BISHOP[5248];
 bb ATTACK_ROOK[102400];
+
+__device__ int GPU_ATTACK_BISHOP[5248];
+__device__ int GPU_ATTACK_ROOK[102400];
 
 bb HASH_WHITE_PAWN[64];
 bb HASH_BLACK_PAWN[64];
@@ -270,21 +282,37 @@ void bb_init() {
         HASH_WHITE_KING[sq] = bb_random();
         HASH_BLACK_KING[sq] = bb_random();
     }
+    cudaMemcpyToSymbol(GPU_BB_KNIGHT, BB_KNIGHT, 64 * sizeof(bb));
+    cudaMemcpyToSymbol(GPU_BB_KING, BB_KING, 64 * sizeof(bb));
+    cudaMemcpyToSymbol(GPU_BB_ROOK_6, BB_ROOK_6, 64 * sizeof(bb));
+    cudaMemcpyToSymbol(GPU_BB_BISHOP_6, BB_BISHOP_6, 64 * sizeof(bb));
+    cudaMemcpyToSymbol(GPU_OFFSET_BISHOP, OFFSET_BISHOP, 64 * sizeof(bb));
+    cudaMemcpyToSymbol(GPU_OFFSET_ROOK, OFFSET_ROOK, 64 * sizeof(bb));
+    cudaMemcpyToSymbol(GPU_ATTACK_BISHOP, ATTACK_BISHOP, 5248 * sizeof(bb));
+    cudaMemcpyToSymbol(GPU_ATTACK_ROOK, ATTACK_ROOK, 102400 * sizeof(bb));
 }
 
-bb bb_bishop(int sq, bb obstacles) {
-    bb value = obstacles & BB_BISHOP_6[sq];
+__device__ bb bb_knight(int sq) {
+    return GPU_BB_KNIGHT[sq];
+}
+
+__device__ bb bb_king(int sq) {
+    return GPU_BB_KING[sq];
+}
+
+__device__ bb bb_bishop(int sq, bb obstacles) {
+    bb value = obstacles & GPU_BB_BISHOP_6[sq];
     int index = (value * MAGIC_BISHOP[sq]) >> SHIFT_BISHOP[sq];
-    return ATTACK_BISHOP[index + OFFSET_BISHOP[sq]];
+    return GPU_ATTACK_BISHOP[index + GPU_OFFSET_BISHOP[sq]];
 }
 
-bb bb_rook(int sq, bb obstacles) {
-    bb value = obstacles & BB_ROOK_6[sq];
+__device__ bb bb_rook(int sq, bb obstacles) {
+    bb value = obstacles & GPU_BB_ROOK_6[sq];
     int index = (value * MAGIC_ROOK[sq]) >> SHIFT_ROOK[sq];
-    return ATTACK_ROOK[index + OFFSET_ROOK[sq]];
+    return GPU_ATTACK_ROOK[index + GPU_OFFSET_ROOK[sq]];
 }
 
-bb bb_queen(int sq, bb obstacles) {
+__device__ bb bb_queen(int sq, bb obstacles) {
     return bb_bishop(sq, obstacles) | bb_rook(sq, obstacles);
 }
 
