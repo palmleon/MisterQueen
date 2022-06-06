@@ -5,13 +5,13 @@
 #include "move.h"
 #include "util.h"
 
-#define TOGGLE_HASH(board) \
+/*#define TOGGLE_HASH(board) \
     board->hash ^= HASH_CASTLE[board->castle]; \
     board->pawn_hash ^= HASH_CASTLE[board->castle]; \
     if (board->ep) { \
         board->hash ^= HASH_EP[LSB(board->ep) % 8]; \
         board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8]; \
-    }
+    }*/
 
 void make_move(Board *board, Move *move) {
     Undo undo; // throw-away
@@ -19,26 +19,26 @@ void make_move(Board *board, Move *move) {
 }
 
 void do_null_move(Board *board, Undo *undo) {
-    TOGGLE_HASH(board);
+    //TOGGLE_HASH(board);
     undo->ep = board->ep;
     board->ep = 0L;
     board->color ^= BLACK;
-    board->hash ^= HASH_COLOR;
-    board->pawn_hash ^= HASH_COLOR;
-    TOGGLE_HASH(board);
+    //board->hash ^= HASH_COLOR;
+    //board->pawn_hash ^= HASH_COLOR;
+    //TOGGLE_HASH(board);
 }
 
 void undo_null_move(Board *board, Undo *undo) {
-    TOGGLE_HASH(board);
+    //TOGGLE_HASH(board);
     board->ep = undo->ep;
     board->color ^= BLACK;
-    board->hash ^= HASH_COLOR;
-    board->pawn_hash ^= HASH_COLOR;
-    TOGGLE_HASH(board);
+    //board->hash ^= HASH_COLOR;
+   // board->pawn_hash ^= HASH_COLOR;
+    //TOGGLE_HASH(board);
 }
 
 void do_move(Board *board, Move *move, Undo *undo) {
-    TOGGLE_HASH(board);
+    //TOGGLE_HASH(board);
     undo->piece = board->squares[move->src];
     undo->capture = board->squares[move->dst];
     undo->castle = board->castle;
@@ -106,13 +106,13 @@ void do_move(Board *board, Move *move, Undo *undo) {
         board->castle &= ~CASTLE_BLACK_KING;
     }
     board->color ^= BLACK;
-    board->hash ^= HASH_COLOR;
-    board->pawn_hash ^= HASH_COLOR;
-    TOGGLE_HASH(board);
+    //board->hash ^= HASH_COLOR;
+    //board->pawn_hash ^= HASH_COLOR;
+    //TOGGLE_HASH(board);
 }
 
 void undo_move(Board *board, Move *move, Undo *undo) {
-    TOGGLE_HASH(board);
+    //TOGGLE_HASH(board);
     board_set(board, move->src, undo->piece);
     board_set(board, move->dst, undo->capture);
     board->castle = undo->castle;
@@ -148,9 +148,9 @@ void undo_move(Board *board, Move *move, Undo *undo) {
         }
     }
     board->color ^= BLACK;
-    board->hash ^= HASH_COLOR;
-    board->pawn_hash ^= HASH_COLOR;
-    TOGGLE_HASH(board);
+    //board->hash ^= HASH_COLOR;
+    //board->pawn_hash ^= HASH_COLOR;
+    //TOGGLE_HASH(board);
 }
 
 int score_move(Board *board, Move *move) {

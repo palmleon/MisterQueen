@@ -175,3 +175,8 @@ $(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
 $(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT)
 	@echo "Compiling: $< -> $@"
 	$(CMD_PREFIX)$(C) $(CFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
+
+.PHONY: run
+run:
+	@echo "Launching MisterQueen!"
+	@./bin/release/main

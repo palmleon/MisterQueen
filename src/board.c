@@ -38,51 +38,52 @@ void board_reset(Board *board) {
 
 /* Given a square and a piece, place that piece onto that square */
 void board_set(Board *board, int sq, int piece) {
-    int previous = board->squares[sq];
-    board->squares[sq] = piece;
-    if (previous) {
+    int previous = board->squares[sq]; // take the previous piece on that square
+    board->squares[sq] = piece; // place the new piece
+    if (previous) { // was the square empty?
+        // There was sth before: remove the previous piece
         bb mask = ~BIT(sq);
-        board->all &= mask;
-        if (COLOR(previous)) {
+        board->all &= mask; // bitwise removal of the piece
+        if (COLOR(previous)) { // previous piece was black
             board->black &= mask;
             switch (PIECE(previous)) {
                 case PAWN:
                     board->black_pawns &= mask;
                     board->black_material -= MATERIAL_PAWN;
                     board->black_position -= POSITION_BLACK_PAWN[sq];
-                    board->hash ^= HASH_BLACK_PAWN[sq];
-                    board->pawn_hash ^= HASH_BLACK_PAWN[sq];
+                    //board->hash ^= HASH_BLACK_PAWN[sq];
+                    //board->pawn_hash ^= HASH_BLACK_PAWN[sq];
                     break;
                 case KNIGHT:
                     board->black_knights &= mask;
                     board->black_material -= MATERIAL_KNIGHT;
                     board->black_position -= POSITION_BLACK_KNIGHT[sq];
-                    board->hash ^= HASH_BLACK_KNIGHT[sq];
+                    //board->hash ^= HASH_BLACK_KNIGHT[sq];
                     break;
                 case BISHOP:
                     board->black_bishops &= mask;
                     board->black_material -= MATERIAL_BISHOP;
                     board->black_position -= POSITION_BLACK_BISHOP[sq];
-                    board->hash ^= HASH_BLACK_BISHOP[sq];
+                    //board->hash ^= HASH_BLACK_BISHOP[sq];
                     break;
                 case ROOK:
                     board->black_rooks &= mask;
                     board->black_material -= MATERIAL_ROOK;
                     board->black_position -= POSITION_BLACK_ROOK[sq];
-                    board->hash ^= HASH_BLACK_ROOK[sq];
+                    //board->hash ^= HASH_BLACK_ROOK[sq];
                     break;
                 case QUEEN:
                     board->black_queens &= mask;
                     board->black_material -= MATERIAL_QUEEN;
                     board->black_position -= POSITION_BLACK_QUEEN[sq];
-                    board->hash ^= HASH_BLACK_QUEEN[sq];
+                   //board->hash ^= HASH_BLACK_QUEEN[sq];
                     break;
                 case KING:
                     board->black_kings &= mask;
                     board->black_material -= MATERIAL_KING;
                     board->black_position -= POSITION_BLACK_KING[sq];
-                    board->hash ^= HASH_BLACK_KING[sq];
-                    board->pawn_hash ^= HASH_BLACK_KING[sq];
+                   // board->hash ^= HASH_BLACK_KING[sq];
+                   // board->pawn_hash ^= HASH_BLACK_KING[sq];
                     break;
             }
         }
@@ -93,45 +94,45 @@ void board_set(Board *board, int sq, int piece) {
                     board->white_pawns &= mask;
                     board->white_material -= MATERIAL_PAWN;
                     board->white_position -= POSITION_WHITE_PAWN[sq];
-                    board->hash ^= HASH_WHITE_PAWN[sq];
-                    board->pawn_hash ^= HASH_WHITE_PAWN[sq];
+                    //board->hash ^= HASH_WHITE_PAWN[sq];
+                    //board->pawn_hash ^= HASH_WHITE_PAWN[sq];
                     break;
                 case KNIGHT:
                     board->white_knights &= mask;
                     board->white_material -= MATERIAL_KNIGHT;
                     board->white_position -= POSITION_WHITE_KNIGHT[sq];
-                    board->hash ^= HASH_WHITE_KNIGHT[sq];
+                    //board->hash ^= HASH_WHITE_KNIGHT[sq];
                     break;
                 case BISHOP:
                     board->white_bishops &= mask;
                     board->white_material -= MATERIAL_BISHOP;
                     board->white_position -= POSITION_WHITE_BISHOP[sq];
-                    board->hash ^= HASH_WHITE_BISHOP[sq];
+                    //board->hash ^= HASH_WHITE_BISHOP[sq];
                     break;
                 case ROOK:
                     board->white_rooks &= mask;
                     board->white_material -= MATERIAL_ROOK;
                     board->white_position -= POSITION_WHITE_ROOK[sq];
-                    board->hash ^= HASH_WHITE_ROOK[sq];
+                   // board->hash ^= HASH_WHITE_ROOK[sq];
                     break;
                 case QUEEN:
                     board->white_queens &= mask;
                     board->white_material -= MATERIAL_QUEEN;
                     board->white_position -= POSITION_WHITE_QUEEN[sq];
-                    board->hash ^= HASH_WHITE_QUEEN[sq];
+                   // board->hash ^= HASH_WHITE_QUEEN[sq];
                     break;
                 case KING:
                     board->white_kings &= mask;
                     board->white_material -= MATERIAL_KING;
                     board->white_position -= POSITION_WHITE_KING[sq];
-                    board->hash ^= HASH_WHITE_KING[sq];
-                    board->pawn_hash ^= HASH_WHITE_KING[sq];
+                   // board->hash ^= HASH_WHITE_KING[sq];
+                   // board->pawn_hash ^= HASH_WHITE_KING[sq];
                     break;
             }
         }
     }
-    if (piece) {
-        bb bit = BIT(sq);
+    if (piece) { // if the piece to move exists (is the if necessary?)
+        bb bit = BIT(sq); // place it
         board->all |= bit;
         if (COLOR(piece)) {
             board->black |= bit;
@@ -140,39 +141,39 @@ void board_set(Board *board, int sq, int piece) {
                     board->black_pawns |= bit;
                     board->black_material += MATERIAL_PAWN;
                     board->black_position += POSITION_BLACK_PAWN[sq];
-                    board->hash ^= HASH_BLACK_PAWN[sq];
-                    board->pawn_hash ^= HASH_BLACK_PAWN[sq];
+                    //board->hash ^= HASH_BLACK_PAWN[sq];
+                    //board->pawn_hash ^= HASH_BLACK_PAWN[sq];
                     break;
                 case KNIGHT:
                     board->black_knights |= bit;
                     board->black_material += MATERIAL_KNIGHT;
                     board->black_position += POSITION_BLACK_KNIGHT[sq];
-                    board->hash ^= HASH_BLACK_KNIGHT[sq];
+                    //board->hash ^= HASH_BLACK_KNIGHT[sq];
                     break;
                 case BISHOP:
                     board->black_bishops |= bit;
                     board->black_material += MATERIAL_BISHOP;
                     board->black_position += POSITION_BLACK_BISHOP[sq];
-                    board->hash ^= HASH_BLACK_BISHOP[sq];
+                    //board->hash ^= HASH_BLACK_BISHOP[sq];
                     break;
                 case ROOK:
                     board->black_rooks |= bit;
                     board->black_material += MATERIAL_ROOK;
                     board->black_position += POSITION_BLACK_ROOK[sq];
-                    board->hash ^= HASH_BLACK_ROOK[sq];
+                    //board->hash ^= HASH_BLACK_ROOK[sq];
                     break;
                 case QUEEN:
                     board->black_queens |= bit;
                     board->black_material += MATERIAL_QUEEN;
                     board->black_position += POSITION_BLACK_QUEEN[sq];
-                    board->hash ^= HASH_BLACK_QUEEN[sq];
+                    //board->hash ^= HASH_BLACK_QUEEN[sq];
                     break;
                 case KING:
                     board->black_kings |= bit;
                     board->black_material += MATERIAL_KING;
                     board->black_position += POSITION_BLACK_KING[sq];
-                    board->hash ^= HASH_BLACK_KING[sq];
-                    board->pawn_hash ^= HASH_BLACK_KING[sq];
+                    //board->hash ^= HASH_BLACK_KING[sq];
+                    //board->pawn_hash ^= HASH_BLACK_KING[sq];
                     break;
             }
         }
@@ -183,39 +184,39 @@ void board_set(Board *board, int sq, int piece) {
                     board->white_pawns |= bit;
                     board->white_material += MATERIAL_PAWN;
                     board->white_position += POSITION_WHITE_PAWN[sq];
-                    board->hash ^= HASH_WHITE_PAWN[sq];
-                    board->pawn_hash ^= HASH_WHITE_PAWN[sq];
+                    //board->hash ^= HASH_WHITE_PAWN[sq];
+                    //board->pawn_hash ^= HASH_WHITE_PAWN[sq];
                     break;
                 case KNIGHT:
                     board->white_knights |= bit;
                     board->white_material += MATERIAL_KNIGHT;
                     board->white_position += POSITION_WHITE_KNIGHT[sq];
-                    board->hash ^= HASH_WHITE_KNIGHT[sq];
+                    //board->hash ^= HASH_WHITE_KNIGHT[sq];
                     break;
                 case BISHOP:
                     board->white_bishops |= bit;
                     board->white_material += MATERIAL_BISHOP;
                     board->white_position += POSITION_WHITE_BISHOP[sq];
-                    board->hash ^= HASH_WHITE_BISHOP[sq];
+                    //board->hash ^= HASH_WHITE_BISHOP[sq];
                     break;
                 case ROOK:
                     board->white_rooks |= bit;
                     board->white_material += MATERIAL_ROOK;
                     board->white_position += POSITION_WHITE_ROOK[sq];
-                    board->hash ^= HASH_WHITE_ROOK[sq];
+                   // board->hash ^= HASH_WHITE_ROOK[sq];
                     break;
                 case QUEEN:
                     board->white_queens |= bit;
                     board->white_material += MATERIAL_QUEEN;
                     board->white_position += POSITION_WHITE_QUEEN[sq];
-                    board->hash ^= HASH_WHITE_QUEEN[sq];
+                    //board->hash ^= HASH_WHITE_QUEEN[sq];
                     break;
                 case KING:
                     board->white_kings |= bit;
                     board->white_material += MATERIAL_KING;
                     board->white_position += POSITION_WHITE_KING[sq];
-                    board->hash ^= HASH_WHITE_KING[sq];
-                    board->pawn_hash ^= HASH_WHITE_KING[sq];
+                    //board->hash ^= HASH_WHITE_KING[sq];
+                    //board->pawn_hash ^= HASH_WHITE_KING[sq];
                     break;
             }
         }
@@ -296,8 +297,8 @@ void board_load_fen(Board *board, char *fen) {
             break;
         case 'b':
             board->color = BLACK;
-            board->hash ^= HASH_COLOR;
-            board->pawn_hash ^= HASH_COLOR;
+            //board->hash ^= HASH_COLOR;
+            //board->pawn_hash ^= HASH_COLOR;
             break;
         default: return;
     }
@@ -318,10 +319,10 @@ void board_load_fen(Board *board, char *fen) {
             break;
         }
     }
-    board->hash ^= HASH_CASTLE[CASTLE_ALL];
-    board->hash ^= HASH_CASTLE[board->castle];
-    board->pawn_hash ^= HASH_CASTLE[CASTLE_ALL];
-    board->pawn_hash ^= HASH_CASTLE[board->castle];
+    //board->hash ^= HASH_CASTLE[CASTLE_ALL];
+    //board->hash ^= HASH_CASTLE[board->castle];
+    //board->pawn_hash ^= HASH_CASTLE[CASTLE_ALL];
+    //board->pawn_hash ^= HASH_CASTLE[board->castle];
     i++;
     if (fen[i] == '-') {
         i++;
@@ -332,8 +333,8 @@ void board_load_fen(Board *board, char *fen) {
         if (fen[i] >= '1' && fen[i] <= '8') {
             int ep_rank = fen[i] - '1';
             board->ep = BIT(RF(ep_rank, ep_file));
-            board->hash ^= HASH_EP[LSB(board->ep) % 8];
-            board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8];
+            //board->hash ^= HASH_EP[LSB(board->ep) % 8];
+            //board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8];
             i++;
         }
     }
@@ -441,8 +442,8 @@ void board_load_file_fen(Board *board, char *filename) {
             break;
         case 'b':
             board->color = BLACK;
-            board->hash ^= HASH_COLOR;
-            board->pawn_hash ^= HASH_COLOR;
+            //board->hash ^= HASH_COLOR;
+            //board->pawn_hash ^= HASH_COLOR;
             break;
         default: return;
     }
@@ -463,10 +464,10 @@ void board_load_file_fen(Board *board, char *filename) {
             break;
         }
     }
-    board->hash ^= HASH_CASTLE[CASTLE_ALL];
-    board->hash ^= HASH_CASTLE[board->castle];
-    board->pawn_hash ^= HASH_CASTLE[CASTLE_ALL];
-    board->pawn_hash ^= HASH_CASTLE[board->castle];
+    //board->hash ^= HASH_CASTLE[CASTLE_ALL];
+    //board->hash ^= HASH_CASTLE[board->castle];
+    //board->pawn_hash ^= HASH_CASTLE[CASTLE_ALL];
+   // board->pawn_hash ^= HASH_CASTLE[board->castle];
     i++;
     if (fen[i] >= 'a' && fen[i] <= 'h') {
         int ep_file = fen[i] - 'a';
@@ -474,8 +475,8 @@ void board_load_file_fen(Board *board, char *filename) {
         if (fen[i] >= '1' && fen[i] <= '8') {
             int ep_rank = fen[i] - '1';
             board->ep = BIT(RF(ep_rank, ep_file));
-            board->hash ^= HASH_EP[LSB(board->ep) % 8];
-            board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8];
+            //board->hash ^= HASH_EP[LSB(board->ep) % 8];
+            //board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8];
         }
     }
     fclose(file_ptr);
@@ -554,8 +555,8 @@ void board_load_file_square(Board *board, char *filename) {
             break;
         case 'b':
             board->color = BLACK;
-            board->hash ^= HASH_COLOR;
-            board->pawn_hash ^= HASH_COLOR;
+            //board->hash ^= HASH_COLOR;
+            //board->pawn_hash ^= HASH_COLOR;
             break;
         default: return;
     }
@@ -575,10 +576,10 @@ void board_load_file_square(Board *board, char *filename) {
             break;
         }
     }
-    board->hash ^= HASH_CASTLE[CASTLE_ALL];
-    board->hash ^= HASH_CASTLE[board->castle];
-    board->pawn_hash ^= HASH_CASTLE[CASTLE_ALL];
-    board->pawn_hash ^= HASH_CASTLE[board->castle];
+    //board->hash ^= HASH_CASTLE[CASTLE_ALL];
+    //board->hash ^= HASH_CASTLE[board->castle];
+    //board->pawn_hash ^= HASH_CASTLE[CASTLE_ALL];
+    //board->pawn_hash ^= HASH_CASTLE[board->castle];
     i++;
     if (line[i] >= 'a' && line[i] <= 'h') {
         int ep_file = line[i] - 'a';
@@ -586,8 +587,8 @@ void board_load_file_square(Board *board, char *filename) {
         if (line[i] >= '1' && line[i] <= '8') {
             int ep_rank = line[i] - '1';
             board->ep = BIT(RF(ep_rank, ep_file));
-            board->hash ^= HASH_EP[LSB(board->ep) % 8];
-            board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8];
+            //board->hash ^= HASH_EP[LSB(board->ep) % 8];
+            //board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8];
         }
     }
     fclose(file_ptr);

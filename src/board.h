@@ -68,12 +68,12 @@ typedef struct {
     int white_position;
     int black_position;
     bb ep;
-    bb all;
-    bb white;
-    bb black;
-    bb white_pawns;
-    bb black_pawns;
-    bb white_knights;
+    bb all; // each bit represents a square, if at '1' it's occupied
+    bb white; // same as the "all" bitmap, but only with white pieces
+    bb black; // same as the "all" bitmap, but only with black pieces
+    bb white_pawns; // same as the "all" bitmap, but only with white pawns
+    bb black_pawns; // same as the "all" bitmap, but only with black pawns
+    bb white_knights; // and so on
     bb black_knights;
     bb white_bishops;
     bb black_bishops;
@@ -83,8 +83,8 @@ typedef struct {
     bb black_queens;
     bb white_kings;
     bb black_kings;
-    bb hash;
-    bb pawn_hash;
+    //bb hash;
+    //bb pawn_hash;
 } Board;
 
 void board_clear(Board *board);

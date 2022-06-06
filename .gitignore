@@ -3,4 +3,6 @@
 /main
 /scripts/*.pgn
 .idea
+/docs
+*.txt
 
