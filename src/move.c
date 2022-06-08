@@ -330,6 +330,10 @@ void move_from_string(Move *move, const char *str) {
     move->promotion = promotion;
 }
 
+
+/*
+ * Convert a move into standard notation
+ */
 void notate_move(Board *board, Move *move, char *result) {
     Move moves[MAX_MOVES];
     int count = gen_legal_moves(board, moves);
@@ -412,7 +416,7 @@ void notate_move(Board *board, Move *move, char *result) {
         }
     }
     if (!castle) {
-        // piece
+        // piece                                                                      
         switch (PIECE(piece)) {
             case KNIGHT: *result++ = 'N'; break;
             case BISHOP: *result++ = 'B'; break;
@@ -481,7 +485,7 @@ int parse_move(Board *board, const char *notation, Move *move) {
     return 0;
 }
 
-int parse_pgn(Board *board, const char *pgn) {
+/*int parse_pgn(Board *board, const char *pgn) {
     board_reset(board);
     char *temp = calloc(strlen(pgn) + 1, sizeof(char));
     strcpy(temp, pgn);
@@ -499,4 +503,4 @@ int parse_pgn(Board *board, const char *pgn) {
     }
     free(temp);
     return 1;
-}
+}*/

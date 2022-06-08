@@ -110,17 +110,17 @@ int do_search(Search *search, Board *board) {
         char move_string[16];
         move_to_string(&search->move, move_string);
         int millis = elapsed * 1000;
-        printf("info depth %d score cp %d time %d pv",
+        printf("Stats:\n| depth: %d\n| score: %d\n| time: %d ms\n",
                depth, score, millis);
-        printf("\n");
     }
     if (now() - start < 1) {
         sleep(1);
     }
     if (search->uci) {
         char move_string[16];
-        move_to_string(&search->move, move_string);
-        printf("bestmove %s\n", move_string);
+        notate_move(board, &search->move, move_string);
+        //move_to_string(&search->move, move_string);
+        printf("| best move: %s\n", move_string);
     }
     return result;
 }

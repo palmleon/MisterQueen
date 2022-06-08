@@ -60,18 +60,18 @@ extern const int POSITION_BLACK_QUEEN[64];
 extern const int POSITION_BLACK_KING[64];
 
 typedef struct {
-    int squares[64];
+    int squares[64]; // -> short int[64]
     int color;
     int castle;
     int white_material;
     int black_material;
-    int white_position;
+    int white_position; // is it necessary?
     int black_position;
     bb ep;
     bb all; // each bit represents a square, if at '1' it's occupied
     bb white; // same as the "all" bitmap, but only with white pieces
     bb black; // same as the "all" bitmap, but only with black pieces
-    bb white_pawns; // same as the "all" bitmap, but only with white pawns
+    bb white_pawns; // same as the "all" bitmap, but only with white pawns // merge the bbs related to the same piece
     bb black_pawns; // same as the "all" bitmap, but only with black pawns
     bb white_knights; // and so on
     bb black_knights;

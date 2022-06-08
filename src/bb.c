@@ -1,3 +1,5 @@
+// "bb" stands for Bit Board, the method used for Board Representation in this engine
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "bb.h"
@@ -86,22 +88,6 @@ int OFFSET_ROOK[64];
 
 bb ATTACK_BISHOP[5248];
 bb ATTACK_ROOK[102400];
-
-bb HASH_WHITE_PAWN[64];
-bb HASH_BLACK_PAWN[64];
-bb HASH_WHITE_KNIGHT[64];
-bb HASH_BLACK_KNIGHT[64];
-bb HASH_WHITE_BISHOP[64];
-bb HASH_BLACK_BISHOP[64];
-bb HASH_WHITE_ROOK[64];
-bb HASH_BLACK_ROOK[64];
-bb HASH_WHITE_QUEEN[64];
-bb HASH_BLACK_QUEEN[64];
-bb HASH_WHITE_KING[64];
-bb HASH_BLACK_KING[64];
-bb HASH_CASTLE[16];
-bb HASH_EP[8];
-bb HASH_COLOR;
 
 int bb_squares(bb value, int squares[64]) {
     int i = 0;
@@ -205,17 +191,19 @@ void bb_init() {
     for (int sq = 0; sq < 64; sq++) {
         int count = bb_squares(BB_BISHOP_6[sq], squares);
         int n = 1 << count;
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < n; i++) { // define all permutations of obstacles
             bb obstacles = 0;
-            for (int j = 0; j < count; j++) {
+            for (int j = 0; j < count; j++) { // create the obstacle
                 if (i & (1 << j)) {
                     obstacles |= BIT(squares[j]);
                 }
             }
-            bb value = bb_slide_bishop(sq, 0, obstacles);
+            bb value = bb_slide_bishop(sq, 0, obstacles); // create the table of possible movements
             int index = (obstacles * MAGIC_BISHOP[sq]) >> SHIFT_BISHOP[sq];
             bb previous = ATTACK_BISHOP[offset + index];
-            if (previous && previous != value) {
+            // you can have a collision only if the input board maps to the same output map;
+            // otherwise, the collision is not good!
+            if (previous && previous != value) { 
                 printf("ERROR: invalid ATTACK_BISHOP table\n");
             }
             ATTACK_BISHOP[offset + index] = value;
@@ -248,28 +236,6 @@ void bb_init() {
         offset += 1 << (64 - SHIFT_ROOK[sq]);
     }
 
-    // HASH
-    HASH_COLOR = bb_random();
-    for (int i = 0; i < 16; i++) {
-        HASH_CASTLE[i] = bb_random();
-    }
-    for (int i = 0; i < 8; i++) {
-        HASH_EP[i] = bb_random();
-    }
-    for (int sq = 0; sq < 64; sq++) {
-        HASH_WHITE_PAWN[sq] = bb_random();
-        HASH_BLACK_PAWN[sq] = bb_random();
-        HASH_WHITE_KNIGHT[sq] = bb_random();
-        HASH_BLACK_KNIGHT[sq] = bb_random();
-        HASH_WHITE_BISHOP[sq] = bb_random();
-        HASH_BLACK_BISHOP[sq] = bb_random();
-        HASH_WHITE_ROOK[sq] = bb_random();
-        HASH_BLACK_ROOK[sq] = bb_random();
-        HASH_WHITE_QUEEN[sq] = bb_random();
-        HASH_BLACK_QUEEN[sq] = bb_random();
-        HASH_WHITE_KING[sq] = bb_random();
-        HASH_BLACK_KING[sq] = bb_random();
-    }
 }
 
 bb bb_bishop(int sq, bb obstacles) {

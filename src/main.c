@@ -13,29 +13,42 @@ void handle_go(void) {
 }
 
 void print_menu(void) {
-    printf("insert a command\n");
+    printf("-------------------\n");
+    printf("insert a command:\n");
+    printf("square: load a board in square format\n");
+    printf("fen: load a board in fen format\n");
     printf("bm: generate the best move\n");
     printf("bk: do bk tests\n");
     printf("pb: print the board\n");
     printf("q: quit\n");
+    printf("-------------------\n");
 }
 
-int main(int argc, char **argv) {
-    bb_init();
-    if (argc == 3) { // load board from file
-        if (strcmp(argv[2], "fen") == 0)
-            board_load_file_fen(&board, argv[1]);
-        else if (strcmp(argv[2], "square") == 0)
-            board_load_file_square(&board, argv[1]);
-    }
-    else
-        board_reset(&board); // load the board as in the initial position
+int main(void) {
+    
     char command[10];
+    char board_file[100];
+    board_reset(&board); // load the board as in the initial position
+
+    bb_init();
+
     while(1) {
         print_menu();
         scanf("%s", command);
         if (strncmp(command, "bm", 2) == 0)
             handle_go();
+        else if (strncmp(command, "square", 6) == 0) {
+            printf("Board file: ");
+            scanf("%s", board_file);
+            board_load_file_square(&board, board_file);
+            printf("Board loaded!\n");
+        }
+        else if (strncmp(command, "fen", 3) == 0) {
+            printf("Board file: ");
+            scanf("%s", board_file);
+            board_load_file_fen(&board, board_file);
+            printf("Board loaded!\n");
+        }
         else if (strncmp(command, "pb", 2) == 0)
             board_print(&board);
         else if (strncmp(command, "bk", 2) == 0)
