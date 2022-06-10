@@ -1,5 +1,7 @@
 #include <string.h>
+#include <math.h>
 #include "gen.h"
+
 
 #define EMIT_MOVE(m, a, b) \
     (m)->src = (a); \
@@ -18,6 +20,138 @@
     EMIT_PROMOTION(m, a, b, ROOK) \
     EMIT_PROMOTION(m, a, b, BISHOP) \
     EMIT_PROMOTION(m, a, b, KNIGHT)
+
+/*
+ * Move generation algorithm
+ * To make it as parallelizable as possible, it has been conceived as an iteration
+ * on all the squares of the board. If there is a piece on the board of the same color
+ * as of the current player (i.e. who must move), then I generate all the possible moves
+ * for that piece.
+ * Since the Board representation is based on bitboards, it is possible to compute
+ * all the possible moves using tables, built at initialization time.
+ * Each of these tables is a bitmap, representing where it is possible to move
+ * To better understand the tables, read the bb_init() function in bb.c
+ */
+int gen_moves_new(Board *board, Move *moves){
+    Move *ptr = moves;
+    // for black, board->color >> 4 = 0x01
+    // for white, board->color >> 4 = 0x00
+    const int color_bit = board->color >> 4;
+    // coeff = -1 for white, +1 for black
+    const int coeff[2] = {-1, 1};
+    const bb players_pieces[2] = {board->white, board->black}; // array defined to avoid an if-else
+    const bb promo[2] = {0xff00000000000000L, 0x00000000000000ffL}; // representation of the promotion rank
+    const bb third_rank[2] = {0x0000000000ff0000L, 0x0000ff0000000000L}; // used for initial double move of pawn
+    const bb front_right_mask[2] = {0xfefefefefefefefeL, 0x7f7f7f7f7f7f7f7fL};
+    const bb front_left_mask[2] = {0x7f7f7f7f7f7f7f7fL, 0xfefefefefefefefeL};
+    const bb own_pieces = players_pieces[color_bit];
+    const bb opponent_pieces = players_pieces[color_bit ^ 1]; 
+    bb mask = ~own_pieces;
+    const bb mask_pawn = opponent_pieces | board->ep;
+    const bb mask_pawn_opp = own_pieces | board->ep;
+    const char castles[4] = {CASTLE_WHITE_KING, CASTLE_WHITE_QUEEN, CASTLE_BLACK_KING, CASTLE_BLACK_QUEEN};
+    const bb castle_masks_1[4] = {0x0000000000000060L, 0x000000000000000eL, 0x6000000000000000L, 0x0e00000000000000L};
+    const bb castle_masks_2[4] = {0x0000000000000070L, 0x000000000000001cL, 0x7000000000000000L, 0x1c00000000000000L};
+    const int castle_king_pos_before[2] = {4, 60};
+    const int castle_king_pos_after[4] = {6, 2, 62, 58};
+
+    for(int sq = 0; sq < 64; sq++){
+        char piece = board->squares[sq];
+        bb dsts = 0;
+        // move a piece only if it is of the current moving player!
+        if (COLOR(piece) == board->color){
+            bb pawn_bb;
+            switch(PIECE(piece)){
+                case PAWN:
+                    pawn_bb = BIT(sq);
+                    bb p1 = pawn_bb >> (coeff[color_bit]*8) & ~board->all;
+                    bb p2 = ((p1 & third_rank[color_bit]) >> (coeff[color_bit]*8)) & ~board->all;
+                    bb a1 = ((pawn_bb & front_right_mask[color_bit]) >> (coeff[color_bit]*7)) & mask_pawn;
+                    bb a2 = ((pawn_bb & front_left_mask[color_bit]) >> (coeff[color_bit]*9)) & mask_pawn;
+                    dsts = p1 | p2 | a1 | a2;
+                    //bb pawn_one_step_forward = pawn_bb
+                    break;
+                case KNIGHT:
+                    dsts = BB_KNIGHT[sq] & mask;
+                    break;
+                case BISHOP:
+                    dsts = bb_bishop(sq, board->all) & mask;
+                    break;
+                case QUEEN:
+                    dsts = bb_queen(sq, board->all) & mask;
+                    break;
+                case KING:
+                    dsts = BB_KING[sq] & mask;
+                    break;
+                default: // empty piece
+                    break;
+            }
+            // Emit all the moves
+            while (dsts) { 
+                bb dst;
+                POP_LSB(dst, dsts);
+                if (PIECE(piece) == PAWN && (BIT(dst) & promo[color_bit])){
+                    EMIT_PROMOTIONS(moves, sq, dst);
+                }
+                else {
+                    EMIT_MOVE(moves, sq, dst);
+                }
+            }
+        }
+    }
+    // GENERATE CASTLES
+    mask = ~opponent_pieces;
+    // look for opponent attacks in the squares where the king should move
+    bb dsts = 0; 
+    if ((board->castle & castles[color_bit*2]) || board->castle & castles[color_bit*2+1]){
+        for (int sq = 0; sq < 64; sq++){
+            char piece = board->squares[sq];
+            if (COLOR(piece) != board->color){
+                bb pawn_bb;
+                switch(PIECE(piece)){
+                    case PAWN:
+                        pawn_bb = BIT(sq);
+                        bb a1 = ((pawn_bb & front_right_mask[color_bit^1]) >> coeff[color_bit^1]*7) & mask_pawn_opp;
+                        bb a2 = ((pawn_bb & front_left_mask[color_bit^1]) >> coeff[color_bit^1]*9) & mask_pawn_opp;
+                        dsts |= a1 | a2;
+                        //bb pawn_one_step_forward = pawn_bb
+                        break;
+                    case KNIGHT:
+                        dsts |= BB_KNIGHT[sq] & mask;
+                        break;
+                    case BISHOP:
+                        dsts |= bb_bishop(sq, board->all) & mask;
+                        break;
+                    case QUEEN:
+                        dsts |= bb_queen(sq, board->all) & mask;
+                        break;
+                    case KING:
+                        dsts |= BB_KING[sq] & mask;
+                        break;
+                    default: // empty piece
+                        break;
+                }
+            }
+        }
+        for (int i = 0; i < 2; i++) {
+            // check if the player can castle and, if that is the case,
+            // where it can castle and whether there are pieces
+            // between the king and the rook
+            bb mask = castle_masks_2[color_bit*2+i];
+            if ((board->castle & castles[color_bit*2+i])  
+                && (!(board->all & castle_masks_1[color_bit*2+i]))){
+                    // if the opponent can only move to squares (dsts)
+                    // which do not attack the king during castle (mask)
+                    // emit the castle
+                    if (!(dsts & mask)) {
+                        EMIT_MOVE(moves, castle_king_pos_before[color_bit], castle_king_pos_after[color_bit*2+i]);
+                    }
+            }
+        }
+    }
+    return moves - ptr; // incompatible with parallel code, for now it is just for refactoring
+}
+
 
 // generic move generators
 int gen_knight_moves(Move *moves, bb srcs, bb mask) {
@@ -96,10 +230,10 @@ int gen_white_pawn_moves(Board *board, Move *moves) {
     bb pawns = board->white_pawns;
     bb mask = board->black | board->ep;
     bb promo = 0xff00000000000000L;
-    bb p1 = (pawns << 8) & ~board->all;
-    bb p2 = ((p1 & 0x0000000000ff0000L) << 8) & ~board->all;
-    bb a1 = ((pawns & 0xfefefefefefefefeL) << 7) & mask;
-    bb a2 = ((pawns & 0x7f7f7f7f7f7f7f7fL) << 9) & mask;
+    bb p1 = (pawns << 8) & ~board->all; // pedoni avanti di una casella
+    bb p2 = ((p1 & 0x0000000000ff0000L) << 8) & ~board->all; // pedoni in seconda riga
+    bb a1 = ((pawns & 0xfefefefefefefefeL) << 7) & mask; // attacchi a dx
+    bb a2 = ((pawns & 0x7f7f7f7f7f7f7f7fL) << 9) & mask; // attacchi a sx
     int sq;
     while (p1) {
         POP_LSB(sq, p1);
@@ -165,7 +299,8 @@ int gen_white_king_castles(Board *board, Move *moves) {
     if (board->castle & CASTLE_WHITE_KING) {
         if (!(board->all & 0x0000000000000060L)) {
             Move dummy[MAX_MOVES];
-            bb mask = 0x0000000000000030L;
+            //bb mask = 0x0000000000000030L;
+            bb mask = 0x0000000000000070L;
             if (!gen_black_attacks_against(board, dummy, mask)) {
                 EMIT_MOVE(moves, 4, 6);
             }
@@ -174,7 +309,8 @@ int gen_white_king_castles(Board *board, Move *moves) {
     if (board->castle & CASTLE_WHITE_QUEEN) {
         if (!(board->all & 0x000000000000000eL)) {
             Move dummy[MAX_MOVES];
-            bb mask = 0x0000000000000018L;
+            //bb mask = 0x0000000000000018L;
+            bb mask = 0x000000000000001cL;
             if (!gen_black_attacks_against(board, dummy, mask)) {
                 EMIT_MOVE(moves, 4, 2);
             }
@@ -332,7 +468,8 @@ int gen_black_king_castles(Board *board, Move *moves) {
     if (board->castle & CASTLE_BLACK_KING) {
         if (!(board->all & 0x6000000000000000L)) {
             Move dummy[MAX_MOVES];
-            bb mask = 0x3000000000000000L;
+            //bb mask = 0x3000000000000000L;
+            bb mask = 0x7000000000000000L;
             if (!gen_white_attacks_against(board, dummy, mask)) {
                 EMIT_MOVE(moves, 60, 62);
             }
@@ -341,7 +478,8 @@ int gen_black_king_castles(Board *board, Move *moves) {
     if (board->castle & CASTLE_BLACK_QUEEN) {
         if (!(board->all & 0x0e00000000000000L)) {
             Move dummy[MAX_MOVES];
-            bb mask = 0x1800000000000000L;
+            //bb mask = 0x1800000000000000L;
+            bb mask = 0x1c00000000000000L;
             if (!gen_white_attacks_against(board, dummy, mask)) {
                 EMIT_MOVE(moves, 60, 58);
             }

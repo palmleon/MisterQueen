@@ -7,11 +7,6 @@
 static Board board;
 static Search search;
 
-void handle_go(void) {
-    search.uci = 1;
-    do_search(&search, &board);
-}
-
 void print_menu(void) {
     printf("-------------------\n");
     printf("insert a command:\n");
@@ -35,8 +30,10 @@ int main(void) {
     while(1) {
         print_menu();
         scanf("%s", command);
-        if (strncmp(command, "bm", 2) == 0)
-            handle_go();
+        if (strncmp(command, "bm", 2) == 0) {
+            search.uci = 1;
+            do_search(&search, &board);
+        }
         else if (strncmp(command, "square", 6) == 0) {
             printf("Board file: ");
             scanf("%s", board_file);

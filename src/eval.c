@@ -2,8 +2,20 @@
 
 int evaluate(Board *board) {
     int score = 0;
+    // evaluate the total score square by square
+    /*
+    for (int sq = 0; sq < 64; sq++){
+        char piece = board->squares[sq];
+        // evaluate material
+        int piece_value = piece_material[PIECE(piece)];
+        int exp = COLOR(piece) >> 4;
+        int coeff = pow(-1, exp);
+        score += coeff * piece_value;
+        // evaluate position
+    }*/
     score += board->white_material;
     score -= board->black_material;
+    // evaluate position, square by square
     score += board->white_position;
     score -= board->black_position;
     return board->color ? -score : score;

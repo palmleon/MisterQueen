@@ -140,11 +140,13 @@ bb bb_slide_bishop(int sq, int truncate, bb obstacles) {
 }
 
 void bb_init() {
+
     // BB_BISHOP_6, BB_ROOK_6
     for (int sq = 0; sq < 64; sq++) {
         BB_BISHOP_6[sq] = bb_slide_bishop(sq, 1, 0L);
         BB_ROOK_6[sq] = bb_slide_rook(sq, 1, 0L);
     }
+    
     // BB_KNIGHT
     const int knight_offsets[8][2] = {
         {-2, -1}, {-2,  1}, { 2, -1}, { 2,  1},
@@ -269,6 +271,7 @@ void bb_print(bb value) {
     putchar('\n');
 }
 
+/*
 bb bb_random() {
     bb a = prng() % 0x10000;
     bb b = prng() % 0x10000;
@@ -276,3 +279,4 @@ bb bb_random() {
     bb d = prng() % 0x10000;
     return a << 48 | b << 32 | c << 16 | d;
 }
+*/

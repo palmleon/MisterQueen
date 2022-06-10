@@ -26,14 +26,15 @@ int bk_test(int index, char *fen, char *bm) {
 void bk_tests() {
     int count = 0;
     int passed = 0;
+    printf("Launching tests!\n");
     for (int i = 0; i < NTESTS; i++) {
         char *fen = TESTS[i * 2];
         char *bm = TESTS[i * 2 + 1];
         int result = bk_test(i, fen, bm);
         passed += result;
         count += 1;
-        printf("%4d of %d tests passed.\r", passed, count);
     }
+    printf("%4d of %d tests passed.\n", passed, count);
 }
 
 void test_position(int index) {

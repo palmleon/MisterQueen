@@ -46,6 +46,8 @@
 #define MATERIAL_QUEEN 900
 #define MATERIAL_KING 20000
 
+//const int piece_material[7] = {0, MATERIAL_PAWN, MATERIAL_KNIGHT, MATERIAL_BISHOP, MATERIAL_ROOK, MATERIAL_QUEEN, MATERIAL_KING};
+
 extern const int POSITION_WHITE_PAWN[64];
 extern const int POSITION_WHITE_KNIGHT[64];
 extern const int POSITION_WHITE_BISHOP[64];
@@ -60,9 +62,9 @@ extern const int POSITION_BLACK_QUEEN[64];
 extern const int POSITION_BLACK_KING[64];
 
 typedef struct {
-    int squares[64]; // -> short int[64]
-    int color;
-    int castle;
+    char squares[64]; // -> short int[64]
+    char color;
+    char castle;
     int white_material;
     int black_material;
     int white_position; // is it necessary?
@@ -73,23 +75,27 @@ typedef struct {
     bb black; // same as the "all" bitmap, but only with black pieces
     bb white_pawns; // same as the "all" bitmap, but only with white pawns // merge the bbs related to the same piece
     bb black_pawns; // same as the "all" bitmap, but only with black pawns
+    //bb pawns;
     bb white_knights; // and so on
     bb black_knights;
+    //bb knights;
     bb white_bishops;
     bb black_bishops;
+    //bb bishops;
     bb white_rooks;
     bb black_rooks;
+    //bb rooks;
     bb white_queens;
     bb black_queens;
+    //bb queens;
     bb white_kings;
     bb black_kings;
-    //bb hash;
-    //bb pawn_hash;
+    //bb kings;
 } Board;
 
 void board_clear(Board *board);
 void board_reset(Board *board);
-void board_set(Board *board, int sq, int piece);
+void board_set(Board *board, int sq, char piece);
 void board_print(Board *board);
 void board_load_fen(Board *board, char *fen);
 void board_load_file_fen(Board *board, char *filename);

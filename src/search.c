@@ -43,7 +43,7 @@ int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int 
     else {
         Undo undo;
         Move moves[MAX_MOVES];
-        int count = gen_moves(board, moves);
+        int count = gen_moves_new(board, moves);
         sort_moves(board, moves, count);
         int can_move = 0;
         for (int i = 0; i < count; i++) {
@@ -76,7 +76,7 @@ int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int 
 int root_search(Search *search, Board *board, int depth, int ply, int alpha, int beta, Move *result) {
     Undo undo;
     Move moves[MAX_MOVES];
-    int count = gen_moves(board, moves);
+    int count = gen_moves_new(board, moves);
     sort_moves(board, moves, count);
     Move *best = NULL;
     for (int i = 0; i < count; i++) {

@@ -37,8 +37,8 @@ void board_reset(Board *board) {
 }
 
 /* Given a square and a piece, place that piece onto that square */
-void board_set(Board *board, int sq, int piece) {
-    int previous = board->squares[sq]; // take the previous piece on that square
+void board_set(Board *board, int sq, char piece) {
+    char previous = board->squares[sq]; // take the previous piece on that square
     board->squares[sq] = piece; // place the new piece
     if (previous) { // was the square empty?
         // There was sth before: remove the previous piece
@@ -228,7 +228,7 @@ void board_print(Board *board) {
     for (int rank = 7; rank >= 0; rank--) {
         for (int file = 0; file < 8; file++) {
             char c;
-            int piece = board->squares[RF(rank, file)];
+            short int piece = board->squares[RF(rank, file)];
             switch (PIECE(piece)) {
                 case EMPTY:  c = '.'; break;
                 case PAWN:   c = 'P'; break;

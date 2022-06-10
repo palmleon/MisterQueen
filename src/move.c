@@ -155,10 +155,10 @@ void undo_move(Board *board, Move *move, Undo *undo) {
 
 int score_move(Board *board, Move *move) {
     int result = 0;
-    int src = move->src;
-    int dst = move->dst;
-    int piece = board->squares[src];
-    int capture = board->squares[dst];
+    unsigned char src = move->src;
+    unsigned char dst = move->dst;
+    unsigned char piece = board->squares[src];
+    unsigned char capture = board->squares[dst];
     int piece_material = 0;
     int capture_material = 0;
     if (COLOR(piece)) {
@@ -337,8 +337,8 @@ void move_from_string(Move *move, const char *str) {
 void notate_move(Board *board, Move *move, char *result) {
     Move moves[MAX_MOVES];
     int count = gen_legal_moves(board, moves);
-    int piece = board->squares[move->src];
-    int capture = board->squares[move->dst];
+    char piece = board->squares[move->src];
+    char capture = board->squares[move->dst];
     char rank1 = '1' + move->src / 8;
     char file1 = 'a' + move->src % 8;
     char rank2 = '1' + move->dst / 8;
@@ -484,23 +484,3 @@ int parse_move(Board *board, const char *notation, Move *move) {
     }
     return 0;
 }
-
-/*int parse_pgn(Board *board, const char *pgn) {
-    board_reset(board);
-    char *temp = calloc(strlen(pgn) + 1, sizeof(char));
-    strcpy(temp, pgn);
-    char *key;
-    char *token = tokenize(temp, " ", &key);
-    while (token) {
-        Move move;
-        if (parse_move(board, token, &move)) {
-            make_move(board, &move);
-        }
-        else {
-            return 0;
-        }
-        token = tokenize(NULL, " ", &key);
-    }
-    free(temp);
-    return 1;
-}*/

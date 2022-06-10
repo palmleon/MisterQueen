@@ -4,7 +4,7 @@
 #include "bb.h"
 #include "board.h"
 
-#define MAX_MOVES 256
+#define MAX_MOVES 512
 
 typedef struct {
     unsigned char src;
@@ -13,9 +13,9 @@ typedef struct {
 } Move;
 
 typedef struct {
-    unsigned char piece;
-    unsigned char capture;
-    unsigned char castle;
+    char piece;
+    char capture;
+    char castle;
     bb ep;
 } Undo;
 
@@ -31,6 +31,5 @@ void move_from_string(Move *move, const char *str);
 void notate_move(Board *board, Move *move, char *result);
 void print_move(Board *board, Move *move);
 int parse_move(Board *board, const char *notation, Move *move);
-int parse_pgn(Board *board, const char *pgn);
 
 #endif
