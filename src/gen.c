@@ -546,9 +546,12 @@ int gen_moves_new(Board *board, Move *moves){
                     bb p2 = ((p1 & third_rank[color_bit]) >> (coeff[color_bit]*8)) & ~board->all;
                     bb a1 = ((pawn_bb & front_right_mask[color_bit]) >> (coeff[color_bit]*7)) & mask_pawn;
                     bb a2 = ((pawn_bb & front_left_mask[color_bit]) >> (coeff[color_bit]*9)) & mask_pawn;
-                    dsts = p1 | p2 | a1 | a2;
-                    //bb pawn_one_step_forward = pawn_bb
+                    dsts |= p1;
+                    dsts |= p2;
+                    dsts |= a1;
+                    dsts |= a2;
                     break;
+                    
                 case KNIGHT:
                     dsts = BB_KNIGHT[sq] & mask;
                     break;
@@ -569,7 +572,7 @@ int gen_moves_new(Board *board, Move *moves){
             }
             // Emit all the moves
             while (dsts) {
-                bb dst;
+                int dst;
                 POP_LSB(dst, dsts);
                 if ((PIECE(piece) == PAWN) && (BIT(dst) & promo[color_bit])){
                     EMIT_PROMOTIONS(moves, sq, dst);
@@ -627,11 +630,22 @@ int gen_moves_new(Board *board, Move *moves){
                     // if the opponent can only move to squares (dsts)
                     // which do not attack the king during castle (mask)
                     // emit the castle
-                    if (!(dsts & mask)) {
-                        EMIT_MOVE(moves, castle_king_pos_before[color_bit], castle_king_pos_after[color_bit*2+i]);
-                    }
+                if (!(dsts & mask)) {
+                    EMIT_MOVE(moves, castle_king_pos_before[color_bit], castle_king_pos_after[color_bit*2+i]);
+                }
             }
         }
     }
+
+    /*
+    if (board->color) {
+        moves += gen_black_pawn_moves(board, moves);
+    }
+    else {
+        moves += gen_white_pawn_moves(board, moves);
+    }
+    */
+
+
     return moves - ptr; // incompatible with parallel code, for now it is just for refactoring
 }

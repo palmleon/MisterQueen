@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#define DEBUG_CMD "bk"
+
 
 static Board board;
 static Search search;
@@ -21,7 +23,7 @@ void print_menu(void) {
 
 int main(void) {
     
-    char command[10];
+    char command[10] = DEBUG_CMD;
     char board_file[100];
     board_reset(&board); // load the board as in the initial position
 
@@ -29,7 +31,7 @@ int main(void) {
 
     while(1) {
         print_menu();
-        scanf("%s", command);
+//        scanf("%s", command);
         if (strncmp(command, "bm", 2) == 0) {
             search.uci = 1;
             do_search(&search, &board);

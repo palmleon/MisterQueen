@@ -2,17 +2,17 @@
 # The name of the executable to be created
 BIN_NAME := main
 # Compiler used
-C ?= gcc
+C ?= nvcc 
 # Extension of source files used in the project
 SRC_EXT = c
 # Path to the source directory, relative to the makefile
 SRC_PATH = src
 # General compiler flags
-COMPILE_FLAGS = -std=c99 -Wall -O3
+COMPILE_FLAGS = --std c++03
 # Additional release-specific flags
-RCOMPILE_FLAGS = -D NDEBUG
+RCOMPILE_FLAGS = -D __CUDACC_DEBUG__
 # Additional debug-specific flags
-DCOMPILE_FLAGS = -D DEBUG
+DCOMPILE_FLAGS = -g -G #-D DEBUG
 # Add additional include paths
 INCLUDES = -I $(SRC_PATH)/ -I $(SRC_PATH)/deps/tinycthread
 # General linker settings
