@@ -39,11 +39,25 @@ void undo_null_move(Board *board, Undo *undo) {
 
 void do_move(Board *board, Move *move, Undo *undo) {
     //TOGGLE_HASH(board);
+    const bb rank_2nd[2] = {0x000000000000ff00L, 0x00ff000000000000L};
+    const bb rank_4th[2] = {0x00000000ff000000L, 0x000000ff00000000L};
+    const char castles_all[2] = {CASTLE_WHITE, CASTLE_BLACK};
+    const char castles_all_types[2] = {CASTLE_WHITE_KING, CASTLE_WHITE_QUEEN, CASTLE_BLACK_KING, CASTLE_BLACK_QUEEN};
+    const int king_start[2] = {4,60};
+    const int king_arrival[4] = {6,2,62,58};
+    const int rook_start[4] = {7,0,63,56};
+    const int rook_arrival[4] = {5,3,61,59};
+    const char rooks[2] = {WHITE_ROOK, BLACK_ROOK};
+    const int color_bit = board->color >> 4;
+    const int coeff[2] = {1, -1};
+    // store previous board data
     undo->piece = board->squares[move->src];
     undo->capture = board->squares[move->dst];
     undo->castle = board->castle;
     undo->ep = board->ep;
+    // remove the moving piece from its starting position
     board_set(board, move->src, EMPTY);
+    // define the ending position of the piece
     if (move->promotion) {
         board_set(board, move->dst, move->promotion | board->color);
     }
@@ -51,6 +65,35 @@ void do_move(Board *board, Move *move, Undo *undo) {
         board_set(board, move->dst, undo->piece);
     }
     board->ep = 0L;
+    // check for an en passant move
+    if (PIECE(undo->piece) == PAWN) {
+         bb src = BIT(move->src);
+         bb dst = BIT(move->dst);
+         if ((src & rank_2nd[color_bit]) && (dst & rank_4th[color_bit])){
+            board->ep = BIT(move->src + coeff[color_bit]*8);
+         }
+         if (dst == undo->ep) {
+            board_set(board, move->dst - coeff[color_bit], EMPTY);
+         }
+    }
+    // check for a castle
+    else if (PIECE(undo->piece) == KING) {
+        board->castle &= ~castles_all[color_bit];
+        for (int i = 0; i < 2; i++) {
+            if (move->src == king_start[color_bit] && move->dst == king_arrival[color_bit*2+i]){
+                board_set(board, rook_start[2*color_bit+i], EMPTY);
+                board_set(board, rook_arrival[2*color_bit+i], rooks[color_bit]);
+            } 
+        }
+    }
+    // consider the case where the rook moves or is eaten: the castle is no more possible
+    for (int i = 0; i < 4; i++){
+        if (move->src == rook_start[i] || move->dst == rook_start[i])
+            board->castle &= ~castles_all_types[i];
+    }
+
+
+    /*
     if (undo->piece == WHITE_PAWN) {
         bb src = BIT(move->src);
         bb dst = BIT(move->dst);
@@ -71,7 +114,7 @@ void do_move(Board *board, Move *move, Undo *undo) {
             board_set(board, move->dst + 8, EMPTY);
         }
     }
-    else if (undo->piece == WHITE_KING) {
+    if (undo->piece == WHITE_KING) {
         board->castle &= ~CASTLE_WHITE;
         if (move->src == 4 && move->dst == 6) {
             board_set(board, 7, EMPTY);
@@ -105,6 +148,7 @@ void do_move(Board *board, Move *move, Undo *undo) {
     if (move->src == 63 || move->dst == 63) {
         board->castle &= ~CASTLE_BLACK_KING;
     }
+    */
     board->color ^= BLACK;
     //board->hash ^= HASH_COLOR;
     //board->pawn_hash ^= HASH_COLOR;

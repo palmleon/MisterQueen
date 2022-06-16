@@ -516,7 +516,7 @@ int gen_moves_new(Board *board, Move *moves){
     // for white, board->color >> 4 = 0x00
     const int color_bit = board->color >> 4;
     // coeff = -1 for white, +1 for black
-    const int coeff[2] = {-1, 1};
+    //const int coeff[2] = {-1, 1};
     const bb players_pieces[2] = {board->white, board->black}; // array defined to avoid an if-else
     const bb promo[2] = {0xff00000000000000L, 0x00000000000000ffL}; // representation of the promotion rank
     const bb third_rank[2] = {0x0000000000ff0000L, 0x0000ff0000000000L}; // used for initial double move of pawn
@@ -541,11 +541,24 @@ int gen_moves_new(Board *board, Move *moves){
             bb pawn_bb;
             switch(PIECE(piece)){
                 case PAWN:
-                    pawn_bb = BIT(sq);
+                    /*
                     bb p1 = (pawn_bb >> (coeff[color_bit]*8)) & ~board->all;
                     bb p2 = ((p1 & third_rank[color_bit]) >> (coeff[color_bit]*8)) & ~board->all;
                     bb a1 = ((pawn_bb & front_right_mask[color_bit]) >> (coeff[color_bit]*7)) & mask_pawn;
                     bb a2 = ((pawn_bb & front_left_mask[color_bit]) >> (coeff[color_bit]*9)) & mask_pawn;
+                    */
+                    pawn_bb = BIT(sq);
+                    bb p1_vec[2] = {pawn_bb << 8, pawn_bb >> 8};
+                    bb p1 = p1_vec[color_bit] & ~board->all;
+                    bb p2 = p1 & third_rank[color_bit];
+                    bb p2_vec[2] = {p2 << 8, p2 >> 8};
+                    p2 = p2_vec[color_bit] & ~board->all;
+                    bb a1 = pawn_bb & front_right_mask[color_bit];
+                    bb a1_vec[2] = {a1 << 7, a1 >> 7};
+                    a1 = a1_vec[color_bit] & mask_pawn;
+                    bb a2 = pawn_bb & front_left_mask[color_bit];
+                    bb a2_vec[2] = {a2 << 9, a2 >> 9};
+                    a2 = a2_vec[color_bit] & mask_pawn;
                     dsts |= p1;
                     dsts |= p2;
                     dsts |= a1;
@@ -556,12 +569,24 @@ int gen_moves_new(Board *board, Move *moves){
                     dsts = BB_KNIGHT[sq] & mask;
                     break;
                 case BISHOP:
+                    //bb value = board->all & BB_BISHOP_6[sq];
+                    //int index = (value * MAGIC_BISHOP[sq]) >> SHIFT_BISHOP[sq];
+                    //dsts = ATTACK_BISHOP[index + OFFSET_BISHOP[sq]];
                     dsts = bb_bishop(sq, board->all) & mask;
                     break;
                 case ROOK:
+                    //bb value = board->all & BB_ROOK_6[sq];
+                    //int index = (value * MAGIC_ROOK[sq]) >> SHIFT_ROOK[sq];
+                    //dsts = ATTACK_ROOK[index + OFFSET_ROOK[sq]];
                     dsts = bb_rook(sq, board->all) & mask;
                     break;
                 case QUEEN:
+                    //bb value = board->all & BB_BISHOP_6[sq];
+                    //int index = (value * MAGIC_BISHOP[sq]) >> SHIFT_BISHOP[sq];
+                    //dsts = ATTACK_BISHOP[index + OFFSET_BISHOP[sq]];
+                    //bb value = board->all & BB_ROOK_6[sq];
+                    //int index = (value * MAGIC_ROOK[sq]) >> SHIFT_ROOK[sq];
+                    //dsts = ATTACK_ROOK[index + OFFSET_ROOK[sq]];
                     dsts = bb_queen(sq, board->all) & mask;
                     break;
                 case KING:
@@ -595,8 +620,16 @@ int gen_moves_new(Board *board, Move *moves){
                 switch(PIECE(piece)){
                     case PAWN:
                         pawn_bb = BIT(sq);
+                        /*
                         bb a1 = ((pawn_bb & front_right_mask[color_bit^1]) >> coeff[color_bit^1]*7) & mask_pawn_opp;
                         bb a2 = ((pawn_bb & front_left_mask[color_bit^1]) >> coeff[color_bit^1]*9) & mask_pawn_opp;
+                        */
+                        bb a1 = pawn_bb & front_right_mask[color_bit ^ 1];
+                        bb a1_vec[2] = {a1 << 7, a1 >> 7};
+                        a1 = a1_vec[color_bit^1] & mask_pawn_opp;
+                        bb a2 = pawn_bb & front_left_mask[color_bit ^ 1];
+                        bb a2_vec[2] = {a2 << 9, a2 >> 9};
+                        a2 = a2_vec[color_bit^1] & mask_pawn_opp;
                         dsts |= a1 | a2;
                         //bb pawn_one_step_forward = pawn_bb
                         break;

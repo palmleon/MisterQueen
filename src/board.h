@@ -69,7 +69,7 @@ typedef struct {
     int black_material;
     int white_position; // is it necessary?
     int black_position;
-    bb ep;
+    bb ep;  // used for "en-passant" captures
     bb all; // each bit represents a square, if at '1' it's occupied
     bb white; // same as the "all" bitmap, but only with white pieces
     bb black; // same as the "all" bitmap, but only with black pieces
