@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
+//#define DEBUG
 #define DEBUG_CMD "bk"
 #define DEBUG_BOARD ""
 
@@ -31,7 +32,9 @@ int main(void) {
 
     while(1) {
         print_menu();
-        //scanf("%s", command);
+#ifndef DEBUG
+        scanf("%s", command);
+#endif
         if (strncmp(command, "bm", 2) == 0) {
             search.uci = 1;
             do_search(&search, &board);
