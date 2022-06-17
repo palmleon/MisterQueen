@@ -569,24 +569,12 @@ int gen_moves_new(Board *board, Move *moves){
                     dsts = BB_KNIGHT[sq] & mask;
                     break;
                 case BISHOP:
-                    //bb value = board->all & BB_BISHOP_6[sq];
-                    //int index = (value * MAGIC_BISHOP[sq]) >> SHIFT_BISHOP[sq];
-                    //dsts = ATTACK_BISHOP[index + OFFSET_BISHOP[sq]];
                     dsts = bb_bishop(sq, board->all) & mask;
                     break;
                 case ROOK:
-                    //bb value = board->all & BB_ROOK_6[sq];
-                    //int index = (value * MAGIC_ROOK[sq]) >> SHIFT_ROOK[sq];
-                    //dsts = ATTACK_ROOK[index + OFFSET_ROOK[sq]];
                     dsts = bb_rook(sq, board->all) & mask;
                     break;
                 case QUEEN:
-                    //bb value = board->all & BB_BISHOP_6[sq];
-                    //int index = (value * MAGIC_BISHOP[sq]) >> SHIFT_BISHOP[sq];
-                    //dsts = ATTACK_BISHOP[index + OFFSET_BISHOP[sq]];
-                    //bb value = board->all & BB_ROOK_6[sq];
-                    //int index = (value * MAGIC_ROOK[sq]) >> SHIFT_ROOK[sq];
-                    //dsts = ATTACK_ROOK[index + OFFSET_ROOK[sq]];
                     dsts = bb_queen(sq, board->all) & mask;
                     break;
                 case KING:

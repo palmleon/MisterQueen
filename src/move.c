@@ -73,7 +73,7 @@ void do_move(Board *board, Move *move, Undo *undo) {
             board->ep = BIT(move->src + coeff[color_bit]*8);
          }
          if (dst == undo->ep) {
-            board_set(board, move->dst - coeff[color_bit], EMPTY);
+            board_set(board, move->dst - coeff[color_bit]*8, EMPTY);
          }
     }
     // check for a castle
@@ -157,11 +157,34 @@ void do_move(Board *board, Move *move, Undo *undo) {
 
 void undo_move(Board *board, Move *move, Undo *undo) {
     //TOGGLE_HASH(board);
+    const int coeff[2] = {1, -1};
+    const int color_bit = board->color >> 4;
+    const char pawns[2] = {WHITE_PAWN, BLACK_PAWN};
+    const char rooks[2] = {WHITE_ROOK, BLACK_ROOK};
+    const int king_start[2] = {4, 60};
+    const int king_arrival[4] = {6,2,62,58};
+    const int rook_start[4] = {7,0,63,56};
+    const int rook_arrival[4] = {5,3,61,59};
+    
+    
     board_set(board, move->src, undo->piece);
     board_set(board, move->dst, undo->capture);
     board->castle = undo->castle;
     board->ep = undo->ep;
-    if (undo->piece == WHITE_PAWN) {
+    if (PIECE(undo->piece) == PAWN){
+        if (BIT(move->dst) == undo->ep){
+            board_set(board, move->dst - coeff[color_bit]*8, pawns[color_bit^1]);
+        }
+    }
+    else if (PIECE(undo->piece) == KING){
+        for (int i = 0; i < 2; i++){
+            if (move->src == king_start[color_bit] && move->dst == king_arrival[2*color_bit+i]){
+                board_set(board, rook_start[2*color_bit+i], rooks[color_bit]);
+                board_set(board, rook_arrival[2*color_bit+i], EMPTY);
+            }
+        }
+    }
+    /*if (undo->piece == WHITE_PAWN) {
         if (BIT(move->dst) == undo->ep) {
             board_set(board, move->dst - 8, BLACK_PAWN);
         }
@@ -190,13 +213,15 @@ void undo_move(Board *board, Move *move, Undo *undo) {
             board_set(board, 56, BLACK_ROOK);
             board_set(board, 59, EMPTY);
         }
-    }
+    }*/
     board->color ^= BLACK;
     //board->hash ^= HASH_COLOR;
     //board->pawn_hash ^= HASH_COLOR;
     //TOGGLE_HASH(board);
 }
 
+// Compute score, but does not update it in the board struct
+// Not important to optimize, as it is used only by the CPU
 int score_move(Board *board, Move *move) {
     int result = 0;
     unsigned char src = move->src;

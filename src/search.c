@@ -42,7 +42,7 @@ int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int 
         result = INF;
     }
     else if (depth <= 0) {
-        result = evaluate(board) + evaluate_pawns(board);
+        result = evaluate(board); // + evaluate_pawns(board);
     }
     else {
         Undo undo;

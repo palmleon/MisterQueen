@@ -36,6 +36,7 @@ void board_reset(Board *board) {
     board_set(board, RF(7, 7), BLACK_ROOK);
 }
 
+// Updates also the score of the board (score_move only computes it on the fly)
 /* Given a square and a piece, place that piece onto that square */
 void board_set(Board *board, int sq, char piece) {
     char previous = board->squares[sq]; // take the previous piece on that square
@@ -222,6 +223,40 @@ void board_set(Board *board, int sq, char piece) {
         }
     }
 }
+/*
+void board_set(Board *board, int sq, char piece) {
+    
+    const int materials[6] = {MATERIAL_PAWN, MATERIAL_KNIGHT, MATERIAL_BISHOP, MATERIAL_ROOK, MATERIAL_QUEEN, MATERIAL_KING};
+    const int coeff[2] = {1, -1};
+    const int* position_tables[12] = {POSITION_WHITE_PAWN, POSITION_WHITE_KNIGHT, POSITION_WHITE_BISHOP, POSITION_WHITE_ROOK, POSITION_WHITE_QUEEN, POSITION_WHITE_KING, POSITION_BLACK_PAWN, POSITION_BLACK_KNIGHT, POSITION_BLACK_BISHOP, POSITION_BLACK_ROOK, POSITION_BLACK_QUEEN, POSITION_BLACK_KING};
+    //bb* piece_masks[6] = {&(board->pawns), &(board->knights), &(board->bishops), &(board->rooks), &(board->queens), &(board->kings)};
+    bb* piece_masks[12] = {&(board->white_pawns), &(board->white_knights), &(board->white_bishops), &(board->white_rooks), &(board->white_queens), &(board->white_kings), &(board->black_pawns), &(board->black_knights), &(board->black_bishops), &(board->black_rooks), &(board->black_queens), &(board->black_kings)};
+    bb* color_masks[2] = {&(board->white), &(board->black)};
+    char previous = board->squares[sq]; // take the previous piece on that square
+    board->squares[sq] = piece; // place the new piece
+    const char color_previous = COLOR(previous) >> 4;
+    const char color_piece = COLOR(piece) >> 4;
+    if (previous) { // was the square empty?
+        // There was sth before: remove the previous piece
+        bb mask = ~BIT(sq);
+        board->all &= mask; // bitwise removal of the piece
+        board->material -= materials[PIECE(previous)-1]*coeff[color_previous];
+        board->position -= position_tables[color_previous*6+(PIECE(previous)-1)][sq]*coeff[color_previous];
+        //*(piece_masks[PIECE(previous)-1]) &= mask;
+        *(piece_masks[color_previous*6+PIECE(piece)-1]) &= mask;
+        *(color_masks[color_previous]) &= mask;
+    }
+    if (piece) { // if the piece to move exists (is the if necessary?)
+        bb bit = BIT(sq); // place it
+        board->all |= bit;
+        board->material += materials[PIECE(piece)-1]*coeff[color_piece];
+        board->position += position_tables[color_piece*6+(PIECE(piece)-1)][sq]*coeff[color_piece];
+        //*(piece_masks[PIECE(piece)-1]) |= bit;
+        *(piece_masks[color_piece*6+PIECE(piece)-1]) |= bit;
+        *(color_masks[color_piece]) |= bit;
+    }
+}
+*/
 
 /*  Print the board  */
 void board_print(Board *board) {

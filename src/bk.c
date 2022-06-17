@@ -34,10 +34,9 @@ void bk_tests() {
         int result = bk_test(i, fen, bm);
         passed += result;
         count += 1;
-        printf("%4d of %d tests passed.\n", passed, count);
+        printf("%4d of %d tests passed.", passed, count);
         }
     }
-    printf("END: %4d of %d tests passed.\n", passed, count);
 }
 
 void test_position(int index) {

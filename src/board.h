@@ -67,8 +67,10 @@ typedef struct {
     char castle;
     int white_material;
     int black_material;
-    int white_position; // is it necessary?
+    //int material; // material score, >0 for white advange, <0 for black advantage
+    int white_position;
     int black_position;
+    //int position; // position score, >0 for white advange, <0 for black advantage
     bb ep;  // used for "en-passant" captures
     bb all; // each bit represents a square, if at '1' it's occupied
     bb white; // same as the "all" bitmap, but only with white pieces
