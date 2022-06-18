@@ -230,40 +230,58 @@ int score_move(Board *board, Move *move) {
     unsigned char capture = board->squares[dst];
     int piece_material = 0;
     int capture_material = 0;
-    if (COLOR(piece)) {
+    //if (COLOR(piece)) {
         switch (PIECE(piece)) {
             case PAWN:
                 piece_material = MATERIAL_PAWN;
-                result -= POSITION_BLACK_PAWN[src];
-                result += POSITION_BLACK_PAWN[dst];
+                COLOR(piece) ?
+                    (result += (POSITION_BLACK_PAWN[dst] - POSITION_BLACK_PAWN[src])) :
+                    (result += (POSITION_WHITE_PAWN[dst] - POSITION_WHITE_PAWN[src]));
+                //result -= POSITION_BLACK_PAWN[src];
+                //result += POSITION_BLACK_PAWN[dst];
                 break;
             case KNIGHT:
                 piece_material = MATERIAL_KNIGHT;
-                result -= POSITION_BLACK_KNIGHT[src];
-                result += POSITION_BLACK_KNIGHT[dst];
+                COLOR(piece) ?
+                    (result += (POSITION_BLACK_KNIGHT[dst] - POSITION_BLACK_KNIGHT[src])) :
+                    (result += (POSITION_WHITE_KNIGHT[dst] - POSITION_WHITE_KNIGHT[src]));
+                //result -= POSITION_BLACK_KNIGHT[src];
+                //result += POSITION_BLACK_KNIGHT[dst];
                 break;
             case BISHOP:
                 piece_material = MATERIAL_BISHOP;
-                result -= POSITION_BLACK_BISHOP[src];
-                result += POSITION_BLACK_BISHOP[dst];
+                COLOR(piece) ?
+                    (result += (POSITION_BLACK_BISHOP[dst] - POSITION_BLACK_BISHOP[src])) :
+                    (result += (POSITION_WHITE_BISHOP[dst] - POSITION_WHITE_BISHOP[src]));
+                //result -= POSITION_BLACK_BISHOP[src];
+                //result += POSITION_BLACK_BISHOP[dst];
                 break;
             case ROOK:
                 piece_material = MATERIAL_ROOK;
-                result -= POSITION_BLACK_ROOK[src];
-                result += POSITION_BLACK_ROOK[dst];
+                COLOR(piece) ?
+                    (result += (POSITION_BLACK_ROOK[dst] - POSITION_BLACK_ROOK[src])) :
+                    (result += (POSITION_WHITE_ROOK[dst] - POSITION_WHITE_ROOK[src]));
+                //result -= POSITION_BLACK_ROOK[src];
+                //result += POSITION_BLACK_ROOK[dst];
                 break;
             case QUEEN:
                 piece_material = MATERIAL_QUEEN;
-                result -= POSITION_BLACK_QUEEN[src];
-                result += POSITION_BLACK_QUEEN[dst];
+                COLOR(piece) ?
+                    (result += (POSITION_BLACK_QUEEN[dst] - POSITION_BLACK_QUEEN[src])) :
+                    (result += (POSITION_WHITE_QUEEN[dst] - POSITION_WHITE_QUEEN[src]));
+                //result -= POSITION_BLACK_QUEEN[src];
+                //result += POSITION_BLACK_QUEEN[dst];
                 break;
             case KING:
                 piece_material = MATERIAL_KING;
-                result -= POSITION_BLACK_KING[src];
-                result += POSITION_BLACK_KING[dst];
+                COLOR(piece) ?
+                    (result += (POSITION_BLACK_KING[dst] - POSITION_BLACK_KING[src])) :
+                    (result += (POSITION_WHITE_KING[dst] - POSITION_WHITE_KING[src]));
+                //result -= POSITION_BLACK_KING[src];
+                //result += POSITION_BLACK_KING[dst];
                 break;
         }
-    }
+    /*}
     else {
         switch (PIECE(piece)) {
             case PAWN:
@@ -297,36 +315,42 @@ int score_move(Board *board, Move *move) {
                 result += POSITION_WHITE_KING[dst];
                 break;
         }
-    }
+    }*/
     if (capture) {
-        if (COLOR(capture)) {
+        //if (COLOR(capture)) {
             switch (PIECE(capture)) {
                 case PAWN:
                     capture_material = MATERIAL_PAWN;
-                    result += POSITION_BLACK_PAWN[dst];
+                    COLOR(capture) ? (result += POSITION_BLACK_PAWN[dst]) : (result += POSITION_WHITE_PAWN[dst]);
+                    //result += POSITION_BLACK_PAWN[dst];
                     break;
                 case KNIGHT:
                     capture_material = MATERIAL_KNIGHT;
-                    result += POSITION_BLACK_KNIGHT[dst];
+                    COLOR(capture) ? (result += POSITION_BLACK_KNIGHT[dst]) : (result += POSITION_WHITE_KNIGHT[dst]);
+                    //result += POSITION_BLACK_KNIGHT[dst];
                     break;
                 case BISHOP:
                     capture_material = MATERIAL_BISHOP;
-                    result += POSITION_BLACK_BISHOP[dst];
+                    COLOR(capture) ? (result += POSITION_BLACK_BISHOP[dst]) : (result += POSITION_WHITE_BISHOP[dst]);
+                    //result += POSITION_BLACK_BISHOP[dst];
                     break;
                 case ROOK:
                     capture_material = MATERIAL_ROOK;
-                    result += POSITION_BLACK_ROOK[dst];
+                    COLOR(capture) ? (result += POSITION_BLACK_ROOK[dst]) : (result += POSITION_WHITE_ROOK[dst]);
+                    //result += POSITION_BLACK_ROOK[dst];
                     break;
                 case QUEEN:
                     capture_material = MATERIAL_QUEEN;
-                    result += POSITION_BLACK_QUEEN[dst];
+                    COLOR(capture) ? (result += POSITION_BLACK_QUEEN[dst]) : (result += POSITION_WHITE_QUEEN[dst]);
+                    //result += POSITION_BLACK_QUEEN[dst];
                     break;
                 case KING:
                     capture_material = MATERIAL_KING;
-                    result += POSITION_BLACK_KING[dst];
+                    COLOR(capture) ? (result += POSITION_BLACK_KING[dst]) : (result += POSITION_WHITE_KING[dst]);
+                    //result += POSITION_BLACK_KING[dst];
                     break;
             }
-        }
+        /*}
         else {
             switch (PIECE(capture)) {
                 case PAWN:
@@ -354,7 +378,7 @@ int score_move(Board *board, Move *move) {
                     result += POSITION_WHITE_KING[dst];
                     break;
             }
-        }
+        }*/
         result += capture_material;
     }
     return result;
