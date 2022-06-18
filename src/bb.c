@@ -169,7 +169,7 @@ void bb_init() {
     const int king_offsets[8][2] = {
         {-1, -1}, { 0, -1}, { 1, -1},
         {-1,  0}, { 1,  0},
-        {-1,  1}, { 0,  1}, { 1,  1},
+        {-1,  1}, { 0,  1}, { 1,  1}
     };
     for (int rank = 0; rank < 8; rank++) {
         for (int file = 0; file < 8; file++) {

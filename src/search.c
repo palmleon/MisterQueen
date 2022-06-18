@@ -68,7 +68,7 @@ int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int 
         result = alpha;
         if (!can_move) {
             //if (is_check(board)) {
-            if (is_check(board, board->color ^ 0x10)) {
+            if (is_check(board, board->color)) {
                 result = -MATE + ply;
             } else {
                 result = 0;

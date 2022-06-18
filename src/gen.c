@@ -518,12 +518,12 @@ int has_legal_moves(Board *board) {
 /* To verify if the current player is in check, 
    we generate all the opponent moves 
    and verify if any of them can directly attack the king
-   color: player that performs the check
+   color: player that may be in check
 */
 int is_check(Board *board, char color){
     // for black, board->color >> 4 = 0x01
     // for white, board->color >> 4 = 0x00
-    const int color_bit = color >> 4;
+    const int color_bit = color >> 4 ^ 1;
     // coeff = -1 for white, +1 for black
     //const int coeff[2] = {-1, 1};
     const bb players_pieces[2] = {board->white, board->black}; // array defined to avoid an if-else
@@ -540,24 +540,17 @@ int is_check(Board *board, char color){
 
     for(int sq = 0; sq < 64; sq++){
         char piece = board->squares[sq];
-        if (COLOR(piece) == color){
+        if (COLOR(piece) >> 4 == color_bit){
             bb pawn_bb;
             switch(PIECE(piece)){
                 case PAWN:
                     pawn_bb = BIT(sq);
-                    bb p1_vec[2] = {pawn_bb << 8, pawn_bb >> 8};
-                    bb p1 = p1_vec[color_bit] & ~board->all;
-                    bb p2 = p1 & third_rank[color_bit];
-                    bb p2_vec[2] = {p2 << 8, p2 >> 8};
-                    p2 = p2_vec[color_bit] & ~board->all;
                     bb a1 = pawn_bb & front_right_mask[color_bit];
                     bb a1_vec[2] = {a1 << 7, a1 >> 7};
                     a1 = a1_vec[color_bit] & mask_pawn;
                     bb a2 = pawn_bb & front_left_mask[color_bit];
                     bb a2_vec[2] = {a2 << 9, a2 >> 9};
                     a2 = a2_vec[color_bit] & mask_pawn;
-                    dsts |= p1;
-                    dsts |= p2;
                     dsts |= a1;
                     dsts |= a2;
                     break;                    
@@ -585,7 +578,7 @@ int is_check(Board *board, char color){
 }
 
 int is_illegal(Board *board){
-    return is_check(board, board->color);
+    return is_check(board, board->color ^ 0x10);
 }
 
 /*
