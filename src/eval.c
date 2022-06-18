@@ -1,5 +1,18 @@
 #include "eval.h"
 
+int count_stacked_pawns(bb pawns, int count) {
+    int result = 0;
+    result += BITS(pawns & FILE_A) == count;
+    result += BITS(pawns & FILE_B) == count;
+    result += BITS(pawns & FILE_C) == count;
+    result += BITS(pawns & FILE_D) == count;
+    result += BITS(pawns & FILE_E) == count;
+    result += BITS(pawns & FILE_F) == count;
+    result += BITS(pawns & FILE_G) == count;
+    result += BITS(pawns & FILE_H) == count;
+    return result;
+}
+
 int evaluate(Board *board) {
     int score = 0;
     // evaluate the total score square by square
@@ -13,13 +26,13 @@ int evaluate(Board *board) {
         score += coeff * piece_value;
         // evaluate position
     }*/
-    score += board->white_material;
-    score -= board->black_material;
-    //score += board->material;
+    //score += board->white_material;
+    //score -= board->black_material;
+    score += board->material;
     // evaluate position, square by square
-    score += board->white_position;
-    score -= board->black_position;
-    //score += board->position;
+    //score += board->white_position;
+    //score -= board->black_position;
+    score += board->position;
 
     // evaluate stacked pawns
     score -= count_stacked_pawns(board->white_pawns, 2) * 50;
@@ -28,19 +41,6 @@ int evaluate(Board *board) {
     score += count_stacked_pawns(board->black_pawns, 3) * 100;
     //score += evaluate_pawns(board);
     return board->color ? -score : score;
-}
-
-int count_stacked_pawns(bb pawns, int count) {
-    int result = 0;
-    result += BITS(pawns & FILE_A) == count;
-    result += BITS(pawns & FILE_B) == count;
-    result += BITS(pawns & FILE_C) == count;
-    result += BITS(pawns & FILE_D) == count;
-    result += BITS(pawns & FILE_E) == count;
-    result += BITS(pawns & FILE_F) == count;
-    result += BITS(pawns & FILE_G) == count;
-    result += BITS(pawns & FILE_H) == count;
-    return result;
 }
 
 /*

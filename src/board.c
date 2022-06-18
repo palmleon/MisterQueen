@@ -38,7 +38,7 @@ void board_reset(Board *board) {
 
 // Updates also the score of the board (score_move only computes it on the fly)
 /* Given a square and a piece, place that piece onto that square */
-void board_set(Board *board, int sq, char piece) {
+/*void board_set(Board *board, int sq, char piece) {
     char previous = board->squares[sq]; // take the previous piece on that square
     board->squares[sq] = piece; // place the new piece
     if (previous) { // was the square empty?
@@ -222,8 +222,8 @@ void board_set(Board *board, int sq, char piece) {
             }
         }
     }
-}
-/*
+}*/
+
 void board_set(Board *board, int sq, char piece) {
     
     const int materials[6] = {MATERIAL_PAWN, MATERIAL_KNIGHT, MATERIAL_BISHOP, MATERIAL_ROOK, MATERIAL_QUEEN, MATERIAL_KING};
@@ -243,7 +243,7 @@ void board_set(Board *board, int sq, char piece) {
         board->material -= materials[PIECE(previous)-1]*coeff[color_previous];
         board->position -= position_tables[color_previous*6+(PIECE(previous)-1)][sq]*coeff[color_previous];
         //*(piece_masks[PIECE(previous)-1]) &= mask;
-        *(piece_masks[color_previous*6+PIECE(piece)-1]) &= mask;
+        *(piece_masks[color_previous*6+PIECE(previous)-1]) &= mask;
         *(color_masks[color_previous]) &= mask;
     }
     if (piece) { // if the piece to move exists (is the if necessary?)
@@ -256,7 +256,7 @@ void board_set(Board *board, int sq, char piece) {
         *(color_masks[color_piece]) |= bit;
     }
 }
-*/
+
 
 /*  Print the board  */
 void board_print(Board *board) {

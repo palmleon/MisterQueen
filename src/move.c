@@ -42,7 +42,7 @@ void do_move(Board *board, Move *move, Undo *undo) {
     const bb rank_2nd[2] = {0x000000000000ff00L, 0x00ff000000000000L};
     const bb rank_4th[2] = {0x00000000ff000000L, 0x000000ff00000000L};
     const char castles_all[2] = {CASTLE_WHITE, CASTLE_BLACK};
-    const char castles_all_types[2] = {CASTLE_WHITE_KING, CASTLE_WHITE_QUEEN, CASTLE_BLACK_KING, CASTLE_BLACK_QUEEN};
+    const char castles_all_types[4] = {CASTLE_WHITE_KING, CASTLE_WHITE_QUEEN, CASTLE_BLACK_KING, CASTLE_BLACK_QUEEN};
     const int king_start[2] = {4,60};
     const int king_arrival[4] = {6,2,62,58};
     const int rook_start[4] = {7,0,63,56};
