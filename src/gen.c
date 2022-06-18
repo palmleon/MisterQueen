@@ -21,6 +21,7 @@
     EMIT_PROMOTION(m, a, b, BISHOP) \
     EMIT_PROMOTION(m, a, b, KNIGHT)
 
+/*
 // generic move generators
 int gen_knight_moves(Move *moves, bb srcs, bb mask) {
     Move *ptr = moves;
@@ -95,7 +96,8 @@ int gen_king_moves(Move *moves, bb srcs, bb mask) {
 // white move generators
 int gen_white_pawn_moves(Board *board, Move *moves) {
     Move *ptr = moves;
-    bb pawns = board->white_pawns;
+    //bb pawns = board->white_pawns;
+    bb pawns = board->pawns & board->white;
     bb mask = board->black | board->ep;
     bb promo = 0xff00000000000000L;
     bb p1 = (pawns << 8) & ~board->all; // pedoni avanti di una casella
@@ -139,27 +141,32 @@ int gen_white_pawn_moves(Board *board, Move *moves) {
 
 int gen_white_knight_moves(Board *board, Move *moves) {
     return gen_knight_moves(
-        moves, board->white_knights, ~board->white);
+      //  moves, board->white_knights, ~board->white);
+          moves, board->white & board->knights, ~board->white);
 }
 
 int gen_white_bishop_moves(Board *board, Move *moves) {
     return gen_bishop_moves(
-        moves, board->white_bishops, ~board->white, board->all);
+     //   moves, board->white_bishops, ~board->white, board->all);
+          moves, board->white & board->bishops, ~board->white, board->all);
 }
 
 int gen_white_rook_moves(Board *board, Move *moves) {
     return gen_rook_moves(
-        moves, board->white_rooks, ~board->white, board->all);
+     //   moves, board->white_rooks, ~board->white, board->all);
+          moves, board->white & board->rooks, ~board->white, board->all);
 }
 
 int gen_white_queen_moves(Board *board, Move *moves) {
     return gen_queen_moves(
-        moves, board->white_queens, ~board->white, board->all);
+     //   moves, board->white_queens, ~board->white, board->all);
+          moves, board->white & board->queens, ~board->white, board->all);
 }
 
 int gen_white_king_moves(Board *board, Move *moves) {
     return gen_king_moves(
-        moves, board->white_kings, ~board->white);
+     //   moves, board->white_kings, ~board->white);
+          moves, board->white & board->kings, ~board->white);
 }
 
 int gen_white_king_castles(Board *board, Move *moves) {
@@ -202,7 +209,8 @@ int gen_white_moves(Board *board, Move *moves) {
 // white attack generators
 int gen_white_pawn_attacks_against(Board *board, Move *moves, bb mask) {
     Move *ptr = moves;
-    bb pawns = board->white_pawns;
+    // bb pawns = board->white_pawns;
+    bb pawns = board->pawns & board->white;
     bb a1 = ((pawns & 0xfefefefefefefefeL) << 7) & mask;
     bb a2 = ((pawns & 0x7f7f7f7f7f7f7f7fL) << 9) & mask;
     int sq;
@@ -219,27 +227,32 @@ int gen_white_pawn_attacks_against(Board *board, Move *moves, bb mask) {
 
 int gen_white_knight_attacks_against(Board *board, Move *moves, bb mask) {
     return gen_knight_moves(
-        moves, board->white_knights, mask);
+     //   moves, board->white_knights, mask);
+         moves, board->white & board->knights, mask);
 }
 
 int gen_white_bishop_attacks_against(Board *board, Move *moves, bb mask) {
     return gen_bishop_moves(
-        moves, board->white_bishops, mask, board->all);
+     //   moves, board->white_bishops, mask, board->all);
+          moves, board->white & board->bishops, mask, board->all);
 }
 
 int gen_white_rook_attacks_against(Board *board, Move *moves, bb mask) {
     return gen_rook_moves(
-        moves, board->white_rooks, mask, board->all);
+     //   moves, board->white_rooks, mask, board->all);
+          moves, board->white & board->rooks, mask, board->all);
 }
 
 int gen_white_queen_attacks_against(Board *board, Move *moves, bb mask) {
     return gen_queen_moves(
-        moves, board->white_queens, mask, board->all);
+      //  moves, board->white_queens, mask, board->all);
+          moves, board->white & board->queens, mask, board->all);
 }
 
 int gen_white_king_attacks_against(Board *board, Move *moves, bb mask) {
     return gen_king_moves(
-        moves, board->white_kings, mask);
+     //   moves, board->white_kings, mask);
+          moves, board->kings & board->white, mask);
 }
 
 int gen_white_attacks_against(Board *board, Move *moves, bb mask) {
@@ -258,13 +271,16 @@ int gen_white_attacks(Board *board, Move *moves) {
 }
 
 int gen_white_checks(Board *board, Move *moves) {
-    return gen_white_attacks_against(board, moves, board->black_kings);
+    // return gen_white_attacks_against(board, moves, board->black_kings);
+    return gen_white_attacks_against(board, moves, board->black & board->kings);
+
 }
 
 // black move generators
 int gen_black_pawn_moves(Board *board, Move *moves) {
     Move *ptr = moves;
-    bb pawns = board->black_pawns;
+    //bb pawns = board->black_pawns;
+    bb pawns = board->black & board->pawns;
     bb mask = board->white | board->ep;
     bb promo = 0x00000000000000ffL;
     bb p1 = (pawns >> 8) & ~board->all;
@@ -308,27 +324,32 @@ int gen_black_pawn_moves(Board *board, Move *moves) {
 
 int gen_black_knight_moves(Board *board, Move *moves) {
     return gen_knight_moves(
-        moves, board->black_knights, ~board->black);
+     //   moves, board->black_knights, ~board->black);
+        moves, board->black & board->knights, ~board->black);
 }
 
 int gen_black_bishop_moves(Board *board, Move *moves) {
     return gen_bishop_moves(
-        moves, board->black_bishops, ~board->black, board->all);
+      //  moves, board->black_bishops, ~board->black, board->all);
+        moves, board->black & board->bishops, ~board->black, board->all);
 }
 
 int gen_black_rook_moves(Board *board, Move *moves) {
     return gen_rook_moves(
-        moves, board->black_rooks, ~board->black, board->all);
+      //  moves, board->black_rooks, ~board->black, board->all);
+        moves, board->black & board->rooks, ~board->black, board->all);
 }
 
 int gen_black_queen_moves(Board *board, Move *moves) {
     return gen_queen_moves(
-        moves, board->black_queens, ~board->black, board->all);
+      //  moves, board->black_queens, ~board->black, board->all);
+        moves, board->black & board->queens, ~board->black, board->all);
 }
 
 int gen_black_king_moves(Board *board, Move *moves) {
     return gen_king_moves(
-        moves, board->black_kings, ~board->black);
+      //  moves, board->black_kings, ~board->black);
+        moves, board->black & board->kings, ~board->black);
 }
 
 int gen_black_king_castles(Board *board, Move *moves) {
@@ -371,7 +392,8 @@ int gen_black_moves(Board *board, Move *moves) {
 // black attack generators
 int gen_black_pawn_attacks_against(Board *board, Move *moves, bb mask) {
     Move *ptr = moves;
-    bb pawns = board->black_pawns;
+   // bb pawns = board->black_pawns;
+   bb pawns = board->pawns & board->black;
     bb a1 = ((pawns & 0x7f7f7f7f7f7f7f7fL) >> 7) & mask;
     bb a2 = ((pawns & 0xfefefefefefefefeL) >> 9) & mask;
     int sq;
@@ -388,27 +410,32 @@ int gen_black_pawn_attacks_against(Board *board, Move *moves, bb mask) {
 
 int gen_black_knight_attacks_against(Board *board, Move *moves, bb mask) {
     return gen_knight_moves(
-        moves, board->black_knights, mask);
+     //   moves, board->black_knights, mask);
+          moves, board->black & board->knights, mask);
 }
 
 int gen_black_bishop_attacks_against(Board *board, Move *moves, bb mask) {
     return gen_bishop_moves(
-        moves, board->black_bishops, mask, board->all);
+      //  moves, board->black_bishops, mask, board->all);
+          moves, board->black & board->bishops, mask, board->all);
 }
 
 int gen_black_rook_attacks_against(Board *board, Move *moves, bb mask) {
     return gen_rook_moves(
-        moves, board->black_rooks, mask, board->all);
+      //  moves, board->black_rooks, mask, board->all);
+          moves, board->black & board->rooks, mask, board->all);
 }
 
 int gen_black_queen_attacks_against(Board *board, Move *moves, bb mask) {
     return gen_queen_moves(
-        moves, board->black_queens, mask, board->all);
+      //  moves, board->black_queens, mask, board->all);
+          moves, board->black & board->queens, mask, board->all);
 }
 
 int gen_black_king_attacks_against(Board *board, Move *moves, bb mask) {
     return gen_king_moves(
-        moves, board->black_kings, mask);
+     //   moves, board->black_kings, mask);
+        moves, board->black & board->kings, mask);
 }
 
 int gen_black_attacks_against(Board *board, Move *moves, bb mask) {
@@ -427,7 +454,9 @@ int gen_black_attacks(Board *board, Move *moves) {
 }
 
 int gen_black_checks(Board *board, Move *moves) {
-    return gen_black_attacks_against(board, moves, board->white_kings);
+    //return gen_black_attacks_against(board, moves, board->white_kings);
+    return gen_black_attacks_against(board, moves, board->white & board->kings);
+
 }
 
 // color determined by board
@@ -438,22 +467,6 @@ int gen_moves(Board *board, Move *moves) {
     else {
         return gen_white_moves(board, moves);
     }
-}
-
-int gen_legal_moves(Board *board, Move *moves) {
-    Move *ptr = moves;
-    Undo undo;
-    Move temp[MAX_MOVES];
-    int count = gen_moves(board, temp);
-    for (int i = 0; i < count; i++) {
-        Move *move = &temp[i];
-        do_move(board, move, &undo);
-        if (!is_illegal(board)) {
-            memcpy(moves++, move, sizeof(Move));
-        }
-        undo_move(board, move, &undo);
-    }
-    return moves - ptr;
 }
 
 int gen_attacks(Board *board, Move *moves) {
@@ -473,7 +486,9 @@ int gen_checks(Board *board, Move *moves) {
         return gen_white_checks(board, moves);
     }
 }
+*/
 
+/*
 int is_check(Board *board) {
     Move moves[MAX_MOVES];
     if (board->color) {
@@ -497,6 +512,80 @@ int is_illegal(Board *board) {
 int has_legal_moves(Board *board) {
     Move moves[MAX_MOVES];
     return gen_legal_moves(board, moves);
+}
+*/
+
+/* To verify if the current player is in check, 
+   we generate all the opponent moves 
+   and verify if any of them can directly attack the king
+   color: player that performs the check
+*/
+int is_check(Board *board, char color){
+    // for black, board->color >> 4 = 0x01
+    // for white, board->color >> 4 = 0x00
+    const int color_bit = color >> 4;
+    // coeff = -1 for white, +1 for black
+    //const int coeff[2] = {-1, 1};
+    const bb players_pieces[2] = {board->white, board->black}; // array defined to avoid an if-else
+    const bb promo[2] = {0xff00000000000000L, 0x00000000000000ffL}; // representation of the promotion rank
+    const bb third_rank[2] = {0x0000000000ff0000L, 0x0000ff0000000000L}; // used for initial double move of pawn
+    const bb front_right_mask[2] = {0xfefefefefefefefeL, 0x7f7f7f7f7f7f7f7fL};
+    const bb front_left_mask[2] = {0x7f7f7f7f7f7f7f7fL, 0xfefefefefefefefeL};
+    const bb own_pieces = players_pieces[color_bit];
+    const bb opponent_pieces = players_pieces[color_bit ^ 1];
+    bb mask = ~own_pieces;
+    const bb mask_pawn = opponent_pieces | board->ep;
+    const bb mask_pawn_opp = own_pieces | board->ep;
+    bb dsts = 0;
+
+    for(int sq = 0; sq < 64; sq++){
+        char piece = board->squares[sq];
+        if (COLOR(piece) == color){
+            bb pawn_bb;
+            switch(PIECE(piece)){
+                case PAWN:
+                    pawn_bb = BIT(sq);
+                    bb p1_vec[2] = {pawn_bb << 8, pawn_bb >> 8};
+                    bb p1 = p1_vec[color_bit] & ~board->all;
+                    bb p2 = p1 & third_rank[color_bit];
+                    bb p2_vec[2] = {p2 << 8, p2 >> 8};
+                    p2 = p2_vec[color_bit] & ~board->all;
+                    bb a1 = pawn_bb & front_right_mask[color_bit];
+                    bb a1_vec[2] = {a1 << 7, a1 >> 7};
+                    a1 = a1_vec[color_bit] & mask_pawn;
+                    bb a2 = pawn_bb & front_left_mask[color_bit];
+                    bb a2_vec[2] = {a2 << 9, a2 >> 9};
+                    a2 = a2_vec[color_bit] & mask_pawn;
+                    dsts |= p1;
+                    dsts |= p2;
+                    dsts |= a1;
+                    dsts |= a2;
+                    break;                    
+                case KNIGHT:
+                    dsts |= BB_KNIGHT[sq] & mask;
+                    break;
+                case BISHOP:
+                    dsts |= bb_bishop(sq, board->all) & mask;
+                    break;
+                case ROOK:
+                    dsts |= bb_rook(sq, board->all) & mask;
+                    break;
+                case QUEEN:
+                    dsts |= bb_queen(sq, board->all) & mask;
+                    break;
+                case KING:
+                    dsts |= BB_KING[sq] & mask;
+                    break;
+                default: // empty piece
+                    break;
+            }
+        }
+    }
+    return (dsts & opponent_pieces & board->kings) != (long long) 0;
+}
+
+int is_illegal(Board *board){
+    return is_check(board, board->color);
 }
 
 /*
@@ -669,4 +758,20 @@ int gen_moves_new(Board *board, Move *moves){
 
 
     return moves - ptr; // incompatible with parallel code, for now it is just for refactoring
+}
+
+int gen_legal_moves(Board *board, Move *moves) {
+    Move *ptr = moves;
+    Undo undo;
+    Move temp[MAX_MOVES];
+    int count = gen_moves_new(board, temp);
+    for (int i = 0; i < count; i++) {
+        Move *move = &temp[i];
+        do_move(board, move, &undo);
+        if (!is_illegal(board)) {
+            memcpy(moves++, move, sizeof(Move));
+        }
+        undo_move(board, move, &undo);
+    }
+    return moves - ptr;
 }

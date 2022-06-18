@@ -14,7 +14,7 @@ RCOMPILE_FLAGS = -D __CUDACC_DEBUG__
 # Additional debug-specific flags
 DCOMPILE_FLAGS = -g -G #-D DEBUG
 # Add additional include paths
-INCLUDES = -I $(SRC_PATH)/ -I $(SRC_PATH)/deps/tinycthread
+INCLUDES = -I $(SRC_PATH)/ 
 # General linker settings
 LINK_FLAGS = -lpthread
 # Additional release-specific linker settings

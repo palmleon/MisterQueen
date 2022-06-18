@@ -62,37 +62,37 @@ extern const int POSITION_BLACK_QUEEN[64];
 extern const int POSITION_BLACK_KING[64];
 
 typedef struct {
-    char squares[64]; // -> short int[64]
+    char squares[64]; // -> valutare se passare a char[32], con due pezzi per elemento dato che un pezzo è grande 4 bit
     char color;
     char castle;
     //int white_material;
     //int black_material;
-    int material; // material score, >0 for white advange, <0 for black advantage
+    int material; // material score, >0 for white advantage, <0 for black advantage
     //int white_position;
     //int black_position;
-    int position; // position score, >0 for white advange, <0 for black advantage
+    int position; // position score, >0 for white advantage, <0 for black advantage
     bb ep;  // used for "en-passant" captures
     bb all; // each bit represents a square, if at '1' it's occupied
     bb white; // same as the "all" bitmap, but only with white pieces
     bb black; // same as the "all" bitmap, but only with black pieces
-    bb white_pawns; // same as the "all" bitmap, but only with white pawns // merge the bbs related to the same piece
-    bb black_pawns; // same as the "all" bitmap, but only with black pawns
-    //bb pawns;
-    bb white_knights; // and so on
-    bb black_knights;
-    //bb knights;
-    bb white_bishops;
-    bb black_bishops;
-    //bb bishops;
-    bb white_rooks;
-    bb black_rooks;
-    //bb rooks;
-    bb white_queens;
-    bb black_queens;
-    //bb queens;
-    bb white_kings;
-    bb black_kings;
-    //bb kings;
+    //bb white_pawns; // same as the "all" bitmap, but only with white pawns // merge the bbs related to the same piece
+    //bb black_pawns; // same as the "all" bitmap, but only with black pawns
+    bb pawns;
+    //bb white_knights; // and so on
+    //bb black_knights;
+    bb knights;
+    //bb white_bishops;
+    //bb black_bishops;
+    bb bishops;
+    //bb white_rooks;
+    //bb black_rooks;
+    bb rooks;
+    //bb white_queens;
+    //bb black_queens;
+    bb queens;
+    //bb white_kings;
+    //bb black_kings;
+    bb kings;
 } Board;
 
 void board_clear(Board *board);
