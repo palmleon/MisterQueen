@@ -523,12 +523,10 @@ int has_legal_moves(Board *board) {
 int is_check(Board *board, char color){
     // for black, board->color >> 4 = 0x01
     // for white, board->color >> 4 = 0x00
-    const int color_bit = color >> 4 ^ 1;
+    const int color_bit = (color ^ BLACK) >> 3;
     // coeff = -1 for white, +1 for black
     //const int coeff[2] = {-1, 1};
     const bb players_pieces[2] = {board->white, board->black}; // array defined to avoid an if-else
-    const bb promo[2] = {0xff00000000000000L, 0x00000000000000ffL}; // representation of the promotion rank
-    const bb third_rank[2] = {0x0000000000ff0000L, 0x0000ff0000000000L}; // used for initial double move of pawn
     const bb front_right_mask[2] = {0xfefefefefefefefeL, 0x7f7f7f7f7f7f7f7fL};
     const bb front_left_mask[2] = {0x7f7f7f7f7f7f7f7fL, 0xfefefefefefefefeL};
     const bb own_pieces = players_pieces[color_bit];
@@ -539,8 +537,9 @@ int is_check(Board *board, char color){
     bb dsts = 0;
 
     for(int sq = 0; sq < 64; sq++){
-        char piece = board->squares[sq];
-        if (COLOR(piece) >> 4 == color_bit){
+        //char piece = board->squares[sq];
+        char piece = board_get_piece(board, sq);
+        if (COLOR(piece) >> 3 == color_bit){
             bb pawn_bb;
             switch(PIECE(piece)){
                 case PAWN:
@@ -578,7 +577,7 @@ int is_check(Board *board, char color){
 }
 
 int is_illegal(Board *board){
-    return is_check(board, board->color ^ 0x10);
+    return is_check(board, board->color ^ BLACK);
 }
 
 /*
@@ -596,7 +595,8 @@ int gen_moves_new(Board *board, Move *moves){
     Move *ptr = moves;
     // for black, board->color >> 4 = 0x01
     // for white, board->color >> 4 = 0x00
-    const int color_bit = board->color >> 4;
+    //const int color_bit = board->color >> 4;
+    const int color_bit = board->color >> 3;
     // coeff = -1 for white, +1 for black
     //const int coeff[2] = {-1, 1};
     const bb players_pieces[2] = {board->white, board->black}; // array defined to avoid an if-else
@@ -616,7 +616,8 @@ int gen_moves_new(Board *board, Move *moves){
     const int castle_king_pos_after[4] = {6, 2, 62, 58};
 
     for(int sq = 0; sq < 64; sq++){
-        char piece = board->squares[sq];
+        //char piece = board->squares[sq];
+        char piece = board_get_piece(board, sq);
         bb dsts = 0;
         // move a piece only if it is of the current moving player!
         if (COLOR(piece) == board->color){
@@ -684,7 +685,8 @@ int gen_moves_new(Board *board, Move *moves){
     bb dsts = 0;
     if ((board->castle & castles[color_bit*2]) || board->castle & castles[color_bit*2+1]){
         for (int sq = 0; sq < 64; sq++){
-            char piece = board->squares[sq];
+            //char piece = board->squares[sq];
+            char piece = board_get_piece(board, sq);
             if (COLOR(piece) != board->color){
                 bb pawn_bb;
                 switch(PIECE(piece)){
@@ -739,16 +741,6 @@ int gen_moves_new(Board *board, Move *moves){
             }
         }
     }
-
-    /*
-    if (board->color) {
-        moves += gen_black_pawn_moves(board, moves);
-    }
-    else {
-        moves += gen_white_pawn_moves(board, moves);
-    }
-    */
-
 
     return moves - ptr; // incompatible with parallel code, for now it is just for refactoring
 }

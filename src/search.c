@@ -9,9 +9,7 @@
 
 #define XOR_SWAP(a, b) a = a ^ b; b = a ^ b; a = a ^ b;
 
-// RICORDA CHE IL PUNTEGGIO DELLA MOSSA VIENE VALUTATO NELLA SORT MOVES
-// (perché non inserirlo direttamente nella evaluate, se a noi non interessa
-//   ordinare le mosse?)
+// RICORDA CHE IL PUNTEGGIO DELLA MOSSA VIENE VALUTATO NELLA SORT MOVES e integrato nella board_set()
 
 void sort_moves(Board *board, Move *moves, int count) {
     int scores[MAX_MOVES];

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "board.h"
 #include "gen.h"
 #include "move.h"
 #include "util.h"
@@ -51,8 +52,10 @@ void do_move(Board *board, Move *move, Undo *undo) {
     const int color_bit = board->color >> 4;
     const int coeff[2] = {1, -1};
     // store previous board data
-    undo->piece = board->squares[move->src];
-    undo->capture = board->squares[move->dst];
+    //undo->piece = board->squares[move->src];
+    //undo->capture = board->squares[move->dst];
+    undo->piece = board_get_piece(board, move->src);
+    undo->capture = board_get_piece(board, move->dst);
     undo->castle = board->castle;
     undo->ep = board->ep;
     // remove the moving piece from its starting position
@@ -226,8 +229,10 @@ int score_move(Board *board, Move *move) {
     int result = 0;
     unsigned char src = move->src;
     unsigned char dst = move->dst;
-    unsigned char piece = board->squares[src];
-    unsigned char capture = board->squares[dst];
+    //unsigned char piece = board->squares[src];
+    //unsigned char capture = board->squares[dst];
+    unsigned char piece = board_get_piece(board, src);
+    unsigned char capture = board_get_piece(board, dst);
     int piece_material = 0;
     int capture_material = 0;
     //if (COLOR(piece)) {
@@ -430,8 +435,10 @@ void move_from_string(Move *move, const char *str) {
 void notate_move(Board *board, Move *move, char *result) {
     Move moves[MAX_MOVES];
     int count = gen_legal_moves(board, moves);
-    char piece = board->squares[move->src];
-    char capture = board->squares[move->dst];
+    //char piece = board->squares[move->src];
+    char piece = board_get_piece(board, move->src);
+    //char capture = board->squares[move->dst];
+    char capture = board_get_piece(board, move->dst);
     char rank1 = '1' + move->src / 8;
     char file1 = 'a' + move->src % 8;
     char rank2 = '1' + move->dst / 8;
@@ -458,7 +465,8 @@ void notate_move(Board *board, Move *move, char *result) {
         if (move->src == other->src) {
             continue; // same move
         }
-        if (piece != board->squares[other->src]) {
+        //if (piece != board->squares[other->src]) {
+        if (piece != board_get_piece(board, other->src)) {
             continue; // different piece
         }
         ambiguous = 1;

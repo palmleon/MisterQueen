@@ -3,33 +3,48 @@
 
 #include "bb.h"
 
-#define WHITE 0x00
-#define BLACK 0x10
+//#define WHITE 0x00
+#define WHITE 0x0
+//#define BLACK 0x10
+#define BLACK 0x8
 
-#define EMPTY 0x00
-#define PAWN 0x01
-#define KNIGHT 0x02
-#define BISHOP 0x03
-#define ROOK 0x04
-#define QUEEN 0x05
-#define KING 0x06
 
-#define WHITE_PAWN 0x01
-#define WHITE_KNIGHT 0x02
-#define WHITE_BISHOP 0x03
-#define WHITE_ROOK 0x04
-#define WHITE_QUEEN 0x05
-#define WHITE_KING 0x06
+#define EMPTY 0x0
+#define PAWN 0x1
+#define KNIGHT 0x2
+#define BISHOP 0x3
+#define ROOK 0x4
+#define QUEEN 0x5
+#define KING 0x6
 
+#define WHITE_PAWN 0x1
+#define WHITE_KNIGHT 0x2
+#define WHITE_BISHOP 0x3
+#define WHITE_ROOK 0x4
+#define WHITE_QUEEN 0x5
+#define WHITE_KING 0x6
+
+/*
 #define BLACK_PAWN 0x11
 #define BLACK_KNIGHT 0x12
 #define BLACK_BISHOP 0x13
 #define BLACK_ROOK 0x14
 #define BLACK_QUEEN 0x15
 #define BLACK_KING 0x16
+*/
 
-#define PIECE(x) ((x) & 0x0f)
-#define COLOR(x) ((x) & 0x10)
+#define BLACK_PAWN 0x9
+#define BLACK_KNIGHT 0xa
+#define BLACK_BISHOP 0xb
+#define BLACK_ROOK 0xc
+#define BLACK_QUEEN 0xd
+#define BLACK_KING 0xe
+
+//#define PIECE(x) ((x) & 0x0f)
+//#define COLOR(x) ((x) & 0x10)
+
+#define PIECE(x) ((x) & 0x7)
+#define COLOR(x) ((x) & 0x8)
 
 #define CASTLE_ALL 15
 #define CASTLE_WHITE 3
@@ -62,7 +77,7 @@ extern const int POSITION_BLACK_QUEEN[64];
 extern const int POSITION_BLACK_KING[64];
 
 typedef struct {
-    char squares[64]; // -> valutare se passare a char[32], con due pezzi per elemento dato che un pezzo è grande 4 bit
+    unsigned char squares[32]; // -> valutare se passare a char[32], con quattro pezzi per elemento dato che un pezzo è grande 4 bit
     char color;
     char castle;
     //int white_material;
@@ -97,6 +112,8 @@ typedef struct {
 
 void board_clear(Board *board);
 void board_reset(Board *board);
+char board_get_piece(Board *board, int sq);
+void board_set_piece(Board *board, int sq, char piece);
 void board_set(Board *board, int sq, char piece);
 void board_print(Board *board);
 void board_load_fen(Board *board, char *fen);
