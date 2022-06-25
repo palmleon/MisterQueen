@@ -35,6 +35,22 @@ void sort_moves(Board *board, Move *moves, int count) {
     }
 }
 
+void sort_moves_new(Board *board, Move *moves, int count) {
+    int best = -INF, index;
+    for (int i = 0; i < count; i++) {
+        Move *move = moves + i;
+        int score = score_move(board, move);
+        if (score > best) {
+            best = score;
+            index = i;
+        }
+    }
+    Move tmp;
+    tmp = moves[index];
+    moves[index] = moves[0];
+    moves[0] = tmp;
+}
+
 int first_sort_moves_rec(Board *board, int *positions, int len, int ply, int alpha, int beta) {
     int result;
     if (is_illegal(board)) {
@@ -98,6 +114,10 @@ void first_sort_moves(Board *board, Move *moves, int count, int *positions, int 
             }
         }
     }
+    Move tmp;
+    tmp = moves[positions[0]];
+    moves[positions[0]] = moves[0];
+    moves[0] = tmp;
     free(best_indexes);
 }
 
@@ -143,12 +163,62 @@ int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int 
     return result;
 }
 
+int alpha_beta_new(Search *search, Board *board, int depth, int ply, int alpha, int beta, int *positions, int len_positions) {
+    int result;
+    if (is_illegal(board)) {
+        result = INF;
+    }
+    else if (depth <= 0) {
+        result = evaluate(board); // + evaluate_pawns(board);
+    }
+    else {
+        Undo undo;
+        Move moves[MAX_MOVES];
+        int count = gen_moves_new(board, moves);
+        if (ply < len_positions) {
+            Move tmp;
+            tmp = moves[positions[ply]];
+            moves[positions[ply]] = moves[0];
+            moves[0] = tmp;
+        }
+        else
+            sort_moves_new(board, moves, count);
+        int can_move = 0;
+        for (int i = 0; i < count; i++) {
+            Move *move = &moves[i];
+            do_move(board, move, &undo);
+            int score = -alpha_beta_new(search, board, depth - 1, ply + 1, -beta, -alpha, positions, len_positions);
+            undo_move(board, move, &undo);
+            if (score > -INF) {
+                can_move = 1;
+            }
+            if (score >= beta) {
+                return beta;
+            }
+            if (score > alpha) {
+                alpha = score;
+            }
+        }
+        result = alpha;
+        if (!can_move) {
+            //if (is_check(board)) {
+            if (is_check(board, board->color)) {
+                result = -MATE + ply;
+            } else {
+                result = 0;
+            }
+        }
+    }
+    return result;
+}
+
 int root_search(Search *search, Board *board, int depth, int ply, int alpha, int beta, Move *result) {
     Undo undo;
     Move moves[MAX_MOVES];
     int positions[3];
     int count = gen_moves_new(board, moves);
     first_sort_moves(board, moves, count, positions, 3);
+    /*sort_moves(board, moves, count);
     Move *best = NULL;
     int index = -1;
     for (int i = 0; i < count; i++) {
@@ -164,13 +234,12 @@ int root_search(Search *search, Board *board, int depth, int ply, int alpha, int
     }
     printf("positions: %d %d %d\n", positions[0], positions[1], positions[2]);
     printf("index: %d\n", index);
-    return alpha;
-    //sort_moves(board, moves, count);
-    /*Move *best = NULL;
+    return alpha;*/
+    Move *best = NULL;
     for (int i = 0; i < count; i++) {
         Move *move = &moves[i];
         do_move(board, move, &undo);
-        int score = -alpha_beta(search, board, depth - 1, ply + 1, -beta, -alpha);
+        int score = -alpha_beta_new(search, board, depth - 1, ply + 1, -beta, -alpha, positions, 3);
         undo_move(board, move, &undo);
         if (score > alpha) {
             alpha = score;
@@ -180,7 +249,7 @@ int root_search(Search *search, Board *board, int depth, int ply, int alpha, int
     if (best) {
         memcpy(result, best, sizeof(Move));
     }
-    return alpha;*/
+    return alpha;
 }
 
 int do_search(Search *search, Board *board) {
