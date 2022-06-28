@@ -3,12 +3,12 @@
 #include <string.h>
 #include <stdio.h>
 
-#define DEBUG
+//#define DEBUG
 #define DEBUG_CMD "bk"
 #define DEBUG_BOARD ""
 
-static Board board;
-static Search search;
+//static Board board;
+//static Search search;
 
 void print_menu(void) {
     printf("-------------------\n");
@@ -24,6 +24,8 @@ void print_menu(void) {
 
 int main(void) {
     
+    Board board;
+    Search search;
     char command[10] = DEBUG_CMD;
     char board_file[100] = DEBUG_BOARD;
     board_reset(&board); // load the board as in the initial position
