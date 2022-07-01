@@ -76,6 +76,19 @@ extern const int POSITION_BLACK_ROOK[64];
 extern const int POSITION_BLACK_QUEEN[64];
 extern const int POSITION_BLACK_KING[64];
 
+extern __constant__ int d_POSITION_WHITE_PAWN[64];
+extern __constant__ int d_POSITION_WHITE_KNIGHT[64];
+extern __constant__ int d_POSITION_WHITE_BISHOP[64];
+extern __constant__ int d_POSITION_WHITE_ROOK[64];
+extern __constant__ int d_POSITION_WHITE_QUEEN[64];
+extern __constant__ int d_POSITION_WHITE_KING[64];
+extern __constant__ int d_POSITION_BLACK_PAWN[64];
+extern __constant__ int d_POSITION_BLACK_KNIGHT[64];
+extern __constant__ int d_POSITION_BLACK_BISHOP[64];
+extern __constant__ int d_POSITION_BLACK_ROOK[64];
+extern __constant__ int d_POSITION_BLACK_QUEEN[64];
+extern __constant__ int d_POSITION_BLACK_KING[64];
+
 typedef struct {
     unsigned char squares[32]; // -> valutare se passare a char[32], con quattro pezzi per elemento dato che un pezzo è grande 4 bit
     char color;
@@ -112,9 +125,9 @@ typedef struct {
 
 void board_clear(Board *board);
 void board_reset(Board *board);
-char board_get_piece(Board *board, int sq);
-void board_set_piece(Board *board, int sq, char piece);
-void board_set(Board *board, int sq, char piece);
+__device__ __host__ char board_get_piece(Board *board, int sq);
+__device__ __host__ void board_set_piece(Board *board, int sq, char piece);
+__device__ __host__ void board_set(Board *board, int sq, char piece);
 void board_print(Board *board);
 void board_load_fen(Board *board, char *fen);
 void board_load_file_fen(Board *board, char *filename);

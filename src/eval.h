@@ -3,7 +3,6 @@
 
 #include "board.h"
 
-int evaluate(Board *board);
-int evaluate_pawns(Board *board);
+__device__ __host__ int evaluate(Board *board);
 
 #endif

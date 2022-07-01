@@ -31,20 +31,38 @@
 
 typedef unsigned long long bb;
 
+extern __constant__ bb d_BB_KNIGHT[64];
+extern __constant__ bb d_BB_KING[64];
+
 extern bb BB_KNIGHT[64];
 extern bb BB_KING[64];
+
+extern __constant__ bb d_BB_BISHOP_6[64];
+extern __constant__ bb d_BB_ROOK_6[64];
 
 extern bb BB_BISHOP_6[64];
 extern bb BB_ROOK_6[64];
 
+extern __constant__ bb d_MAGIC_BISHOP[64];
+extern __constant__ bb d_MAGIC_ROOK[64];
+
 extern const bb MAGIC_BISHOP[64];
 extern const bb MAGIC_ROOK[64];
+
+extern __constant__ int d_SHIFT_BISHOP[64];
+extern __constant__ int d_SHIFT_ROOK[64];
 
 extern const int SHIFT_BISHOP[64];
 extern const int SHIFT_ROOK[64];
 
+extern __constant__ int d_OFFSET_BISHOP[64];
+extern __constant__ int d_OFFSET_ROOK[64];
+
 extern int OFFSET_BISHOP[64];
 extern int OFFSET_ROOK[64];
+
+extern __constant__ bb d_ATTACK_BISHOP[5248];
+extern __device__ bb d_ATTACK_ROOK[102400];
 
 extern bb ATTACK_BISHOP[5248];
 extern bb ATTACK_ROOK[102400];
@@ -53,8 +71,8 @@ void bb_init();
 void bb_print(bb value);
 bb bb_random();
 
-bb bb_bishop(int sq, bb obstacles);
-bb bb_rook(int sq, bb obstacles);
-bb bb_queen(int sq, bb obstacles);
+extern __device__ __host__ bb bb_bishop(int sq, bb obstacles);
+extern __device__ __host__ bb bb_rook(int sq, bb obstacles);
+extern __device__ __host__ bb bb_queen(int sq, bb obstacles);
 
 #endif

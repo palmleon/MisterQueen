@@ -4,11 +4,12 @@ BIN_NAME := main
 # Compiler used
 C ?= nvcc 
 # Extension of source files used in the project
-SRC_EXT = c
+SRC_EXT_C = c
+SRC_EXT_CU = cu
 # Path to the source directory, relative to the makefile
 SRC_PATH = src
 # General compiler flags
-COMPILE_FLAGS = --std c++03
+COMPILE_FLAGS = --std c++03 --device-c -w
 # Additional release-specific flags
 RCOMPILE_FLAGS = -D __CUDACC_DEBUG__
 # Additional debug-specific flags
@@ -16,7 +17,7 @@ DCOMPILE_FLAGS = -g -G #-D DEBUG
 # Add additional include paths
 INCLUDES = -I $(SRC_PATH)/ 
 # General linker settings
-LINK_FLAGS = -lpthread
+LINK_FLAGS =
 # Additional release-specific linker settings
 RLINK_FLAGS = 
 # Additional debug-specific linker settings
@@ -61,18 +62,26 @@ install: export BIN_PATH := bin/release
 
 # Find all source files in the source directory, sorted by most
 # recently modified
-SOURCES = $(shell find $(SRC_PATH)/ -name '*.$(SRC_EXT)' \
+SOURCES_C = $(shell find $(SRC_PATH)/ -name '*.$(SRC_EXT_C)' \
+					| sort -k 1nr | cut -f2-)
+SOURCES_CU = $(shell find $(SRC_PATH)/ -name '*.$(SRC_EXT_CU)' \
 					| sort -k 1nr | cut -f2-)
 # fallback in case the above fails
 rwildcard = $(foreach d, $(wildcard $1*), $(call rwildcard,$d/,$2) \
 						$(filter $(subst *,%,$2), $d))
-ifeq ($(SOURCES),)
-	SOURCES := $(call rwildcard, $(SRC_PATH)/, *.$(SRC_EXT))
+ifeq ($(SOURCES_C),)
+	SOURCES_C := $(call rwildcard, $(SRC_PATH)/, *.$(SRC_EXT_C))
+endif
+
+ifeq ($(SOURCES_CU),)
+	SOURCES_CU := $(call rwildcard, $(SRC_PATH)/, *.$(SRC_EXT_CU))
 endif
 
 # Set the object file names, with the source directory stripped
 # from the path, and the build path prepended in its place
-OBJECTS = $(SOURCES:$(SRC_PATH)/%.$(SRC_EXT)=$(BUILD_PATH)/%.o)
+OBJECTS  = $(SOURCES_C:$(SRC_PATH)/%.$(SRC_EXT_C)=$(BUILD_PATH)/%.o)
+OBJECTS += $(SOURCES_CU:$(SRC_PATH)/%.$(SRC_EXT_CU)=$(BUILD_PATH)/%.o)
+
 # Set the dependency files that will be used to add header dependencies
 DEPS = $(OBJECTS:.o=.d)
 
@@ -172,9 +181,13 @@ $(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
 # Source file rules
 # After the first compilation they will be joined with the rules from the
 # dependency files to provide header dependencies
-$(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT)
+$(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT_C)
 	@echo "Compiling: $< -> $@"
 	$(CMD_PREFIX)$(C) $(CFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
+
+$(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT_CU)
+	@echo "Compiling: $< -> $@"
+	$(CMD_PREFIX)$(C) $(CFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@	
 
 .PHONY: run
 run:
