@@ -4,7 +4,7 @@
 #include "bb.h"
 #include "board.h"
 
-#define MAX_MOVES 512
+#define MAX_MOVES 220
 
 typedef struct {
     unsigned char src;
