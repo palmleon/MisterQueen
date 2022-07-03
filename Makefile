@@ -11,9 +11,9 @@ SRC_PATH = src
 # General compiler flags
 COMPILE_FLAGS = --std c++03 --device-c -w
 # Additional release-specific flags
-RCOMPILE_FLAGS = -D __CUDACC_DEBUG__
+RCOMPILE_FLAGS = 
 # Additional debug-specific flags
-DCOMPILE_FLAGS = -g -G #-D DEBUG
+DCOMPILE_FLAGS = -g -G -D __CUDACC_DEBUG__ #-D DEBUG
 # Add additional include paths
 INCLUDES = -I $(SRC_PATH)/ 
 # General linker settings

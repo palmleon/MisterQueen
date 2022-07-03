@@ -98,50 +98,6 @@ void initial_sort_moves(Board *board, Move *moves, int count, int *positions, in
     free(best_indexes);
 }
 
-/*
-int alpha_beta(Search *search, Board *board, int depth, int ply, int alpha, int beta) {
-    int result;
-    if (is_illegal(board)) {
-        result = INF;
-    }
-    else if (depth <= 0) {
-        result = evaluate(board);
-    }
-    else {
-        Undo undo;
-        Move moves[MAX_MOVES];
-        int count = gen_moves_new(board, moves);
-        sort_moves(board, moves, count);
-        int can_move = 0;
-        for (int i = 0; i < count; i++) {
-            Move *move = &moves[i];
-            do_move(board, move, &undo);
-            int score = -alpha_beta(search, board, depth - 1, ply + 1, -beta, -alpha);
-            undo_move(board, move, &undo);
-            if (score > -INF) {
-                can_move = 1;
-            }
-            if (score >= beta) {
-                return beta;
-            }
-            if (score > alpha) {
-                alpha = score;
-            }
-        }
-        result = alpha;
-        if (!can_move) {
-            //if (is_check(board)) {
-            if (is_check(board, board->color)) {
-                result = -MATE + ply;
-            } else {
-                result = 0;
-            }
-        }
-    }
-    return result;
-}
-*/
-
 __device__ int alpha_beta_gpu_device(Board *board, int depth, int ply, int alpha, int beta) {
     int result;
     if (is_illegal(board)) {
@@ -258,8 +214,7 @@ int alpha_beta_cpu(Board *board, int depth, int ply, int alpha, int beta, int *p
         }
         else
             sort_moves(board, moves, count);
-        //for (int i = 0; i < count; i++) {
-        //    Move *move = &moves[i];
+        
         if (count >= 1){
             do_move(board, &(moves[0]), &undo);
             int score = -alpha_beta_cpu(board, depth - 1, ply + 1, -beta, -alpha, positions, len_positions);
@@ -274,7 +229,7 @@ int alpha_beta_cpu(Board *board, int depth, int ply, int alpha, int beta, int *p
                 alpha = score;
             }
         }
-        if (count > 1){ // da cambiare con la chiamata al kernel e conseguente gestione delle mosse
+        if (count > 1){ 
             Board *d_board;
             Move *d_moves;
             int *d_scores;

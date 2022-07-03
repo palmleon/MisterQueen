@@ -69,7 +69,6 @@ extern bb ATTACK_ROOK[102400];
 
 void bb_init();
 void bb_print(bb value);
-bb bb_random();
 
 extern __device__ __host__ bb bb_bishop(int sq, bb obstacles);
 extern __device__ __host__ bb bb_rook(int sq, bb obstacles);

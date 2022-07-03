@@ -90,7 +90,7 @@ extern __constant__ int d_POSITION_BLACK_QUEEN[64];
 extern __constant__ int d_POSITION_BLACK_KING[64];
 
 typedef struct {
-    unsigned char squares[32]; // -> valutare se passare a char[32], con quattro pezzi per elemento dato che un pezzo è grande 4 bit
+    unsigned char squares[32];
     char color;
     char castle;
     //int white_material;

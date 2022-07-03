@@ -304,12 +304,4 @@ void bb_print(bb value) {
     putchar('\n');
 }
 
-/*
-bb bb_random() {
-    bb a = prng() % 0x10000;
-    bb b = prng() % 0x10000;
-    bb c = prng() % 0x10000;
-    bb d = prng() % 0x10000;
-    return a << 48 | b << 32 | c << 16 | d;
-}
-*/
+
