@@ -6,22 +6,22 @@
 
 #define MAX_MOVES 220
 
-typedef struct {
+typedef struct __align__(4) {
     unsigned char src;
     unsigned char dst;
     unsigned char promotion;
 } Move;
 
-typedef struct {
+typedef struct __align__ (16) {
+    bb ep;
     char piece;
     char capture;
     char castle;
-    bb ep;
 } Undo;
 
-void make_move(Board *board, Move *move);
+/*void make_move(Board *board, Move *move);
 void do_null_move(Board *board, Undo *undo);
-void undo_null_move(Board *board, Undo *undo);
+void undo_null_move(Board *board, Undo *undo);*/
 __device__ __host__ void do_move(Board *board, Move *move, Undo *undo);
 __device__ __host__ void undo_move(Board *board, Move *move, Undo *undo);
 int score_move(Board *board, Move *move);

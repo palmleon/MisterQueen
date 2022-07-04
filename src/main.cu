@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 
-//#define DEBUG
+#define DEBUG
 #define DEBUG_CMD "bk"
 #define DEBUG_BOARD ""
 
@@ -75,6 +75,13 @@ int main(void) {
     bb_init();
 
     transfer_tables_to_gpu();
+
+    size_t value;
+    cudaDeviceSetLimit(cudaLimitStackSize, 3500);
+
+    cudaDeviceGetLimit(&value, cudaLimitStackSize);
+
+    printf("stack size: %ld\n", value);
     
     printf("Tables transferred to the GPU!\n");
 

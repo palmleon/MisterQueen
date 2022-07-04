@@ -77,7 +77,7 @@ __device__ __host__ void board_set(Board *board, int sq, char piece) {
         bb mask = ~BIT(sq);
         board->all &= mask; // bitwise removal of the piece
         board->material -= materials[PIECE(previous)-1]*coeff[color_previous];
-        board->position -= position_tables[color_previous*6+(PIECE(previous)-1)][sq]*coeff[color_previous];
+        board->position -= position_tables[color_previous*6+(PIECE(previous)-1)][sq] * coeff[color_previous];
         //*(piece_masks[PIECE(previous)-1]) &= mask;
         //*(piece_masks[color_previous*6+PIECE(previous)-1]) &= mask;
 

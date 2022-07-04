@@ -89,10 +89,8 @@ extern __constant__ int d_POSITION_BLACK_ROOK[64];
 extern __constant__ int d_POSITION_BLACK_QUEEN[64];
 extern __constant__ int d_POSITION_BLACK_KING[64];
 
-typedef struct {
+typedef struct __align__(128) {
     unsigned char squares[32];
-    char color;
-    char castle;
     //int white_material;
     //int black_material;
     int material; // material score, >0 for white advantage, <0 for black advantage
@@ -121,6 +119,8 @@ typedef struct {
     //bb white_kings;
     //bb black_kings;
     bb kings;
+    char color;
+    char castle;
 } Board;
 
 void board_clear(Board *board);
