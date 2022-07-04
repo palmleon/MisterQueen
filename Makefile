@@ -183,11 +183,11 @@ $(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
 # dependency files to provide header dependencies
 $(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT_C)
 	@echo "Compiling: $< -> $@"
-	$(CMD_PREFIX)$(C) $(CFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
+	$(CMD_PREFIX)$(C) $(CFLAGS) $(INCLUDES) -MMD -c $< -o $@
 
 $(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT_CU)
 	@echo "Compiling: $< -> $@"
-	$(CMD_PREFIX)$(C) $(CFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@	
+	$(CMD_PREFIX)$(C) $(CFLAGS) $(INCLUDES) -MMD -c $< -o $@	
 
 .PHONY: run
 run:
