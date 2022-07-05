@@ -409,7 +409,7 @@ int bk_test(int index, char *fen, char *bm) {
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     do_search(&search, &board);
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);    
-    u_int64_t elapsed = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+    u_int64_t elapsed = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000;
     char notation[16];
     notate_move(&board, &search.move, notation);
     char padded[16];

@@ -100,6 +100,7 @@ void initial_sort_moves(Board *board, Move *moves, int count, int *positions, in
 }
 
 __device__ int alpha_beta_gpu_device(Board *board, int depth, int ply, int alpha, int beta) {
+    int alpha_reg = alpha;
     int result;
     if (is_illegal(board)) {
         result = INF;
@@ -116,7 +117,7 @@ __device__ int alpha_beta_gpu_device(Board *board, int depth, int ply, int alpha
             Move *move = &moves[i];
             do_move(board, move, &undo);
             //int score = 0;
-            int score = -alpha_beta_gpu_device(board, depth - 1, ply + 1, -beta, -alpha);
+            int score = -alpha_beta_gpu_device(board, depth - 1, ply + 1, -beta, -alpha_reg);
             undo_move(board, move, &undo);
             if (score > -INF) {
                 can_move = 1;
@@ -124,11 +125,11 @@ __device__ int alpha_beta_gpu_device(Board *board, int depth, int ply, int alpha
             if (score >= beta) {
                 return beta;
             }
-            if (score > alpha) {
-                alpha = score;
+            if (score > alpha_reg) {
+                alpha_reg = score;
             }
         }
-        result = alpha;
+        result = alpha_reg;
         if (!can_move) {
             //if (is_check(board)) {
             if (is_check(board, board->color)) {
@@ -145,6 +146,7 @@ __device__ int alpha_beta_gpu_device(Board *board, int depth, int ply, int alpha
 __global__ void alpha_beta_gpu_kernel(Board *board_parent, int depth, int ply, int alpha, int beta, Move* moves_parent, int* scores) {
     //int result;
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int alpha_reg = alpha;
     Board board = *board_parent;
     Move moves[MAX_MOVES];
     Undo undo;
@@ -169,7 +171,7 @@ __global__ void alpha_beta_gpu_kernel(Board *board_parent, int depth, int ply, i
             do_move(&board,  move, &undo);
             //Board *board2 = &board;
             //int score = 0;
-            int score = -alpha_beta_gpu_device(&board, depth - 1, ply + 1, -beta, -alpha);
+            int score = -alpha_beta_gpu_device(&board, depth - 1, ply + 1, -beta, -alpha_reg);
             //int score = -alpha_beta_gpu_device(&board, 0, 1, 1, 1);
             //int score = -alpha_beta_gpu_device(board_parent, depth - 1, ply + 1, -beta, -alpha);
             undo_move(&board, move, &undo);
@@ -182,12 +184,12 @@ __global__ void alpha_beta_gpu_kernel(Board *board_parent, int depth, int ply, i
                 beta_reached = 1;
                 //break;
             }
-            else if (score > alpha) {
-                alpha = score;
+            else if (score > alpha_reg) {
+                alpha_reg = score;
             }
         }
         if (!beta_reached){
-            final_score = alpha;
+            final_score = alpha_reg;
             //result = alpha;
             if (!can_move) {
                 if (is_check(&board, board.color)) {

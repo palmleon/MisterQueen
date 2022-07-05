@@ -66,18 +66,27 @@ __device__ __host__ void board_set(Board *board, int sq, char piece) {
     //int sq_shift[2] = {4,0};
     //char sq_masks[2] = {0x0f, 0xf0};
     //char previous = board->squares[sq]; // take the previous piece on that square
-    char previous = board_get_piece(board, sq);
+    unsigned char previous = board_get_piece(board, sq);
     board_set_piece(board, sq, piece);
     //const char color_previous = COLOR(previous) >> 4;
     //const char color_piece = COLOR(piece) >> 4;
-    const char color_previous = COLOR(previous) >> 3;
-    const char color_piece = COLOR(piece) >> 3;
+    /*printf("%d %d %d %d\n", COLOR(previous), COLOR(previous) >> 1, COLOR(previous) >> 2, COLOR(previous) >> 3);
+    printf("color: %d\n", COLOR(previous));
+    printf("piece: %d\n", PIECE(previous));
+    const unsigned char color = COLOR(previous);
+    */
+    const unsigned char color_previous = COLOR(previous) / 8; //>> 3;// >> 3;
+    const unsigned char color_piece = COLOR(piece) / 8; //>> 3;
     if (previous) { // was the square empty?
         // There was sth before: remove the previous piece
         bb mask = ~BIT(sq);
         board->all &= mask; // bitwise removal of the piece
+ //       printf("Board->all: %lu\n", board->all);
         board->material -= materials[PIECE(previous)-1]*coeff[color_previous];
+//        printf("Board->material: %lu\n", board->material);
         board->position -= position_tables[color_previous*6+(PIECE(previous)-1)][sq] * coeff[color_previous];
+//        printf("Board->position: %lu\n", board->position);
+        
         //*(piece_masks[PIECE(previous)-1]) &= mask;
         //*(piece_masks[color_previous*6+PIECE(previous)-1]) &= mask;
 

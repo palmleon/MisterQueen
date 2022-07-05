@@ -24,16 +24,60 @@ void print_menu(void) {
     printf("-------------------\n");
 }
 
-__global__ void print_value(void){
+/*__global__ void print_value(void){
+    printf("BLACK_KING\n");
     for(int i = 0; i < 64; i++){
         printf("%d: %d\n", i, d_POSITION_BLACK_KING[i]);
     }
-}
+    printf("BLACK_QUEEN\n");
+    for(int i = 0; i < 64; i++){
+        printf("%d: %d\n", i, d_POSITION_BLACK_QUEEN[i]);
+    }
+    printf("BLACK_ROOK\n");
+    for(int i = 0; i < 64; i++){
+        printf("%d: %d\n", i, d_POSITION_BLACK_ROOK[i]);
+    }
+    printf("BLACK_BISHOP\n");
+    for(int i = 0; i < 64; i++){
+        printf("%d: %d\n", i, d_POSITION_BLACK_BISHOP[i]);
+    }
+    printf("BLACK_KNIGHT\n");
+    for(int i = 0; i < 64; i++){
+        printf("%d: %d\n", i, d_POSITION_BLACK_KNIGHT[i]);
+    }
+    printf("BLACK_PAWN\n");
+    for(int i = 0; i < 64; i++){
+        printf("%d: %d\n", i, d_POSITION_BLACK_PAWN[i]);
+    }
+    printf("WHITE_KING\n");
+    for(int i = 0; i < 64; i++){
+        printf("%d: %d\n", i, d_POSITION_WHITE_KING[i]);
+    }
+    printf("WHITE_QUEEN\n");
+    for(int i = 0; i < 64; i++){
+        printf("%d: %d\n", i, d_POSITION_WHITE_QUEEN[i]);
+    }
+    printf("WHITE_ROOK\n");
+    for(int i = 0; i < 64; i++){
+        printf("%d: %d\n", i, d_POSITION_WHITE_ROOK[i]);
+    }
+    printf("WHITE_BISHOP\n");
+    for(int i = 0; i < 64; i++){
+        printf("%d: %d\n", i, d_POSITION_WHITE_BISHOP[i]);
+    }
+    printf("WHITE_KNIGHT\n");
+    for(int i = 0; i < 64; i++){
+        printf("%d: %d\n", i, d_POSITION_WHITE_KNIGHT[i]);
+    }
+    printf("WHITE_PAWN\n");
+    for(int i = 0; i < 64; i++){
+        printf("%d: %d\n", i, d_POSITION_WHITE_PAWN[i]);
+    }
+}*/
 
 void transfer_tables_to_gpu(void) {
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-    //do stuff
     checkCudaErrors(cudaMemcpyToSymbol(d_BB_KNIGHT, BB_KNIGHT, 64 * sizeof(bb)));
     checkCudaErrors(cudaMemcpyToSymbol(d_BB_KING, BB_KING, 64 * sizeof(bb)));
     checkCudaErrors(cudaMemcpyToSymbol(d_BB_BISHOP_6, BB_BISHOP_6, 64 * sizeof(bb)));
@@ -58,6 +102,7 @@ void transfer_tables_to_gpu(void) {
     checkCudaErrors(cudaMemcpyToSymbol(d_POSITION_BLACK_ROOK, POSITION_BLACK_ROOK, 64 * sizeof(int)));
     checkCudaErrors(cudaMemcpyToSymbol(d_POSITION_BLACK_QUEEN, POSITION_BLACK_QUEEN, 64 * sizeof(int)));
     checkCudaErrors(cudaMemcpyToSymbol(d_POSITION_BLACK_KING, POSITION_BLACK_KING, 64 * sizeof(int)));
+    //print_value<<<1,1>>>();
     cudaDeviceSynchronize();  
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
     printf("Tables loaded in %d ms\n", (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000);
@@ -77,7 +122,7 @@ int main(void) {
     transfer_tables_to_gpu();
 
     size_t value;
-    cudaDeviceSetLimit(cudaLimitStackSize, 3500);
+    cudaDeviceSetLimit(cudaLimitStackSize, 4000);
 
     cudaDeviceGetLimit(&value, cudaLimitStackSize);
 

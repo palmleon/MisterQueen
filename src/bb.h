@@ -4,9 +4,15 @@
 #define BIT(sq) (1L << (sq))
 #define RF(rank, file) ((rank) * 8 + (file))
 
+#ifdef __CUDA_ARCH__
+#define LSB(x) (__clzll(__brevll(x)))
+#define MSB(x) (63 - __clzll(x))
+#define BITS(x) (__popcll(x))
+#else
 #define LSB(x) (__builtin_ctzll(x))
 #define MSB(x) (__builtin_clzll(x))
 #define BITS(x) (__builtin_popcountll(x))
+#endif
 
 #define POP_LSB(b, x) b = LSB(x); x &= ~BIT(b);
 #define POP_MSB(b, x) b = MSB(x); x &= ~BIT(b);
