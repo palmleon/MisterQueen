@@ -99,9 +99,24 @@ void initial_sort_moves(Board *board, Move *moves, int count, int *positions, in
     free(best_indexes);
 }
 
-__device__ int alpha_beta_gpu_device(Board *board, int depth, int ply, int alpha, int beta) {
+__device__ int alpha_beta_gpu_device5(Board *board, int depth, int ply, int alpha, int beta) {
     int alpha_reg = alpha;
     int result;
+    //printf("%lu\n", board->all);
+    if (is_illegal(board)) {
+        result = INF;
+    }
+    else if (depth <= 0) {
+        result = evaluate(board);
+    }
+    return result;
+    //return 0;
+}
+
+__device__ int alpha_beta_gpu_device4(Board *board, int depth, int ply, int alpha, int beta) {
+    int alpha_reg = alpha;
+    int result;
+    //printf("%lu\n", board->all);
     if (is_illegal(board)) {
         result = INF;
     }
@@ -117,7 +132,142 @@ __device__ int alpha_beta_gpu_device(Board *board, int depth, int ply, int alpha
             Move *move = &moves[i];
             do_move(board, move, &undo);
             //int score = 0;
-            int score = -alpha_beta_gpu_device(board, depth - 1, ply + 1, -beta, -alpha_reg);
+            int score = -alpha_beta_gpu_device5(board, depth - 1, ply + 1, -beta, -alpha_reg);
+            undo_move(board, move, &undo);
+            if (score > -INF) {
+                can_move = 1;
+            }
+            if (score >= beta) {
+                return beta;
+            }
+            if (score > alpha_reg) {
+                alpha_reg = score;
+            }
+        }
+        result = alpha_reg;
+        if (!can_move) {
+            //if (is_check(board)) {
+            if (is_check(board, board->color)) {
+                result = -MATE + ply;
+            } else {
+                result = 0;
+            }
+        }
+    }
+    return result;
+    //return 0;
+}
+
+__device__ int alpha_beta_gpu_device3(Board *board, int depth, int ply, int alpha, int beta) {
+    int alpha_reg = alpha;
+    int result;
+    //printf("%lu\n", board->all);
+    if (is_illegal(board)) {
+        result = INF;
+    }
+    else if (depth <= 0) {
+        result = evaluate(board);
+    }
+    else {
+        Undo undo;
+        Move moves[MAX_MOVES];
+        int count = gen_moves_new(board, moves);
+        int can_move = 0;
+        for (int i = 0; i < count; i++) {
+            Move *move = &moves[i];
+            do_move(board, move, &undo);
+            //int score = 0;
+            int score = -alpha_beta_gpu_device4(board, depth - 1, ply + 1, -beta, -alpha_reg);
+            undo_move(board, move, &undo);
+            if (score > -INF) {
+                can_move = 1;
+            }
+            if (score >= beta) {
+                return beta;
+            }
+            if (score > alpha_reg) {
+                alpha_reg = score;
+            }
+        }
+        result = alpha_reg;
+        if (!can_move) {
+            //if (is_check(board)) {
+            if (is_check(board, board->color)) {
+                result = -MATE + ply;
+            } else {
+                result = 0;
+            }
+        }
+    }
+    return result;
+    //return 0;
+}
+
+__device__ int alpha_beta_gpu_device2(Board *board, int depth, int ply, int alpha, int beta) {
+    int alpha_reg = alpha;
+    int result;
+    //printf("%lu\n", board->all);
+    if (is_illegal(board)) {
+        result = INF;
+    }
+    else if (depth <= 0) {
+        result = evaluate(board);
+    }
+    else {
+        Undo undo;
+        Move moves[MAX_MOVES];
+        int count = gen_moves_new(board, moves);
+        int can_move = 0;
+        for (int i = 0; i < count; i++) {
+            Move *move = &moves[i];
+            do_move(board, move, &undo);
+            //int score = 0;
+            int score = -alpha_beta_gpu_device3(board, depth - 1, ply + 1, -beta, -alpha_reg);
+            undo_move(board, move, &undo);
+            if (score > -INF) {
+                can_move = 1;
+            }
+            if (score >= beta) {
+                return beta;
+            }
+            if (score > alpha_reg) {
+                alpha_reg = score;
+            }
+        }
+        result = alpha_reg;
+        if (!can_move) {
+            //if (is_check(board)) {
+            if (is_check(board, board->color)) {
+                result = -MATE + ply;
+            } else {
+                result = 0;
+            }
+        }
+    }
+    return result;
+    //return 0;
+}
+
+__device__ int alpha_beta_gpu_device(Board *board, int depth, int ply, int alpha, int beta) {
+    int alpha_reg = alpha;
+    int result;
+    //printf("%lu\n", board->all);
+    if (is_illegal(board)) {
+        result = INF;
+    }
+    else if (depth <= 0) {
+        result = evaluate(board);
+    }
+    else {
+        Undo undo;
+        Move moves[MAX_MOVES];
+        int count = gen_moves_new(board, moves);
+        int can_move = 0;
+        for (int i = 0; i < count; i++) {
+            Move *move = &moves[i];
+            do_move(board, move, &undo);
+            //int score = 0;
+            int score = -alpha_beta_gpu_device2(board, depth - 1, ply + 1, -beta, -alpha_reg);
             undo_move(board, move, &undo);
             if (score > -INF) {
                 can_move = 1;

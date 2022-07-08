@@ -122,7 +122,7 @@ int main(void) {
     transfer_tables_to_gpu();
 
     size_t value;
-    cudaDeviceSetLimit(cudaLimitStackSize, 4000);
+    //cudaDeviceSetLimit(cudaLimitStackSize, 4000);
 
     cudaDeviceGetLimit(&value, cudaLimitStackSize);
 

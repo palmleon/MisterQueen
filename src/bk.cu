@@ -406,7 +406,9 @@ int bk_test(int index, char *fen, char *bm) {
     Search search;
     search.uci = 0;
     struct timespec start, end;
+    //printf("hello0\n");
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+    //printf("hello\n");
     do_search(&search, &board);
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);    
     u_int64_t elapsed = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000;
@@ -424,7 +426,7 @@ void bk_tests() {
     int count = 0;
     int passed = 0;
     printf("Launching tests!\n");
-    int i = 0;
+    //printf("wow\n");
     for (int i = 0; i < NTESTS; i++) {
         //if (i != 21) {
         char *fen = TESTS[i * 2];
