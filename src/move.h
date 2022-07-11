@@ -10,6 +10,7 @@ typedef struct __align__(4) {
     unsigned char src;
     unsigned char dst;
     unsigned char promotion;
+    unsigned char already_executed;
 } Move;
 
 typedef struct __align__ (16) {

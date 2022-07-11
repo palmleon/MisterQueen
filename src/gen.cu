@@ -7,12 +7,14 @@
     (m)->src = (a); \
     (m)->dst = (b); \
     (m)->promotion = EMPTY; \
+    (m)->already_executed = 0; \
     (m)++;
 
 #define EMIT_PROMOTION(m, a, b, p) \
     (m)->src = (a); \
     (m)->dst = (b); \
     (m)->promotion = (p); \
+    (m)->already_executed = 0; \
     (m)++;
 
 #define EMIT_PROMOTIONS(m, a, b) \
@@ -105,12 +107,13 @@ __device__ __host__ int is_illegal(Board *board){
  * Each of these tables is a bitmap, representing where it is possible to move
  * To better understand the tables, read the bb_init() function in bb.c
  */
-__device__ __host__ int gen_moves_new(Board *board, Move *moves){
+__device__ __host__ int gen_moves(Board *board, Move *moves){
     Move *ptr = moves;
     // for black, board->color >> 4 = 0x01
     // for white, board->color >> 4 = 0x00
     //const int color_bit = board->color >> 4;
-    const int color_bit = board->color >> 3;
+    //const int color_bit = board->color >> 3;
+    const int color_bit = board->color / 8;
     // coeff = -1 for white, +1 for black
     //const int coeff[2] = {-1, 1};
     const bb players_pieces[2] = {board->white, board->black}; // array defined to avoid an if-else
@@ -268,7 +271,7 @@ int gen_legal_moves(Board *board, Move *moves) {
     Move *ptr = moves;
     Undo undo;
     Move temp[MAX_MOVES];
-    int count = gen_moves_new(board, temp);
+    int count = gen_moves(board, temp);
     for (int i = 0; i < count; i++) {
         Move *move = &temp[i];
         do_move(board, move, &undo);

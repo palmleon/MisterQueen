@@ -31,12 +31,13 @@ __device__ __host__ void do_move(Board *board, Move *move, Undo *undo) {
     const int rook_start[4] = {7,0,63,56};
     const int rook_arrival[4] = {5,3,61,59};
     const char rooks[2] = {WHITE_ROOK, BLACK_ROOK};
-    const int color_bit = board->color >> 4;
+    const int color_bit = board->color / 8;
     const int coeff[2] = {1, -1};
     undo->piece = board_get_piece(board, move->src);
     undo->capture = board_get_piece(board, move->dst);
     undo->castle = board->castle;
     undo->ep = board->ep;
+    move->already_executed = 1;
     Move move2 = *move;
     // remove the moving piece from its starting position
     board_set(board, move->src, EMPTY);
@@ -81,7 +82,7 @@ __device__ __host__ void do_move(Board *board, Move *move, Undo *undo) {
 __device__ __host__ void undo_move(Board *board, Move *move, Undo *undo) {
     //TOGGLE_HASH(board);
     const int coeff[2] = {1, -1};
-    const int color_bit = board->color >> 4;
+    const int color_bit = (board->color / 8) ^ 1;
     const char pawns[2] = {WHITE_PAWN, BLACK_PAWN};
     const char rooks[2] = {WHITE_ROOK, BLACK_ROOK};
     const int king_start[2] = {4, 60};
