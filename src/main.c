@@ -13,11 +13,15 @@ void handle_go(void) {
 }
 
 void print_menu(void) {
-    printf("insert a command\n");
+    printf("-------------------\n");
+    printf("insert a command:\n");
+    printf("square: load a board in square format\n");
+    printf("fen: load a board in fen format\n");
     printf("bm: generate the best move\n");
     printf("bk: do bk tests\n");
     printf("pb: print the board\n");
     printf("q: quit\n");
+    printf("-------------------\n");
 }
 
 int main(int argc, char **argv) {

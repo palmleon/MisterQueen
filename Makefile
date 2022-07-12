@@ -12,7 +12,7 @@ COMPILE_FLAGS = -std=c99 -Wall -O3
 # Additional release-specific flags
 RCOMPILE_FLAGS = -D NDEBUG
 # Additional debug-specific flags
-DCOMPILE_FLAGS = -D DEBUG
+DCOMPILE_FLAGS = -D DEBUG -g
 # Add additional include paths
 INCLUDES = -I $(SRC_PATH)/ -I $(SRC_PATH)/deps/tinycthread
 # General linker settings
@@ -160,6 +160,11 @@ all: $(BIN_PATH)/$(BIN_NAME)
 	@echo "Making symlink: $(BIN_NAME) -> $<"
 	@$(RM) $(BIN_NAME)
 	@ln -s $(BIN_PATH)/$(BIN_NAME) $(BIN_NAME)
+
+.PHONY: run
+run: 
+	@echo "Launching MisterQueen!"
+	@./bin/release/main
 
 # Link the executable
 $(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
