@@ -317,24 +317,22 @@ __device__ int alpha_beta_gpu_device(Board *board, int depth, int ply, int alpha
     int beta_reached[MAX_DEPTH] = {0};
     int curr_depth = depth;
     int count = 0, board_illegal, curr_idx = -1;
-    //int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    do_move(&board, &(moves_parent[idx+1]), &undo[curr_depth]);
-    // initial board created
-    if (curr_depth > 0) {
-        count = gen_moves(&board, &(moves[0]));
-        curr_idx = count - 1;
-    }
-    else {
-        if(is_illegal(&board)) {
-            scores[curr_depth] = INF;
-        }
-        else {
-            scores[curr_depth] = evaluate(&board);
-        }
-    }
     //moves[0] = moves_parent[idx+1];
     alpha[curr_depth] = alpha_parent;
     beta[curr_depth] = beta_parent;
+    //int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    do_move(&board, &(moves_parent[idx+1]), &undo[curr_depth]);
+    // initial board created
+    if(is_illegal(&board)){
+        scores[curr_depth] = INF;
+    }
+    else if (curr_depth == 0) {
+        scores[curr_depth] = evaluate(&board);
+    }
+    else {
+        count = gen_moves(&board, &(moves[0]));
+        curr_idx = count - 1;
+    }
 
     while (curr_idx >= 0){ 
         count = -1;
@@ -353,12 +351,14 @@ __device__ int alpha_beta_gpu_device(Board *board, int depth, int ply, int alpha
                 curr_idx += count;
             }
         }
-        if (board_illegal) {
+        //terminal nodes
+        if (count == 0 && board_illegal) {
             scores[curr_depth] = INF;
         }
-        else if (curr_depth == 0 || count == 0) { //terminal node
+        else if (curr_depth == 0 || count == 0) { 
             scores[curr_depth] = evaluate(&board); 
         }
+
         if (curr_idx >= 0) {
             undo_move(&board, &(moves[curr_idx]), &(undo[curr_depth]));
             curr_depth++;

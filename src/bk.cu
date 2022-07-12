@@ -4,6 +4,8 @@
 #include "move.h"
 #include "search.h"
 
+//#define FIRST_TEST 0
+
 static char *TESTS[] = {
     // https://chessprogramming.wikispaces.com/Win+at+Chess
     "2rr3k/pp3pp1/1nnqbN1p/3pN3/2pP4/2P3Q1/PPB4P/R4RK1 w - -", " Qg6 ",
@@ -427,14 +429,14 @@ void bk_tests() {
     int passed = 0;
     printf("Launching tests!\n");
     for (int i = 0; i < NTESTS; i++) {
-        //if (i >= 4) {
+//        if (i >= FIRST_TEST) {
         char *fen = TESTS[i * 2];
         char *bm = TESTS[i * 2 + 1];
         int result = bk_test(i, fen, bm);
         passed += result;
         count += 1;
         printf("%4d of %d tests passed.\n", passed, count);
-        //}
+//        }
     }
 }
 
