@@ -1,15 +1,6 @@
-#include "eval.cuh"
+#include "eval.h"
 
-__device__ __host__ int evaluate(Board *board) {
-    int score = 0;
-    score += board->white_material;
-    score -= board->black_material;
-    score += board->white_position;
-    score -= board->black_position;
-    return board->color ? -score : score;
-}
-
-int count_stacked_pawns(bb pawns, int count) {
+__device__ __host__ int count_stacked_pawns(bb pawns, int count) {
     int result = 0;
     result += BITS(pawns & FILE_A) == count;
     result += BITS(pawns & FILE_B) == count;
@@ -22,25 +13,17 @@ int count_stacked_pawns(bb pawns, int count) {
     return result;
 }
 
-int evaluate_white_pawns(Board *board) {
-    bb pawns = board->white_pawns;
+__device__ __host__ int evaluate(Board *board) {
     int score = 0;
-    score -= count_stacked_pawns(pawns, 2) * 50;
-    score -= count_stacked_pawns(pawns, 3) * 100;
-    return score;
-}
+    // evaluate the total score square by square
+    score += board->material;
+    // evaluate position, square by square
+    score += board->position;
 
-int evaluate_black_pawns(Board *board) {
-    bb pawns = board->black_pawns;
-    int score = 0;
-    score -= count_stacked_pawns(pawns, 2) * 50;
-    score -= count_stacked_pawns(pawns, 3) * 100;
-    return score;
-}
-
-__device__ __host__ int evaluate_pawns(Board *board) {
-    int score = 0;
-    score += evaluate_white_pawns(board);
-    score -= evaluate_black_pawns(board);
+    // evaluate stacked pawns
+    score -= count_stacked_pawns(board->pawns & board->white, 2) * 50;
+    score -= count_stacked_pawns(board->pawns & board->white, 3) * 100;
+    score += count_stacked_pawns(board->pawns & board->black, 2) * 50;
+    score += count_stacked_pawns(board->pawns & board->black, 3) * 100;
     return board->color ? -score : score;
 }

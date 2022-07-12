@@ -2,5 +2,8 @@
 /build
 /main
 /scripts/*.pgn
-.idea
+.idea/
+.vscode/
+/docs
+*.txt
 

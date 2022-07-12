@@ -2,11 +2,11 @@
 #define SEARCH_H
 
 #include "board.h"
+#include "move.h"
 #include "util.h"
-#include "move.cuh"
 
-#define INF 1000000
-#define MATE 100000
+#define INF 10000000
+#define MATE 1000000
 
 typedef struct {
     // input
@@ -14,7 +14,7 @@ typedef struct {
     // output
     Move move;
     // internal
-    int nodes;
+    //int nodes;
 } Search;
 
 int do_search(Search *search, Board *board);

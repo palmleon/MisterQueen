@@ -1,8 +1,10 @@
 #include <cstdio>
 #include <cstring>
 #include "board.h"
-#include "move.cuh"
-#include "search.cuh"
+#include "move.h"
+#include "search.h"
+
+//#define FIRST_TEST 0
 
 static char *TESTS[] = {
     // https://chessprogramming.wikispaces.com/Win+at+Chess
@@ -403,29 +405,38 @@ static int NTESTS = sizeof(TESTS) / sizeof(char *) / 2;
 int bk_test(int index, char *fen, char *bm) {
     Board board;
     board_load_fen(&board, fen);
+    //printf("Curr color: %s\n", board.color? "BLACK": "WHITE");
+    //board_print(&board);
     Search search;
     search.uci = 0;
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     do_search(&search, &board);
+    clock_gettime(CLOCK_MONOTONIC_RAW, &end);    
+    u_int64_t elapsed = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000;
     char notation[16];
     notate_move(&board, &search.move, notation);
     char padded[16];
     sprintf(padded, " %s ", notation);
     int result = strstr(bm, padded) != NULL;
-    printf("%4d) %s: %8s [%s]\n",
-        index + 1, result ? "PASS" : "FAIL", notation, bm);
+    printf("%4d) %s: %8s [%s] (Time: %ld ms)\n",
+        index + 1, result ? "PASS" : "FAIL", notation, bm, elapsed);
     return result;
 }
 
 void bk_tests() {
     int count = 0;
     int passed = 0;
+    printf("Launching tests!\n");
     for (int i = 0; i < NTESTS; i++) {
+//        if (i >= FIRST_TEST) {
         char *fen = TESTS[i * 2];
         char *bm = TESTS[i * 2 + 1];
         int result = bk_test(i, fen, bm);
         passed += result;
         count += 1;
-        printf("%4d of %d tests passed.\r", passed, count);
+        printf("%4d of %d tests passed.\n", passed, count);
+//        }
     }
 }
 
@@ -439,4 +450,3 @@ void test_position(int index) {
     search.uci = 1;
     do_search(&search, &board);
 }
-
