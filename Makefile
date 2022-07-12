@@ -8,11 +8,11 @@ SRC_EXT = c
 # Path to the source directory, relative to the makefile
 SRC_PATH = src
 # General compiler flags
-COMPILE_FLAGS = -std=c99 -Wall -O3
+COMPILE_FLAGS = -std=c99 -Wall 
 # Additional release-specific flags
-RCOMPILE_FLAGS = -D NDEBUG
+RCOMPILE_FLAGS = -D NDEBUG -O3
 # Additional debug-specific flags
-DCOMPILE_FLAGS = -D DEBUG -g
+DCOMPILE_FLAGS = -D DEBUG -g -O0
 # Add additional include paths
 INCLUDES = -I $(SRC_PATH)/ -I $(SRC_PATH)/deps/tinycthread
 # General linker settings

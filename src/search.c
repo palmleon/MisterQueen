@@ -79,10 +79,11 @@ int root_search(Search *search, Board *board, int depth, int ply, int alpha, int
     int count = gen_moves(board, moves);
     sort_moves(board, moves, count);
     Move *best = NULL;
+    int score;
     for (int i = 0; i < count; i++) {
         Move *move = &moves[i];
         do_move(board, move, &undo);
-        int score = -alpha_beta(search, board, depth - 1, ply + 1, -beta, -alpha);
+        score = -alpha_beta(search, board, depth - 1, ply + 1, -beta, -alpha);
         undo_move(board, move, &undo);
         if (score > alpha) {
             alpha = score;

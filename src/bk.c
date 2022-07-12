@@ -27,12 +27,14 @@ void bk_tests() {
     int count = 0;
     int passed = 0;
     for (int i = 0; i < NTESTS; i++) {
+        //if (i >= 24){
         char *fen = TESTS[i * 2];
         char *bm = TESTS[i * 2 + 1];
         int result = bk_test(i, fen, bm);
         passed += result;
         count += 1;
         printf("%4d of %d tests passed.\r", passed, count);
+        //}
     }
 }
 

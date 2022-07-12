@@ -34,10 +34,10 @@ int main(int argc, char **argv) {
     }
     else
         board_reset(&board); // load the board as in the initial position
-    char command[10];
+    char command[10] = "bk";
     while(1) {
         print_menu();
-        scanf("%s", command);
+        //scanf("%s", command);
         if (strncmp(command, "bm", 2) == 0)
             handle_go();
         else if (strncmp(command, "pb", 2) == 0)
