@@ -578,7 +578,7 @@ int root_search(Board *board, int depth, int ply, int alpha, int beta, Move *res
         Board *d_board;
         Move *d_moves;
         int *d_scores;
-        for (int i = 16/*1*/; i < count; i++){
+        for (int i = 1; i < count; i++){
             alpha_beta_gpu_iter(board, depth - 1, -beta, -alpha, moves, scores, i-1);
             //undo_move(board, move, &undo);
             //for (int i = 1; i < count; i++){
