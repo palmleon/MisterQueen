@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define DEBUG
+//#define DEBUG
 #define DEBUG_CMD "bk"
 #define DEBUG_BOARD ""
 
@@ -76,8 +76,6 @@ void print_menu(void) {
 }*/
 
 void transfer_tables_to_gpu(void) {
-    struct timespec start, end;
-    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     checkCudaErrors(cudaMemcpyToSymbol(d_BB_KNIGHT, BB_KNIGHT, 64 * sizeof(bb)));
     checkCudaErrors(cudaMemcpyToSymbol(d_BB_KING, BB_KING, 64 * sizeof(bb)));
     checkCudaErrors(cudaMemcpyToSymbol(d_BB_BISHOP_6, BB_BISHOP_6, 64 * sizeof(bb)));
@@ -104,13 +102,11 @@ void transfer_tables_to_gpu(void) {
     checkCudaErrors(cudaMemcpyToSymbol(d_POSITION_BLACK_KING, POSITION_BLACK_KING, 64 * sizeof(int)));
     //print_value<<<1,1>>>();
     cudaDeviceSynchronize();  
-    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-    printf("Tables loaded in %d ms\n", (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000);
-    
 }
 
 int main(void) {
     
+    struct timespec start, end;
     Board board;
     Search search;
     char command[10] = DEBUG_CMD;
@@ -119,16 +115,11 @@ int main(void) {
 
     bb_init();
 
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     transfer_tables_to_gpu();
-
-    size_t value;
-    //cudaDeviceSetLimit(cudaLimitStackSize, 4000);
-
-    cudaDeviceGetLimit(&value, cudaLimitStackSize);
-
-    printf("stack size: %ld\n", value);
-    
-    printf("Tables transferred to the GPU!\n");
+    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+  
+    printf("Tables transferred to the GPU! (Time: %d ms)\n", (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000);
 
     while(1) {
         print_menu();
