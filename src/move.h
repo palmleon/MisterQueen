@@ -23,8 +23,8 @@ typedef struct __align__ (16) {
 /*void make_move(Board *board, Move *move);
 void do_null_move(Board *board, Undo *undo);
 void undo_null_move(Board *board, Undo *undo);*/
-__device__ __host__ void do_move(Board *board, Move *move, Undo *undo);
-__device__ __host__ void undo_move(Board *board, Move *move, Undo *undo);
+void do_move(Board *board, Move *move, Undo *undo);
+void undo_move(Board *board, Move *move, Undo *undo);
 int score_move(Board *board, Move *move);
 
 void move_to_string(Move *move, char *str);

@@ -1,6 +1,6 @@
 #include "eval.h"
 
-__device__ __host__ int count_stacked_pawns(bb pawns, int count) {
+int count_stacked_pawns(bb pawns, int count) {
     int result = 0;
     result += BITS(pawns & FILE_A) == count;
     result += BITS(pawns & FILE_B) == count;
@@ -13,7 +13,7 @@ __device__ __host__ int count_stacked_pawns(bb pawns, int count) {
     return result;
 }
 
-__device__ __host__ int evaluate(Board *board) {
+int evaluate(Board *board) {
     int score = 0;
     // evaluate the total score square by square
     score += board->material;

@@ -125,9 +125,9 @@ typedef struct __align__(128) {
 
 void board_clear(Board *board);
 void board_reset(Board *board);
-__device__ __host__ char board_get_piece(Board *board, int sq);
-__device__ __host__ void board_set_piece(Board *board, int sq, char piece);
-__device__ __host__ void board_set(Board *board, int sq, char piece);
+char board_get_piece(Board *board, int sq);
+void board_set_piece(Board *board, int sq, char piece);
+void board_set(Board *board, int sq, char piece);
 void board_print(Board *board);
 void board_load_fen(Board *board, char *fen);
 void board_load_file_fen(Board *board, char *filename);

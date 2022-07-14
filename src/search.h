@@ -7,6 +7,7 @@
 
 #define INF 10000000
 #define MATE 1000000
+#define MAX_DEPTH 6
 
 typedef struct {
     // input

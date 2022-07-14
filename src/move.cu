@@ -21,7 +21,7 @@ void undo_null_move(Board *board, Undo *undo) {
     board->color ^= BLACK;
 }*/
 
-__device__ __host__ void do_move(Board *board, Move *move, Undo *undo) {
+void do_move(Board *board, Move *move, Undo *undo) {
     const bb rank_2nd[2] = {0x000000000000ff00L, 0x00ff000000000000L};
     const bb rank_4th[2] = {0x00000000ff000000L, 0x000000ff00000000L};
     const char castles_all[2] = {CASTLE_WHITE, CASTLE_BLACK};
@@ -79,7 +79,7 @@ __device__ __host__ void do_move(Board *board, Move *move, Undo *undo) {
     board->color ^= BLACK;
 }
 
-__device__ __host__ void undo_move(Board *board, Move *move, Undo *undo) {
+void undo_move(Board *board, Move *move, Undo *undo) {
     //TOGGLE_HASH(board);
     const int coeff[2] = {1, -1};
     const int color_bit = (board->color / 8) ^ 1;

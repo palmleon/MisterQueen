@@ -3,6 +3,6 @@
 
 #include "board.h"
 
-__device__ __host__ int evaluate(Board *board);
+int evaluate(Board *board);
 
 #endif
