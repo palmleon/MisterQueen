@@ -10,12 +10,8 @@
 #include "move.h"
 #include "util.h"
 
+
 #define LEN_POSITIONS 3
-#define MAX_DEPTH 6
-
-// RICORDA CHE IL PUNTEGGIO DELLA MOSSA VIENE VALUTATO NELLA SORT MOVES e integrato nella board_set()
-
-//void alpha_beta_iter(Board *board_parent, int depth, int alpha_parent, int beta_parent, Move* moves_parent, int* scores_parent, int idx);
 
 void sort_moves(Board *board, Move *moves, int count) {
     int best = -INF, index;
@@ -160,7 +156,7 @@ int alpha_beta_cpu(Board *board, int depth, int ply, int alpha, int beta, int *p
             checkCudaErrors(cudaMemcpy(d_board, board, sizeof(Board), cudaMemcpyHostToDevice));
             checkCudaErrors(cudaMemcpy(d_moves, moves, count * sizeof(Move), cudaMemcpyHostToDevice));
             checkCudaErrors(cudaMemcpy(d_scores, scores, count * sizeof(int), cudaMemcpyHostToDevice));
-            alpha_beta_gpu_kernel<<<count-1, 1>>>(d_board, depth - 1, -beta, -alpha, d_moves, d_scores); // first move already counted
+            alpha_beta_gpu_kernel<<<count-1, dim3(1, THREADS_PER_NODE, 1), 64 * (sizeof(bb) + sizeof(int))>>>(d_board, depth - 1, -beta, -alpha, d_moves, d_scores); // first move already counted
             //alpha_beta_gpu_kernel<<<num_multiproc, (count-1)/num_multiproc + 1>>>(d_board, depth - 1, ply + 1, -beta, -alpha, d_moves, d_scores, count-1);
             checkCudaErrors(cudaMemcpy(scores, d_scores, count * sizeof(int), cudaMemcpyDeviceToHost));
             cudaFree(d_board); cudaFree(d_moves); cudaFree(d_scores);
@@ -225,7 +221,7 @@ int root_search(Board *board, int depth, int ply, int alpha, int beta, Move *res
         checkCudaErrors(cudaMemcpy(d_board, board, sizeof(Board), cudaMemcpyHostToDevice));
         checkCudaErrors(cudaMemcpy(d_moves, moves, count * sizeof(Move), cudaMemcpyHostToDevice));
         checkCudaErrors(cudaMemcpy(d_scores, scores, count * sizeof(int), cudaMemcpyHostToDevice));
-        alpha_beta_gpu_kernel<<<count-1,1>>>(d_board, depth - 1, -beta, -alpha, d_moves, d_scores);
+        alpha_beta_gpu_kernel<<<count-1, dim3(1, THREADS_PER_NODE, 1),  64 * (sizeof(bb)  + sizeof(int))>>>(d_board, depth - 1, -beta, -alpha, d_moves, d_scores);
         //alpha_beta_gpu_kernel<<<num_multiproc, (count-1)/num_multiproc + 1>>>(d_board, depth - 1, ply + 1, -beta, -alpha, d_moves, d_scores, count-1);
         checkCudaErrors(cudaMemcpy(scores, d_scores, count * sizeof(int), cudaMemcpyDeviceToHost));
         cudaFree(d_board); cudaFree(d_moves); cudaFree(d_scores);
