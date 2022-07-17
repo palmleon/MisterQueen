@@ -371,7 +371,7 @@ void notate_move(Board *board, Move *move, char *result) {
     // check
     Undo undo;
     do_move(board, move, &undo);
-    if (is_check(board, board->color)) {
+    if (is_check(board)) {
         //if (has_legal_moves(board)) {
         if (gen_legal_moves(board, moves)){
             *result++ = '+';

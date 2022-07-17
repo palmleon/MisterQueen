@@ -68,7 +68,7 @@ int initial_sort_moves_rec(Board *board, int *positions, int len, int ply, int a
         result = alpha;
         if (!can_move) {
             //if (is_check(board)) {
-            if (is_check(board, board->color)) {
+            if (is_check(board)) {
                 result = -MATE + ply;
             } else {
                 result = 0;
@@ -177,7 +177,7 @@ int alpha_beta_cpu(Board *board, int depth, int ply, int alpha, int beta, int *p
         result = alpha;
         if (!can_move) {
             //if (is_check(board)) {
-            if (is_check(board, board->color)) {
+            if (is_check(board)) {
                 result = -MATE + ply;
             } else {
                 result = 0;
