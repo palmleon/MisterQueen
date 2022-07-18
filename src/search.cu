@@ -7,6 +7,7 @@
 #include "eval.h"
 #include "gen.h"
 #include "move.h"
+#include "stree.h"
 #include "util.h"
 
 #define LEN_POSITIONS 3
@@ -107,6 +108,49 @@ void initial_sort_moves(Board *board, Move *moves, int count, int *positions, in
         moves[0] = tmp;
     }
     free(best_indexes);
+}
+
+void initial_sort_moves_new(Board *board, int *positions, int len) {
+    Undo undo;
+    Move moves[MAX_MOVES];
+    int count = gen_moves(board, moves);
+    int *best_indexes = (int*) malloc(sizeof(int)*(len-1));
+    int best_score = -INF;
+    for (int i = 0; i < count; i++) {
+        Move *move = &(moves[i]);
+        do_move(board, move, &undo);
+        int score = -initial_sort_moves_rec(board, best_indexes, len-1, 1, -INF, +INF);
+        undo_move(board, move, &undo);
+        if (score > best_score) {
+            best_score = score;
+            positions[0] = i;
+            for (int j = 1; j < len; j++) {
+                positions[j] = best_indexes[j-1];
+            }
+        }
+    }
+    if (count >= 1){
+        Move tmp;
+        tmp = moves[positions[0]];
+        moves[positions[0]] = moves[0];
+        moves[0] = tmp;
+    }
+    free(best_indexes);
+}
+
+void initial_sort_tree(STree tree) {
+    Board board = tree->root->board;
+    int positions[LEN_POSITIONS];
+    initial_sort_moves_new(&board, positions, LEN_POSITIONS);
+    // Rearrange the Search Tree so that the PV is on the left-most branch
+    STNode node = tree->root;
+    for (int i = 0 ; i < LEN_POSITIONS; i++, node = node->children[0]) {
+        STNode tmp = node->children[0];
+        node->children[0] = node->children[positions[i]];
+        node->children[positions[i]] = tmp;
+    }
+
+    // PARALLEL ALPHA-BETA + ALPHA-BETA REDUCE
 }
 
 // Iterative Alpha-Beta Pruning
@@ -631,3 +675,99 @@ __device__ int alpha_beta_gpu_device(Board *board, int depth, int ply, int alpha
     scores[idx+1] = -final_score;
 }*/
 
+
+int root_search_new(Board *board, int s, int d, int ply, int alpha, int beta, Move *result) {
+    STree search_tree = gen_tree(board, s);
+    initial_sort_tree(search_tree);
+    // PARALLEL ALPHA-BETA + ALPHA-BETA REDUCE
+    /*
+    Move *best = NULL;
+    if (count >= 1){
+        do_move(board, &(moves[0]), &undo);
+        int score = -alpha_beta_cpu(board, depth - 1, ply + 1, -beta, -alpha, positions, LEN_POSITIONS);
+        undo_move(board, &(moves[0]), &undo);
+        if (score > alpha) {
+            alpha = score;
+            best = &(moves[0]);
+        }
+    }
+    if (count > 1){ // da cambiare con la chiamata al kernel
+        Board *d_board;
+        Move *d_moves;
+        int *d_scores;
+        checkCudaErrors(cudaMalloc(&d_board, sizeof(Board)));
+        checkCudaErrors(cudaMalloc(&d_moves, count * sizeof(Move)));
+        checkCudaErrors(cudaMalloc(&d_scores, count * sizeof(int)));
+        checkCudaErrors(cudaMemcpy(d_board, board, sizeof(Board), cudaMemcpyHostToDevice));
+        checkCudaErrors(cudaMemcpy(d_moves, moves, count * sizeof(Move), cudaMemcpyHostToDevice));
+        checkCudaErrors(cudaMemcpy(d_scores, scores, count * sizeof(int), cudaMemcpyHostToDevice));
+        alpha_beta_gpu_kernel<<<count-1,1>>>(d_board, depth - 1, -beta, -alpha, d_moves, d_scores);
+        //alpha_beta_gpu_kernel<<<num_multiproc, (count-1)/num_multiproc + 1>>>(d_board, depth - 1, ply + 1, -beta, -alpha, d_moves, d_scores, count-1);
+        checkCudaErrors(cudaMemcpy(scores, d_scores, count * sizeof(int), cudaMemcpyDeviceToHost));
+        cudaFree(d_board); cudaFree(d_moves); cudaFree(d_scores);
+        for (int i = 1; i < count; i++){
+            if (scores[i] > alpha) {
+                alpha = scores[i];
+                best = &(moves[i]);
+            }   
+        }
+    }
+    if (best) {
+        memcpy(result, best, sizeof(Move));
+    }
+    return alpha;
+    */
+}
+
+/* Wrapper of the Tree Generation Function
+ * Starting from the initial board, build the root node of tree and its direct children
+ * Then, build the rest of the tree using the Tree Gen Recursive Function, up to depth s
+ * */
+STree gen_tree(Board *board, int s){
+    Undo undo;
+    Move moves[MAX_MOVES];
+    int count;
+    // Create root
+    STree search_tree = STree_init();
+    search_tree->root = STNode_init(board);
+    if (!is_illegal(board)){
+        count = gen_moves(board, moves); //da non parallelizzare a tutti i costi dato che posso generare relativamente pochi thread
+        STNode_init_children(search_tree->root, count);
+        for (int i = 0; i < count; i++){
+            Board board_tmp = *board;
+            // Create the new node of the tree
+            do_move(&board_tmp, &moves[i], &undo);
+            search_tree->root->children[i] = STNode_init(&board_tmp);
+        }
+        gen_tree_rec(search_tree->root, 1, s);
+    }
+    return search_tree;
+}
+
+/* 
+ * Recursive Tree Generation Function
+ * Generate all 2nd generation children of the current node, then move to its direct children and repeat
+ * until all terminal nodes have been reached, i.e. nodes at depth s or illegal nodes or nodes with no children
+ * It could be parallelized on the direct children, by generating the moves for all siblings nodes in parallel
+ * Since max depth = s, mad depth of arg node = s - 2
+ */
+void gen_tree_rec(STNode node, int ply, int s){
+    Undo undo;
+    Move moves[MAX_MOVES];
+    if (ply > s-2 || is_illegal(&(node->board)))
+        return;
+    for (int i = 0; i < node->nchild; i++){ // <-- PARALLELISM
+        if (!is_illegal(&(node->children[i]->board))) {
+            int count = gen_moves(&(node->children[i]->board), moves);
+            STNode_init_children(node->children[i], count);
+            for (int j = 0; j < count; j++) { // <-- PARALLELISM (Moves + Board generate insieme nella gpu?)
+                Board board_tmp = node->children[i]->board;
+                do_move(&board_tmp, &(moves[j]), &undo);
+                node->children[i]->children[j] = STNode_init(&board_tmp);
+            }                                                          
+        }
+    }
+    for (int i = 0; i < node->nchild; i++){
+        gen_tree_rec(node->children[i], ply + 1, s);     
+    }   
+}
