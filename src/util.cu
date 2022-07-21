@@ -22,3 +22,7 @@ inline void __getLastCudaError(const char *errorMessage, const char *file,
     exit(EXIT_FAILURE);
   }
 }
+
+int compute_interval_ms(struct timespec *start, struct timespec *end){
+  return (end->tv_sec - start->tv_sec) * 1000 + (end->tv_nsec - start->tv_nsec) / 1000000;
+}

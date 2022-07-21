@@ -13,12 +13,14 @@ typedef struct __align__(4) {
     unsigned char already_executed;
 } Move;
 
-typedef struct __align__ (16) {
+typedef struct __align__(16) {
     bb ep;
     char piece;
     char capture;
     char castle;
 } Undo;
+
+extern Move NOT_MOVE; //default move for representing illegal moves
 
 /*void make_move(Board *board, Move *move);
 void do_null_move(Board *board, Undo *undo);

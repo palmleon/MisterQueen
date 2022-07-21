@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 
-//#define DEBUG
+#define DEBUG
 #define DEBUG_CMD "bk"
 #define DEBUG_BOARD ""
 

@@ -21,6 +21,8 @@ void undo_null_move(Board *board, Undo *undo) {
     board->color ^= BLACK;
 }*/
 
+Move NOT_MOVE = { 128, 128, 128, 128 }; //default move for representing illegal moves
+
 __device__ __host__ void do_move(Board *board, Move *move, Undo *undo) {
     const bb rank_2nd[2] = {0x000000000000ff00L, 0x00ff000000000000L};
     const bb rank_4th[2] = {0x00000000ff000000L, 0x000000ff00000000L};
