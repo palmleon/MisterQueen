@@ -49,7 +49,7 @@ int initial_sort_moves_rec(Board *board, int *positions, int len, int ply, int a
     }
     else if (len <= 0)
     {
-        result = evaluate(board); // + evaluate_pawns(board);
+        result = evaluate(board);
     }
     else
     {
@@ -100,7 +100,7 @@ int initial_sort_moves_rec(Board *board, int *positions, int len, int ply, int a
     }
     return result;
 }
-
+/*
 void initial_sort_moves(Board *board, Move *moves, int count, int *positions, int len)
 {
     Undo undo;
@@ -131,11 +131,17 @@ void initial_sort_moves(Board *board, Move *moves, int count, int *positions, in
     }
     free(best_indexes);
 }
+*/
 
 void initial_sort_moves_new(Board *board, int *positions, int len)
 {
     Undo undo;
     Move moves[MAX_MOVES];
+
+    if (len <= 0){
+        return;
+    }
+
     int count = gen_moves(board, moves);
     int *best_indexes = (int *)malloc(sizeof(int) * (len - 1));
     int best_score = -INF;
@@ -553,100 +559,6 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
     if (s >= 2)
     {
 
-        /*
-    Board **boards, **d_boards;
-    int **scores, **d_scores;
-
-    int nchildren;
-    // Allocate the Board Table
-    boards = (Board **) malloc (node->nchild * sizeof(Board*));
-    // Allocate the Board Table as a matrix of boards: each kernel will use its own row
-    d_boards = (Board **) malloc (node->nchild * sizeof(Board*));
-    //cudaMalloc((void ***) &d_boards, node->nchild * sizeof(Board*));
-
-    //For each child move, allocate a row of the Board Table
-    for (int i = 0; i < node->nchild; i++){
-        nchildren = node->children[i]->nchild;
-        if (nchildren > 0) {
-            boards[i] = (Board*) malloc (nchildren * sizeof(Board));
-            cudaMalloc(&(d_boards[i]), nchildren * sizeof(Board));
-        }
-    }
-
-    // Allocate the Score Table
-    scores = (int **) malloc (node->nchild * sizeof(int*));
-    // Allocate the Score Table as a matrix of scores: each kernel will use its own row
-    d_scores = (int **) malloc (node->nchild * sizeof(int*));
-
-    //cudaMalloc(&d_scores, node->nchild * sizeof(int*));
-    //For each child move, allocate a row of the Score Table
-    for (int i = 0; i < node->nchild; i++){
-        nchildren = node->children[i]->nchild;
-        if (nchildren > 0) {
-            scores[i] = (int*) malloc (nchildren * sizeof(int));
-            cudaMalloc(&(d_scores[i]), nchildren * sizeof(int));
-        }
-    }
-
-    // Insert the Boards in the Score Table
-    for (int i = 0; i < node->nchild; i++){
-        for (int j = 0; j < node->children[i]->nchild; j++){
-            boards[i][j] = node->children[i]->children[j]->board;
-        }
-    }
-
-    // Transfer the Boards to the GPU
-    for (int i = 0; i < node->nchild; i++){
-        nchildren = node->children[i]->nchild;
-        if (nchildren > 0){
-            cudaMemcpy(d_boards[i], boards[i], nchildren * sizeof(Board), cudaMemcpyHostToDevice);
-        }
-    }
-
-    // Launch the Search
-    for (int i = 0; i < node->nchild; i++){
-        nchildren = node->children[i]->nchild;
-        if (nchildren > 0){
-            alpha_beta_gpu_kernel<<<1, node->children[i]->nchild>>>(d_boards[i], d, alpha, beta, d_scores[i]);
-        }
-    }
-
-    // Retrieve the results
-    for (int i = 0; i < node->nchild; i++){
-        nchildren = node->children[i]->nchild;
-        if (nchildren > 0){
-            cudaMemcpy(scores[i], d_scores[i], nchildren * sizeof(int), cudaMemcpyDeviceToHost);
-        }
-    }
-
-    // Update the Search Tree
-    for (int i = 0; i < node->nchild; i++){
-        for (int j = 0; j < node->children[i]->nchild; j++){
-            node->children[i]->children[j]->score = scores[i][j];
-        }
-    }
-
-    // Free the Score Table
-    for (int i = 0; i < node->nchild; i++){
-        nchildren = node->children[i]->nchild;
-        if (nchildren > 0) {
-            cudaFree(d_scores[i]);
-            free(scores[i]);
-        }
-    }
-    free(d_scores); free(scores);
-
-    // Free the Board Table
-    for (int i = 0; i < node->nchild; i++){
-        nchildren = node->children[i]->nchild;
-        if (nchildren > 0) {
-            cudaFree(d_boards[i]);
-            free(boards[i]);
-        }
-    }
-    free(d_boards); free(boards);
-    */
-
         int **scores, **d_scores;
 
         int nchildren;
@@ -873,17 +785,17 @@ void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta,
     }
     if (ply >= s)
     {
-        // node->score = evaluate(&(node->board)); //TODO REMOVE ONCE DEBUGGED
+        node->score = evaluate(&(node->board)); //TODO REMOVE ONCE DEBUGGED
         return; // score has already been defined by the parallel search on terminal nodes
     }
     if (ply <= s - 2)
     {
         gen_search_tree(node);
     }
-    if (ply == s - 2 || ply == 0 && (s == 1 || s == 0))
+    if (ply == s - 2 || (ply == 0 && (s == 1 || s == 0)))
     {
         // perform the Parallel Search (it does not create additional nodes, but enriches them with more accurate scores coming from the deeper parallel search)
-        alpha_beta_parallel(node, s, d, alpha, beta);
+        //alpha_beta_parallel(node, s, d, alpha, beta);
     }
     if (isPV)
     {
@@ -920,6 +832,9 @@ void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta,
             alpha = score;
         }
     }
+    if (!beta_reached) {
+        node->score = alpha;
+    }
     if (!can_move)
     {
         if (is_check(&(node->board), node->board.color))
@@ -930,10 +845,6 @@ void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta,
         {
             node->score = 0;
         }
-    }
-    else if (!beta_reached)
-    {
-        node->score = alpha;
     }
     if (ply <= s - 2)
     {
@@ -1066,7 +977,7 @@ int root_search(Board *board, int depth, int ply, int alpha, int beta, Move *res
 
 */
 
-int root_search_new(Board *board, int s, int d, int ply, int alpha, int beta, Move *best_move)
+int root_search_new(Board *board, int s, int d, int alpha, int beta, Move *best_move)
 {
 
     // If the board is illegal, it is pointless to perform the search
@@ -1079,11 +990,14 @@ int root_search_new(Board *board, int s, int d, int ply, int alpha, int beta, Mo
     // Create the Search Tree
     STree search_tree = STree_init();
     search_tree->root = STNode_init(board, &NOT_MOVE);
+    int *positions;
 
     // Define the PV to hopefully follow the best case
-    int *positions = (int *)malloc(LEN_POSITIONS * sizeof(int));
-    initial_sort_moves_new(board, positions, LEN_POSITIONS);
-
+    if (LEN_POSITIONS > 0) {
+        positions = (int *)malloc(LEN_POSITIONS * sizeof(int));
+        initial_sort_moves_new(board, positions, LEN_POSITIONS);
+    }
+    
     // Generate the 1st generation children of the root node, if s != 0 (otherwise, the root node is terminal and should be explored on the GPU)
     Undo undo;
     Move tmp, moves[MAX_MOVES];
@@ -1102,15 +1016,18 @@ int root_search_new(Board *board, int s, int d, int ply, int alpha, int beta, Mo
     }
 
     // Reorder moves for correct move-score association
-    tmp = moves[0];
-    moves[0] = moves[positions[0]];
-    moves[positions[0]] = tmp;
+    if (LEN_POSITIONS > 0) {
+        tmp = moves[0];
+        moves[0] = moves[positions[0]];
+        moves[positions[0]] = tmp;
+    }
 
     /* Perform the search, using the Alpha Beta Pruning Algorithm
      * The algorithm will update the search_tree, updating the score of all the children nodes */
 
-    alpha_beta_cpu_new(search_tree->root, s, d, ply, alpha, beta, 1, positions);
+    alpha_beta_cpu_new(search_tree->root, s, d, 0, alpha, beta, 1, positions);
 
+    int result = alpha;
     // Fetch the best move and store it
     int can_move = 0;
     Move *best = NULL;
@@ -1121,9 +1038,9 @@ int root_search_new(Board *board, int s, int d, int ply, int alpha, int beta, Mo
         {
             can_move = 1;
         }
-        if (score > alpha)
+        if (score > result)
         {
-            alpha = score;
+            result = score;
             best = &(moves[i]);
         }
     }
@@ -1132,11 +1049,11 @@ int root_search_new(Board *board, int s, int d, int ply, int alpha, int beta, Mo
     {
         if (is_check(board, board->color))
         {
-            alpha = -MATE;
+            result = -MATE;
         }
         else
         {
-            alpha = 0;
+            result = 0;
         }
         *best_move = NOT_MOVE;
     }
@@ -1147,10 +1064,11 @@ int root_search_new(Board *board, int s, int d, int ply, int alpha, int beta, Mo
     }
 
     // Free everything
-    free(positions);
+    if (LEN_POSITIONS > 0)
+        free(positions);
     STree_free(search_tree);
 
-    return alpha;
+    return result;
     // PARALLEL ALPHA-BETA + ALPHA-BETA REDUCE
     /*
     Undo undo;
@@ -1217,7 +1135,7 @@ int do_search(Search *search, Board *board)
     int beta = score + hi;
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     // score = root_search(board, depth, 0, alpha, beta, &search->move);
-    score = root_search_new(board, s, d, 0, alpha, beta, &(search->move));
+    score = root_search_new(board, s, d, alpha, beta, &(search->move));
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
     int millis = compute_interval_ms(&start, &end);
     if (search->move.src == NOT_MOVE.src && search->move.dst == NOT_MOVE.dst)

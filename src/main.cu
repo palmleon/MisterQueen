@@ -119,7 +119,7 @@ int main(void) {
     transfer_tables_to_gpu();
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
   
-    printf("Tables transferred to the GPU! (Time: %d ms)\n", (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000);
+    printf("Tables transferred to the GPU! (Time: %d ms)\n", compute_interval_ms(&start, &end));
 
     while(1) {
         print_menu();

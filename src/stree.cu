@@ -44,15 +44,3 @@ void STNode_free_children(STNode node){
         free(node->children);
     }
 }
-
-/*
-void STNode_set_children(STNode node, STNode* children, int nchild){
-    if (node->nchild > 0) {
-        node->children = (STNode*) malloc (nchild * sizeof(STNode));
-        for (int i = 0; i < nchild; i++){
-            node->children[i] = children[i]; //children must have already been allocated
-        }
-        node->nchild = nchild;
-    }
-}
-*/
