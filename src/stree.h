@@ -2,6 +2,7 @@
 #define STREE_h
 
 #include "board.h"
+#include "move.h"
 
 /* "STree" stands for "Search Tree" */
 /* "STNode stands for "Search Tree Node" */
@@ -11,9 +12,10 @@ typedef struct _STree *STree;
 
 struct _STNode{
     Board board;
+    STNode* children; //array of children, whose len is nchild
+    Move move; //the move performed to obtain the node board from the father node
     int score;
     int nchild;
-    STNode* children; //array of children, whose len is nchild
 };
 
 struct _STree{
@@ -38,9 +40,10 @@ void STree_free(STree tree);
  * @brief Create a new node for the Search Tree
  * 
  * @param board: the board that defines the Search Tree Node
+ * @param move: the move executed to obtain the node board from the parent node
  * @return STNode: the brand new STNode
  */
-STNode STNode_init(Board *board);
+STNode STNode_init(Board *board, Move *move);
 
 /**
  * @brief Deallocate a node of the Search Tree

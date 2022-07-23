@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "stree.h"
 #include "board.h"
+#include "move.h"
 
 STree STree_init(void){
     STree tree = (STree) malloc (sizeof(_STree));
@@ -13,9 +14,10 @@ void STree_free(STree tree){
     free(tree);
 }
 
-STNode STNode_init(Board *board){
+STNode STNode_init(Board *board, Move *move){
     STNode node = (STNode) malloc (sizeof(_STNode));
     node->board = *board;
+    node->move = *move;
     node->nchild = 0;
     node->score = -INFINITY; //default value
     return node;
