@@ -12,7 +12,7 @@
 
 #define LEN_POSITIONS 3
 #define MAX_DEPTH_PAR 3
-#define MAX_DEPTH_SEQ 3
+#define MAX_DEPTH_SEQ 6
 
 // RICORDA CHE IL PUNTEGGIO DELLA MOSSA VIENE VALUTATO NELLA SORT MOVES e integrato nella board_set()
 
@@ -160,6 +160,18 @@ void gen_search_tree(STNode node){
                 node->children[i]->children[j] = STNode_init(&board_tmp);
             }                                                          
         }
+    }
+}
+
+/*
+ * Search Tree Destruction Function, acts as an inverse of the gen_search_tree function
+ * Destroy all 2nd generation children of the current node
+ * Assumptions:
+ *   - the node is at ply < s - 2 (i.e. it has effectively generated a search sub-tree)
+ */
+void undo_search_tree(STNode node){
+    for (int i = 0; i < node->nchild; i++){
+        STNode_free_children(node->children[i]);
     }
 }
 
@@ -469,7 +481,11 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta){
         int nchildren;
         // Allocate the Board Table
         boards = (Board **) malloc (node->nchild * sizeof(Board*));
-        cudaMalloc(&d_boards, node->nchild * sizeof(Board*));
+        // Allocate the Board Table as a matrix of boards: each kernel will use its own row
+        d_boards = (Board **) malloc (node->nchild * sizeof(Board*));
+        //cudaMalloc((void ***) &d_boards, node->nchild * sizeof(Board*));
+
+        //For each child move, allocate a row of the Board Table
         for (int i = 0; i < node->nchild; i++){
             nchildren = node->children[i]->nchild;
             if (nchildren > 0) {
@@ -480,7 +496,11 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta){
 
         // Allocate the Score Table
         scores = (int **) malloc (node->nchild * sizeof(int*));
-        cudaMalloc(&d_scores, node->nchild * sizeof(int*));
+        // Allocate the Score Table as a matrix of scores: each kernel will use its own row
+        d_scores = (int **) malloc (node->nchild * sizeof(int*));
+
+        //cudaMalloc(&d_scores, node->nchild * sizeof(int*));
+        //For each child move, allocate a row of the Score Table
         for (int i = 0; i < node->nchild; i++){
             nchildren = node->children[i]->nchild;
             if (nchildren > 0) {
@@ -506,7 +526,10 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta){
 
         // Launch the Search
         for (int i = 0; i < node->nchild; i++){
-            alpha_beta_gpu_kernel<<<1, node->children[i]->nchild>>>(d_boards[i], d, alpha, beta, d_scores[i]);
+            nchildren = node->children[i]->nchild;
+            if (nchildren > 0){
+                alpha_beta_gpu_kernel<<<1, node->children[i]->nchild>>>(d_boards[i], d, alpha, beta, d_scores[i]);
+            }
         }
 
         // Retrieve the results
@@ -532,17 +555,19 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta){
                 free(scores[i]);
             }
         }
-        cudaFree(d_scores);
-        free(scores);
+        free(d_scores); free(scores);
 
         // Free the Board Table
         for (int i = 0; i < node->nchild; i++){
-            cudaFree(d_boards[i]);
-            free(boards[i]);
+            nchildren = node->children[i]->nchild;
+            if (nchildren > 0) {
+                cudaFree(d_boards[i]);
+                free(boards[i]);
+            }
         }
-        cudaFree(d_boards);
-        free(boards);
+        free(d_boards); free(boards);
     }
+
     // Special Cases
     else if (s == 1){
         Board *boards, *d_boards;
@@ -559,9 +584,9 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta){
         
         cudaMemcpy(d_boards, boards, node->nchild * sizeof(Board), cudaMemcpyHostToDevice);
 
-        alpha_beta_gpu_kernel<<<1, 1>>>(d_boards, d, alpha, beta, d_scores);
+        alpha_beta_gpu_kernel<<<1, node->nchild>>>(d_boards, d, alpha, beta, d_scores);
 
-        cudaMemcpy(scores, d_scores, sizeof(int), cudaMemcpyDeviceToHost);
+        cudaMemcpy(scores, d_scores, node->nchild * sizeof(int), cudaMemcpyDeviceToHost);
 
         for (int i = 0; i < node->nchild; i++){
             node->children[i]->score = scores[i];
@@ -612,12 +637,13 @@ void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta,
         return;
     }
     if (ply >= s) {
+        node->score = evaluate(&(node->board)); //TODO REMOVE ONCE DEBUGGED
         return; // score has already been defined by the parallel search on terminal nodes
     }
     if (ply <= s-2){
         gen_search_tree(node);
     }
-    if (ply == s-2 || ply == 0 && (s == 1 || s ==0)){
+    if (0){ // (ply == s-2 || ply == 0 && (s == 1 || s == 0))){
         //perform the Parallel Search (it does not create additional nodes, but enriches them with more accurate scores coming from the deeper parallel search)
         alpha_beta_parallel(node, s, d, alpha, beta);    
      }
@@ -658,9 +684,8 @@ void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta,
     else if (!beta_reached){
         node->score = alpha;
     }
-
-    for (int i = 0; i < node->nchild; i++){
-        STNode_free_children(node->children[i]); // destroy the 2nd generation children of the current node
+    if (ply <= s-2){
+        undo_search_tree(node); // destroy the 2nd generation children of the current node
     }
         /*
         Undo undo;
@@ -807,7 +832,7 @@ int root_search_new(Board *board, int s, int d, int ply, int alpha, int beta, Mo
     
     // Generate the 1st generation children of the root node, if s != 0 (otherwise, the root node is terminal and should be explored on the GPU)
     Undo undo;
-    Move moves[MAX_MOVES];
+    Move tmp, moves[MAX_MOVES];
     int count = 0;
 
     if (s > 0){
@@ -819,6 +844,11 @@ int root_search_new(Board *board, int s, int d, int ply, int alpha, int beta, Mo
             undo_move(board, &(moves[i]), &undo);
         } 
     }
+
+    // Reorder moves for correct move-score association
+    tmp = moves[0];
+    moves[0] = moves[positions[0]];
+    moves[positions[0]] = tmp;    
 
     /* Perform the search, using the Alpha Beta Pruning Algorithm
      * The algorithm will update the search_tree, updating the score of all the children nodes */

@@ -405,6 +405,7 @@ static int NTESTS = sizeof(TESTS) / sizeof(char *) / 2;
 int bk_test(int index, char *fen, char *bm) {
     Board board;
     board_load_fen(&board, fen);
+    //board_print(&board);
     //printf("Curr color: %s\n", board.color? "BLACK": "WHITE");
     //board_print(&board);
     Search search;
@@ -426,12 +427,14 @@ void bk_tests() {
     int passed = 0;
     printf("Launching tests!\n");
     for (int i = 0; i < NTESTS; i++) {
-        char *fen = TESTS[i * 2];
-        char *bm = TESTS[i * 2 + 1];
-        int result = bk_test(i, fen, bm);
-        passed += result;
-        count += 1;
-        printf("%4d of %d tests passed.\n", passed, count);
+        if (i >= 3 - 1){
+            char *fen = TESTS[i * 2];
+            char *bm = TESTS[i * 2 + 1];
+            int result = bk_test(i, fen, bm);
+            passed += result;
+            count += 1;
+            printf("%4d of %d tests passed.\n", passed, count);
+        }
     }
 }
 
