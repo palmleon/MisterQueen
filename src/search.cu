@@ -11,8 +11,8 @@
 #include "util.h"
 
 #define LEN_POSITIONS 3
-#define MAX_DEPTH_PAR 3
-#define MAX_DEPTH_SEQ 6
+#define MAX_DEPTH_PAR 1
+#define MAX_DEPTH_SEQ 5
 
 // RICORDA CHE IL PUNTEGGIO DELLA MOSSA VIENE VALUTATO NELLA SORT MOVES e integrato nella board_set()
 
@@ -188,13 +188,13 @@ __device__ __forceinline__ void alpha_beta_gpu_iter(Board *boards_parent, int de
     
     int idx = threadIdx.x; 
     Board board = boards_parent[idx];
-    Move moves[MAX_MOVES * (MAX_DEPTH_PAR-1)];
-    int can_move[MAX_DEPTH_PAR] = {0};
-    Undo undo[MAX_DEPTH_PAR];
-    int scores[MAX_DEPTH_PAR];
-    int alpha[MAX_DEPTH_PAR];
-    int beta[MAX_DEPTH_PAR];
-    int beta_reached[MAX_DEPTH_PAR] = {0};
+    Move moves[MAX_MOVES * (MAX_DEPTH_PAR)];
+    int can_move[MAX_DEPTH_PAR+1] = {0};
+    Undo undo[MAX_DEPTH_PAR+1];
+    int scores[MAX_DEPTH_PAR+1];
+    int alpha[MAX_DEPTH_PAR+1];
+    int beta[MAX_DEPTH_PAR+1];
+    int beta_reached[MAX_DEPTH_PAR+1] = {0};
     int curr_depth = depth;
     int count = 0, board_illegal, curr_idx = -1;
     //int idx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -637,13 +637,13 @@ void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta,
         return;
     }
     if (ply >= s) {
-        node->score = evaluate(&(node->board)); //TODO REMOVE ONCE DEBUGGED
+        //node->score = evaluate(&(node->board)); //TODO REMOVE ONCE DEBUGGED
         return; // score has already been defined by the parallel search on terminal nodes
     }
     if (ply <= s-2){
         gen_search_tree(node);
     }
-    if (0){ // (ply == s-2 || ply == 0 && (s == 1 || s == 0))){
+    if ( ply == s-2 || ply == 0 && (s == 1 || s == 0)){
         //perform the Parallel Search (it does not create additional nodes, but enriches them with more accurate scores coming from the deeper parallel search)
         alpha_beta_parallel(node, s, d, alpha, beta);    
      }
