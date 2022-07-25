@@ -187,14 +187,34 @@ void gen_search_tree(STNode node)
     { // <-- PARALLELISM
         if (!is_illegal(&(node->children[i]->board)))
         {
-            int count = gen_moves(&(node->children[i]->board), moves);
-            STNode_init_children(node->children[i], count);
-            for (int j = 0; j < count; j++)
+            bb *dsts;
+            int *d_count;
+            Board *d_board;
+            Move *d_moves;
+            int *count = (int*)malloc(sizeof(int));
+            int *pieces;
+            cudaMalloc(&dsts, 64*sizeof(bb));
+            cudaMalloc(&d_moves, MAX_MOVES*sizeof(Move));
+            cudaMalloc(&d_count, sizeof(int));
+            cudaMalloc(&d_board, sizeof(Board));
+            cudaMalloc(&pieces, 64*sizeof(int));
+            cudaMemcpy(d_board, &(node->children[i]->board), sizeof(Board), cudaMemcpyHostToDevice);
+            gen_moves_gpu<<<1,64>>>(d_board, d_moves, dsts, pieces, d_count);
+            cudaMemcpy(count, d_count, sizeof(int), cudaMemcpyDeviceToHost);
+            cudaMemcpy(moves, d_moves, MAX_MOVES*sizeof(Move), cudaMemcpyDeviceToHost);
+            cudaFree(d_count);
+            cudaFree(d_board);
+            cudaFree(dsts);
+            cudaFree(d_moves);
+            cudaFree(pieces);
+            STNode_init_children(node->children[i], *count);
+            for (int j = 0; j < *count; j++)
             { // <-- PARALLELISM (Moves + Board generate insieme nella gpu)
                 Board board_tmp = node->children[i]->board;
                 do_move(&board_tmp, &(moves[j]), &undo);
                 node->children[i]->children[j] = STNode_init(&board_tmp, &(moves[j]));
             }
+            free(count);
         }
     }
 }
