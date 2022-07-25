@@ -559,6 +559,7 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
     if (s >= 2)
     {
 
+        cudaStream_t *streams;
         int **scores, **d_scores;
 
         int nchildren;
@@ -567,6 +568,17 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
         Move **second_moves, **d_second_moves;
 
         Board *d_board;
+
+        int num_multiproc;
+        int stream_idx;
+        checkCudaErrors(cudaDeviceGetAttribute(&num_multiproc, cudaDevAttrMultiProcessorCount, 0));
+        //num_multiproc++; //define an additional stream in 
+        
+        // Allocate the cudaStreams
+        streams = (cudaStream_t*) malloc (num_multiproc * sizeof(cudaStream_t));
+        for (int i = 0; i < num_multiproc; i++){
+            checkCudaErrors(cudaStreamCreate(&(streams[i])));
+        }
 
         // Allocate the Board to start from
         cudaMalloc(&d_board, sizeof(Board));
@@ -587,6 +599,7 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
             d_scores = (int **)malloc(node->nchild * sizeof(int *));
         }
 
+        stream_idx = 0;
         // For each child, allocate a row in the Move Matrix
         for (int i = 0; i < node->nchild; i++)
         {
@@ -594,10 +607,12 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
             if (nchildren > 0)
             {
                 second_moves[i] = (Move *)malloc(nchildren * sizeof(Move));
-                cudaMalloc(&(d_second_moves[i]), nchildren * sizeof(Move));
+                cudaMallocAsync(&(d_second_moves[i]), nchildren * sizeof(Move), streams[stream_idx++]);
+                stream_idx %= num_multiproc;
             }
         }
 
+        stream_idx = 0;
         // For each child move, allocate a row of the Score Table
         for (int i = 0; i < node->nchild; i++)
         {
@@ -605,7 +620,8 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
             if (nchildren > 0)
             {
                 scores[i] = (int *)malloc(nchildren * sizeof(int));
-                cudaMalloc(&(d_scores[i]), nchildren * sizeof(int));
+                cudaMallocAsync(&(d_scores[i]), nchildren * sizeof(int), streams[stream_idx++]);
+                stream_idx %= num_multiproc;
             }
         }
 
@@ -629,32 +645,39 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
         }
 
         // Transfer the 2nd generation Move Matrix to the GPU
+        stream_idx = 0;
         for (int i = 0; i < node->nchild; i++)
         {
             nchildren = node->children[i]->nchild;
             if (nchildren > 0)
             {
-                cudaMemcpy(d_second_moves[i], second_moves[i], nchildren * sizeof(Move), cudaMemcpyHostToDevice);
+                cudaMemcpyAsync(d_second_moves[i], second_moves[i], nchildren * sizeof(Move), cudaMemcpyHostToDevice, streams[stream_idx++]);
+                stream_idx %= num_multiproc;
             }
         }
 
         // Launch the Search
+        stream_idx = 0;
         for (int i = 0; i < node->nchild; i++)
         {
             nchildren = node->children[i]->nchild;
             if (nchildren > 0)
             {
-                alpha_beta_gpu_kernel<<<1, nchildren>>>(d_board, d_first_moves, d_second_moves[i], i, d, alpha, beta, d_scores[i]);
+                // no shared memory so far
+                alpha_beta_gpu_kernel<<<1, nchildren, 0, streams[stream_idx++]>>>(d_board, d_first_moves, d_second_moves[i], i, d, alpha, beta, d_scores[i]);
+                stream_idx %= num_multiproc;
             }
         }
 
         // Retrieve the results
+        stream_idx = 0;
         for (int i = 0; i < node->nchild; i++)
         {
             nchildren = node->children[i]->nchild;
             if (nchildren > 0)
             {
-                cudaMemcpy(scores[i], d_scores[i], nchildren * sizeof(int), cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(scores[i], d_scores[i], nchildren * sizeof(int), cudaMemcpyDeviceToHost, streams[stream_idx++]);
+                stream_idx %= num_multiproc;
             }
         }
 
@@ -700,6 +723,12 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
             free(first_moves);
         }
         cudaFree(d_board);
+
+        for (int i = 0; i < num_multiproc; i++){
+            checkCudaErrors(cudaStreamDestroy(streams[i]));
+        }
+
+        free(streams);
     }
 
     // Special Cases
@@ -709,13 +738,13 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
         Move *moves, *d_moves;
         int *scores, *d_scores;
 
-        cudaMalloc(&d_board, sizeof(Board));
+        checkCudaErrors(cudaMalloc(&d_board, sizeof(Board)));
         if (node->nchild > 0)
         {
             moves = (Move *)malloc(node->nchild * sizeof(Move));
-            cudaMalloc(&d_moves, node->nchild * sizeof(Move));
+            checkCudaErrors(cudaMalloc(&d_moves, node->nchild * sizeof(Move)));
             scores = (int *)malloc(node->nchild * sizeof(int));
-            cudaMalloc(&d_scores, node->nchild * sizeof(int));
+            checkCudaErrors(cudaMalloc(&d_scores, node->nchild * sizeof(int)));
         }
 
         for (int i = 0; i < node->nchild; i++)
@@ -725,12 +754,12 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
 
         if (node->nchild > 0)
         {
-            cudaMemcpy(d_board, &(node->board), sizeof(Board), cudaMemcpyHostToDevice);
-            cudaMemcpy(d_moves, moves, node->nchild * sizeof(Move), cudaMemcpyHostToDevice);
+            checkCudaErrors(cudaMemcpy(d_board, &(node->board), sizeof(Board), cudaMemcpyHostToDevice));
+            checkCudaErrors(cudaMemcpy(d_moves, moves, node->nchild * sizeof(Move), cudaMemcpyHostToDevice));
 
             alpha_beta_gpu_kernel<<<1, node->nchild>>>(d_board, d_moves, d, alpha, beta, d_scores);
 
-            cudaMemcpy(scores, d_scores, node->nchild * sizeof(int), cudaMemcpyDeviceToHost);
+            checkCudaErrors(cudaMemcpy(scores, d_scores, node->nchild * sizeof(int), cudaMemcpyDeviceToHost));
         }
 
         for (int i = 0; i < node->nchild; i++)
@@ -740,33 +769,33 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
 
         if (node->nchild > 0)
         {
-            cudaFree(d_scores);
+            checkCudaErrors(cudaFree(d_scores));
             free(scores);
-            cudaFree(d_moves);
+            checkCudaErrors(cudaFree(d_moves));
             free(moves);
         }
-        cudaFree(d_board);
+        checkCudaErrors(cudaFree(d_board));
     }
     else if (s == 0)
     {
         Board *d_board;
         int *score, *d_score;
 
-        cudaMalloc(&d_board, sizeof(Board));
+        checkCudaErrors(cudaMalloc(&d_board, sizeof(Board)));
         score = (int *)malloc(sizeof(int));
-        cudaMalloc(&d_score, sizeof(int));
+        checkCudaErrors(cudaMalloc(&d_score, sizeof(int)));
 
-        cudaMemcpy(d_board, &(node->board), sizeof(Board), cudaMemcpyHostToDevice);
+        checkCudaErrors(cudaMemcpy(d_board, &(node->board), sizeof(Board), cudaMemcpyHostToDevice));
 
         alpha_beta_gpu_kernel<<<1, 1>>>(d_board, d, alpha, beta, d_score);
 
-        cudaMemcpy(score, d_score, sizeof(int), cudaMemcpyDeviceToHost);
+        checkCudaErrors(cudaMemcpy(score, d_score, sizeof(int), cudaMemcpyDeviceToHost));
 
         node->score = *score;
 
-        cudaFree(d_score);
+        checkCudaErrors(cudaFree(d_score));
         free(score);
-        cudaFree(d_board);
+        checkCudaErrors(cudaFree(d_board));
     }
 }
 
