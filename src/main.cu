@@ -119,9 +119,11 @@ int main(void) {
     transfer_tables_to_gpu();
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
   
-    printf("Tables transferred to the GPU! (Time: %d ms)\n", compute_interval_ms(&start, &end));
+    printf("Tables transferred to the GPU! (Time: %lu ms)\n", compute_interval_ms(&start, &end));  
 
+    #ifndef DEBUG
     while(1) {
+    #endif
         print_menu();
         #ifndef DEBUG
         scanf("%s", command);
@@ -148,6 +150,8 @@ int main(void) {
             bk_tests();
         else if (strncmp(command, "q", 1) == 0)
             return 0;
+    #ifndef DEBUG
     }
+    #endif
 }
 

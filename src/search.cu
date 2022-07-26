@@ -180,43 +180,105 @@ void initial_sort_moves_new(Board *board, int *positions, int len)
 void gen_search_tree(STNode node)
 {
     Undo undo;
-    Move moves[MAX_MOVES];
+    //Move moves[MAX_MOVES];
+    cudaStream_t *streams;
     if (is_illegal(&(node->board)))
         return;
-    for (int i = 0; i < node->nchild; i++)
+    int num_multiproc;
+
+    int *d_count, *count;
+    Board *d_boards, *boards;
+    Move *d_moves, *moves;
+           
+    //int stream_idx;
+    checkCudaErrors(cudaDeviceGetAttribute(&num_multiproc, cudaDevAttrMultiProcessorCount, 0));
+    //num_multiproc++; //define an additional stream in 
+    const int num_streams = 2*num_multiproc;
+    
+    // Allocate the board vectors (one board per child node)
+    boards = (Board*) malloc (node->nchild * sizeof(Board));
+    checkCudaErrors(cudaMalloc(&d_boards, node->nchild * sizeof(Board)));
+
+    // Allocate the Moves vectors (one subvector per child node)
+    moves = (Move*) malloc (node->nchild * MAX_MOVES * sizeof(Move));
+    checkCudaErrors(cudaMalloc(&d_moves, node->nchild * MAX_MOVES * sizeof(Move)));
+
+    // Allocate the count vectors (one count per child node)
+    count = (int*) malloc (node->nchild * sizeof(int));
+    checkCudaErrors(cudaMalloc(&d_count, node->nchild * sizeof(int)));
+        
+    // Create the Streams
+    streams = (cudaStream_t *) malloc (num_streams * sizeof(cudaStream_t));   
+    for (int i = 0; i < num_streams; i++){
+        checkCudaErrors(cudaStreamCreate(&(streams[i])));
+    }
+
+    // Prepare the Board Vector
+    for (int i = 0; i < node->nchild; i++) {
+        boards[i] = node->children[i]->board;
+    }
+
+    // Transfer everything to memory
+    for (int i = 0, stream_idx = 0; i < node->nchild; i++, stream_idx = (stream_idx + 1) % num_streams){
+        cudaMemcpyAsync(d_boards + i, boards + i, sizeof(Board), cudaMemcpyHostToDevice, streams[stream_idx]);
+    }
+
+    for (int i = 0, stream_idx = 0; i < node->nchild; i++, stream_idx = (stream_idx + 1) % num_streams)
     { // <-- PARALLELISM
         if (!is_illegal(&(node->children[i]->board)))
         {
-            bb *dsts;
-            int *d_count;
-            Board *d_board;
-            Move *d_moves;
-            int *count = (int*)malloc(sizeof(int));
-            int *pieces;
-            cudaMalloc(&dsts, 64*sizeof(bb));
+            //bb *dsts;
+            // int *count = (int*)malloc(sizeof(int));
+            //int *pieces;
+            //cudaMalloc(&dsts, 64*sizeof(bb));
+            /*
             cudaMalloc(&d_moves, MAX_MOVES*sizeof(Move));
-            cudaMalloc(&d_count, sizeof(int));
+            cudaMalloc(&d_count, sizeof(int));cacca
             cudaMalloc(&d_board, sizeof(Board));
-            cudaMalloc(&pieces, 64*sizeof(int));
-            cudaMemcpy(d_board, &(node->children[i]->board), sizeof(Board), cudaMemcpyHostToDevice);
-            gen_moves_gpu<<<1,64>>>(d_board, d_moves, dsts, pieces, d_count);
-            cudaMemcpy(count, d_count, sizeof(int), cudaMemcpyDeviceToHost);
-            cudaMemcpy(moves, d_moves, MAX_MOVES*sizeof(Move), cudaMemcpyDeviceToHost);
+            */
+            //cudaMalloc(&pieces, 64*sizeof(int));
+            //cudaMemcpyAsync(d_board, &(node->children[i]->board), sizeof(Board), cudaMemcpyHostToDevice, streams[stream_idx]);
+            gen_moves_gpu<<<1, 64, 0, streams[stream_idx]>>>(d_boards, d_moves, d_count, i);
+            /*
+            cudaMemcpyAsync(count, d_count, sizeof(int), cudaMemcpyDeviceToHost, streams[stream_idx]);
+            cudaMemcpyAsync(moves, d_moves, MAX_MOVES*sizeof(Move), cudaMemcpyDeviceToHost, streams[stream_idx]);
+            */
+            /*
             cudaFree(d_count);
             cudaFree(d_board);
-            cudaFree(dsts);
-            cudaFree(d_moves);
-            cudaFree(pieces);
-            STNode_init_children(node->children[i], *count);
-            for (int j = 0; j < *count; j++)
-            { // <-- PARALLELISM (Moves + Board generate insieme nella gpu)
-                Board board_tmp = node->children[i]->board;
-                do_move(&board_tmp, &(moves[j]), &undo);
-                node->children[i]->children[j] = STNode_init(&board_tmp, &(moves[j]));
-            }
-            free(count);
+            */
+            //cudaFree(dsts);
+            //cudaFree(d_moves);
+            //cudaFree(pieces);
         }
     }
+
+    for (int i = 0, stream_idx = 0; i < node->nchild; i++, stream_idx = (stream_idx + 1) % num_streams) {
+        cudaMemcpyAsync(moves + i*MAX_MOVES, d_moves + i*MAX_MOVES, MAX_MOVES * sizeof(Move), cudaMemcpyDeviceToHost, streams[stream_idx]);
+        cudaMemcpyAsync(count + i, d_count + i, sizeof(int), cudaMemcpyDeviceToHost, streams[stream_idx]);
+    }
+    
+    cudaDeviceSynchronize();
+
+    for (int i = 0; i < node->nchild; i++){
+        if (!is_illegal(&(node->children[i]->board))){
+            STNode_init_children(node->children[i], count[i]);
+            for (int j = 0; j < count[i]; j++){
+                Board board_tmp = node->children[i]->board;
+                do_move(&board_tmp, &(moves[i*MAX_MOVES + j]), &undo);
+                node->children[i]->children[j] = STNode_init(&board_tmp, &(moves[i*MAX_MOVES + j]));
+            }
+        }
+    }
+    
+    cudaFree(d_count); cudaFree(d_moves); cudaFree(d_boards);
+    free(count); free(moves); free(boards);
+
+    for (int i = 0; i < num_streams; i++){
+        checkCudaErrors(cudaStreamDestroy(streams[i]));
+    }
+
+    free(streams);
 }
 
 /*
@@ -589,14 +651,14 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
 
         Board *d_board;
 
-        int num_multiproc;
+        int num_multiproc, num_streams;
         int stream_idx;
         checkCudaErrors(cudaDeviceGetAttribute(&num_multiproc, cudaDevAttrMultiProcessorCount, 0));
         //num_multiproc++; //define an additional stream in 
-        
+        num_streams = num_multiproc;
         // Allocate the cudaStreams
-        streams = (cudaStream_t*) malloc (num_multiproc * sizeof(cudaStream_t));
-        for (int i = 0; i < num_multiproc; i++){
+        streams = (cudaStream_t*) malloc (num_streams * sizeof(cudaStream_t));
+        for (int i = 0; i < num_streams; i++){
             checkCudaErrors(cudaStreamCreate(&(streams[i])));
         }
 
@@ -628,7 +690,7 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
             {
                 second_moves[i] = (Move *)malloc(nchildren * sizeof(Move));
                 cudaMallocAsync(&(d_second_moves[i]), nchildren * sizeof(Move), streams[stream_idx++]);
-                stream_idx %= num_multiproc;
+                stream_idx %= num_streams;
             }
         }
 
@@ -641,7 +703,7 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
             {
                 scores[i] = (int *)malloc(nchildren * sizeof(int));
                 cudaMallocAsync(&(d_scores[i]), nchildren * sizeof(int), streams[stream_idx++]);
-                stream_idx %= num_multiproc;
+                stream_idx %= num_streams;
             }
         }
 
@@ -672,7 +734,7 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
             if (nchildren > 0)
             {
                 cudaMemcpyAsync(d_second_moves[i], second_moves[i], nchildren * sizeof(Move), cudaMemcpyHostToDevice, streams[stream_idx++]);
-                stream_idx %= num_multiproc;
+                stream_idx %= num_streams;
             }
         }
 
@@ -685,7 +747,7 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
             {
                 // no shared memory so far
                 alpha_beta_gpu_kernel<<<1, nchildren, 0, streams[stream_idx++]>>>(d_board, d_first_moves, d_second_moves[i], i, d, alpha, beta, d_scores[i]);
-                stream_idx %= num_multiproc;
+                stream_idx %= num_streams;
             }
         }
 
@@ -697,7 +759,7 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
             if (nchildren > 0)
             {
                 cudaMemcpyAsync(scores[i], d_scores[i], nchildren * sizeof(int), cudaMemcpyDeviceToHost, streams[stream_idx++]);
-                stream_idx %= num_multiproc;
+                stream_idx %= num_streams;
             }
         }
 
@@ -744,7 +806,7 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
         }
         cudaFree(d_board);
 
-        for (int i = 0; i < num_multiproc; i++){
+        for (int i = 0; i < num_streams; i++){
             checkCudaErrors(cudaStreamDestroy(streams[i]));
         }
 

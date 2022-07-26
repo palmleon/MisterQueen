@@ -26,6 +26,6 @@ inline void __getLastCudaError(const char *errorMessage, const char *file,
  * @return int: the interval, in ms
  */
 
-int compute_interval_ms(struct timespec *start, struct timespec *end);
+unsigned long int compute_interval_ms(struct timespec *start, struct timespec *end);
 
 #endif
