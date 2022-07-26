@@ -2,7 +2,6 @@
 #include <math.h>
 #include "gen.h"
 
-
 #define EMIT_MOVE(m, a, b) \
     (m)->src = (a); \
     (m)->dst = (b); \
@@ -19,11 +18,11 @@
 
 #define EMIT_PROMOTIONS(m, a, b) \
     EMIT_PROMOTION(m, a, b, QUEEN) \
-    EMIT_PROMOTION(m, a, b, ROOK) \
-    EMIT_PROMOTION(m, a, b, BISHOP) \
     EMIT_PROMOTION(m, a, b, KNIGHT)
-
-#define THREADS_PER_NODE 64
+    /*
+    EMIT_PROMOTION(m, a, b, ROOK) \
+    EMIT_PROMOTION(m, a, b, BISHOP) 
+    */
 
 /* To verify if the current player is in check, 
    we generate all the opponent moves 
@@ -270,23 +269,39 @@ __device__ __host__ int gen_moves(Board *board, Move *moves){
 }
 
 
-__global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr, int childIdx){
+__global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr, int baseNodeIdx, int nNodes){
     
-    const int idx = threadIdx.x;
+    // Thread indexes x, y
+    const int tid_x = baseNodeIdx + threadIdx.x; // index of the Node
+    const int tid_y = threadIdx.y; // index of the Thread 
+    
+    if (tid_x >= nNodes) { return; }
+    
     // declare different pointers to the same contiguous memory area: it is the only way to use the shared memory
-    __shared__ bb dsts_array[64];
-    __shared__ char pieces[64];
+    extern __shared__ int *shmem[];
+    bb *dsts_array = (bb*) ((char*) shmem + threadIdx.x * 64 * sizeof(bb));
+    char *pieces = (char*) shmem + blockDim.x * 64 * sizeof(bb) + threadIdx.x * 64 * sizeof(char);
+
+    //bb dsts_array[64];
+    //__shared__ char pieces[64];
+    
     //int *pieces = (int*) ((char*) dsts_array + 64*sizeof(bb));
-    Board board = board_arr[childIdx];
-    Move *moves = moves_arr + MAX_MOVES * childIdx;
-    Move *ptr = moves;
-    // for black, board->color >> 4 = 0x01
-    // for white, board->color >> 4 = 0x00
-    //const int color_bit = board->color >> 4;
+    Board board = board_arr[tid_x]; // input board
+
+    if (is_illegal(&board)){
+        count_arr[tid_x] = 0;
+        return;
+    }
+
+    
+    Move moves[MAX_MOVES];
+    Move *moves_local = moves; // moving pointer of the moves array
+    Move *moves_glob = moves_arr + MAX_MOVES * tid_x; // index where to write the new moves
+    Move *moves_local_start = moves; // start point of the moves vector
+    // for black, board->color >> 3 = 0x01
+    // for white, board->color >> 3 = 0x00
     //const int color_bit = board->color >> 3;
     const int color_bit = board.color / 8;
-    // coeff = -1 for white, +1 for black
-    //const int coeff[2] = {-1, 1};
     const bb players_pieces[2] = {board.white, board.black}; // array defined to avoid an if-else
     const bb promo[2] = {0xff00000000000000L, 0x00000000000000ffL}; // representation of the promotion rank
     const bb third_rank[2] = {0x0000000000ff0000L, 0x0000ff0000000000L}; // used for initial double move of pawn
@@ -303,7 +318,8 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
     const int castle_king_pos_before[2] = {4, 60};
     const int castle_king_pos_after[4] = {6, 2, 62, 58};
     bb dsts; 
-    for(int sq = idx * (64 / THREADS_PER_NODE); sq < (idx + 1) * (64 / THREADS_PER_NODE); sq++){
+
+    for(int sq = tid_y * (64 / THREADS_PER_NODE); sq < (tid_y + 1) * (64 / THREADS_PER_NODE); sq++){
         //char piece = board->squares[sq];
         //char piece = board_get_piece_gpu(board, sq);
         pieces[sq] = board_get_piece(&board, sq);
@@ -373,7 +389,7 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
         dsts_array[sq] = dsts;
     }
     __syncthreads();
-    if (idx == 0) {
+    if (tid_y == 0) {
         for (int sq = 0; sq < 64; sq++) {
             // Emit all the moves
             dsts = dsts_array[sq];
@@ -383,10 +399,10 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
                 int dst;
                 POP_LSB(dst, dsts);
                 if ((PIECE(piece) == PAWN) && (BIT(dst) & promo[color_bit])){
-                    EMIT_PROMOTIONS(moves, sq, dst);
+                    EMIT_PROMOTIONS(moves_local, sq, dst);
                 }
                 else {
-                    EMIT_MOVE(moves, sq, dst);
+                    EMIT_MOVE(moves_local, sq, dst);
                 }
             }
         }
@@ -399,7 +415,7 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
     //dsts = 0;
     if ((board.castle & castles[color_bit*2]) || board.castle & castles[color_bit*2+1]){
         //for (int sq = 0; sq < 64; sq++){
-        for(int sq = idx * (64 / THREADS_PER_NODE); sq < (idx + 1) * (64 / THREADS_PER_NODE); sq++){
+        for(int sq = tid_y * (64 / THREADS_PER_NODE); sq < (tid_y + 1) * (64 / THREADS_PER_NODE); sq++){
             //char piece = board_get_piece_gpu(board, sq);
             //dsts = 0;
             char piece = pieces[sq];
@@ -454,7 +470,7 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
             dsts_array[sq] = dsts;
         }
         __syncthreads();
-        if (idx == 0) {
+        if (tid_y == 0) {
             for (int sq = 1; sq < 64; sq++) {
                 dsts_array[0] |= dsts_array[sq];
             }
@@ -469,15 +485,21 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
                         // which do not attack the king during castle (mask)
                         // emit the castle
                     if (!(dsts_array[0] & mask)) {
-                        EMIT_MOVE(moves, castle_king_pos_before[color_bit], castle_king_pos_after[color_bit*2+i]);
+                        EMIT_MOVE(moves_local, castle_king_pos_before[color_bit], castle_king_pos_after[color_bit*2+i]);
                     }
                 }
             }
         }
     }
-    if (idx == 0)
-        count_arr[childIdx] = moves - ptr;
-    return; // incompatible with parallel code, for now it is just for refactoring
+    if (tid_y == 0) {
+        count_arr[tid_x] = moves_local - moves_local_start;
+
+        // copy the moves to the global memory vector
+        for (int i = 0; i < MAX_MOVES; i++) {
+            moves_glob[i] = moves[i];
+        }
+    }
+    return;
 }
 
 int gen_legal_moves(Board *board, Move *moves) {
