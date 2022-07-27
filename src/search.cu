@@ -684,21 +684,23 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
         int stream_idx;
         checkCudaErrors(cudaDeviceGetAttribute(&num_multiproc, cudaDevAttrMultiProcessorCount, 0));
         //num_multiproc++; //define an additional stream in 
-        num_streams = num_multiproc;
+        //num_streams = num_multiproc;
+        num_streams = node->nchild;
         // Allocate the cudaStreams
         streams = (cudaStream_t*) malloc (num_streams * sizeof(cudaStream_t));
+
         for (int i = 0; i < num_streams; i++){
             checkCudaErrors(cudaStreamCreate(&(streams[i])));
         }
 
         // Allocate the Board to start from
-        cudaMalloc(&d_board, sizeof(Board));
-
+        checkCudaErrors(cudaMalloc(&d_board, sizeof(Board)));
+        
         if (node->nchild > 0)
         {
             // Allocate the Move Array containing the 1st generation children
             first_moves = (Move *)malloc(node->nchild * sizeof(Move));
-            cudaMalloc(&d_first_moves, node->nchild * sizeof(Move));
+            checkCudaErrors(cudaMalloc(&d_first_moves, node->nchild * sizeof(Move)));
 
             // Allocate the Move Matrix containing the 2nd generation children
             second_moves = (Move **)malloc(node->nchild * sizeof(Move *));
@@ -747,12 +749,12 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
         }
 
         // Transfer the node Board to the GPU
-        cudaMemcpy(d_board, &(node->board), sizeof(Board), cudaMemcpyHostToDevice);
-
+        checkCudaErrors(cudaMemcpy(d_board, &(node->board), sizeof(Board), cudaMemcpyHostToDevice));
+        
         // Transfer the 1st generation Move Array to the GPU
         if (node->nchild > 0)
         {
-            cudaMemcpy(d_first_moves, first_moves, node->nchild * sizeof(Move), cudaMemcpyHostToDevice);
+            checkCudaErrors(cudaMemcpy(d_first_moves, first_moves, node->nchild * sizeof(Move), cudaMemcpyHostToDevice));
         }
 
         // Transfer the 2nd generation Move Matrix to the GPU
@@ -762,7 +764,7 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
             nchildren = node->children[i]->nchild;
             if (nchildren > 0)
             {
-                cudaMemcpyAsync(d_second_moves[i], second_moves[i], nchildren * sizeof(Move), cudaMemcpyHostToDevice, streams[stream_idx++]);
+                checkCudaErrors(cudaMemcpyAsync(d_second_moves[i], second_moves[i], nchildren * sizeof(Move), cudaMemcpyHostToDevice, streams[stream_idx++]));
                 stream_idx %= num_streams;
             }
         }
@@ -787,10 +789,12 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
             nchildren = node->children[i]->nchild;
             if (nchildren > 0)
             {
-                cudaMemcpyAsync(scores[i], d_scores[i], nchildren * sizeof(int), cudaMemcpyDeviceToHost, streams[stream_idx++]);
+                checkCudaErrors(cudaMemcpyAsync(scores[i], d_scores[i], nchildren * sizeof(int), cudaMemcpyDeviceToHost, streams[stream_idx++]));
                 stream_idx %= num_streams;
             }
         }
+
+        cudaDeviceSynchronize();
 
         // Update the Search Tree
         for (int i = 0; i < node->nchild; i++)
@@ -807,7 +811,7 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
             nchildren = node->children[i]->nchild;
             if (nchildren > 0)
             {
-                cudaFree(d_scores[i]);
+                checkCudaErrors(cudaFree(d_scores[i]));
                 free(scores[i]);
             }
         }
@@ -818,7 +822,7 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
             nchildren = node->children[i]->nchild;
             if (nchildren > 0)
             {
-                cudaFree(d_second_moves[i]);
+                checkCudaErrors(cudaFree(d_second_moves[i]));
                 free(second_moves[i]);
             }
         }
@@ -830,10 +834,10 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
             free(scores);
             free(second_moves);
             free(d_second_moves);
-            cudaFree(d_first_moves);
+            checkCudaErrors(cudaFree(d_first_moves));
             free(first_moves);
         }
-        cudaFree(d_board);
+        checkCudaErrors(cudaFree(d_board));
 
         for (int i = 0; i < num_streams; i++){
             checkCudaErrors(cudaStreamDestroy(streams[i]));

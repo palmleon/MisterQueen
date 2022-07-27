@@ -277,11 +277,6 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
     
     if (tid_x >= nNodes) { return; }
     
-    // declare different pointers to the same contiguous memory area: it is the only way to use the shared memory
-    extern __shared__ int *shmem[];
-    bb *dsts_array = (bb*) ((char*) shmem + threadIdx.x * 64 * sizeof(bb));
-    char *pieces = (char*) shmem + blockDim.x * 64 * sizeof(bb) + threadIdx.x * 64 * sizeof(char);
-
     //bb dsts_array[64];
     //__shared__ char pieces[64];
     
@@ -293,7 +288,11 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
         return;
     }
 
-    
+    // declare different pointers to the same contiguous memory area: it is the only way to use the shared memory
+    extern __shared__ int *shmem[];
+    bb *dsts_array = (bb*) ((char*) shmem + threadIdx.x * 64 * sizeof(bb));
+    char *pieces = (char*) shmem + blockDim.x * 64 * sizeof(bb) + threadIdx.x * 64 * sizeof(char);
+
     Move moves[MAX_MOVES];
     Move *moves_local = moves; // moving pointer of the moves array
     Move *moves_glob = moves_arr + MAX_MOVES * tid_x; // index where to write the new moves
