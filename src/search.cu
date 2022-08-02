@@ -179,7 +179,7 @@ void initial_sort_moves_new(Board *board, int *positions, int len)
  * It could be parallelized on the direct children, by generating the moves for all siblings nodes in parallel
  * Since max depth = s, max depth of arg node = s - 2
  */
-void gen_search_tree(STNode node)
+int gen_search_tree(STNode node)
 {
     Undo undo;
     //Move moves[MAX_MOVES];
@@ -192,7 +192,7 @@ void gen_search_tree(STNode node)
     Board *d_boards, *boards;
     Move *d_moves, *moves;
 
-    if (is_illegal(&(node->board))) { return; }
+    if (is_illegal(&(node->board))) { return 0; }
            
     // Get the Max number of threads per block
     checkCudaErrors(cudaDeviceGetAttribute(&max_threads_per_block, cudaDevAttrMaxThreadsPerBlock, 0));
@@ -304,9 +304,11 @@ void gen_search_tree(STNode node)
 
     cudaDeviceSynchronize();
 
+    int nmoves = 0;
     for (int i = 0; i < node->nchild; i++){
         //if (!is_illegal(&(node->children[i]->board))){
         if (count[i] > 0) {
+            nmoves += count[i];
             STNode_init_children(node->children[i], count[i]);
             for (int j = 0; j < count[i]; j++){
                 Board board_tmp = node->children[i]->board;
@@ -324,6 +326,7 @@ void gen_search_tree(STNode node)
     }
 
     free(streams);
+    return nmoves;
 }
 
 /*
@@ -349,9 +352,11 @@ void undo_search_tree(STNode node)
  *      scores_parent: array storing the scores of the different nodes
  */
 
-__device__ __forceinline__ void alpha_beta_gpu_iter(Board *board_parent, Move *first_moves, Move *second_moves, int childIdx, int depth, int alpha_parent, int beta_parent, int *scores_parent)
+__device__ __forceinline__ void alpha_beta_gpu_iter(Board *board_parent, Move *first_moves, Move *second_moves, int *father_pos, int depth, int alpha_parent, int beta_parent, int *scores_parent, int nmoves)
 {
-    int idx = threadIdx.x;
+        // Thread indexes x, y
+    unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x ;
+    
     // Board board = boards_parent[idx];
     Board board = *board_parent;
     Move first_move, second_move;
@@ -371,7 +376,10 @@ __device__ __forceinline__ void alpha_beta_gpu_iter(Board *board_parent, Move *f
 
     // Creating the initial board
     if (first_moves != NULL) {
-        first_move = first_moves[childIdx];
+        if (*father_pos != -1)
+            first_move = first_moves[father_pos[idx]];
+        else
+            first_move = first_moves[idx];
         do_move(&board, &first_move, &first_undo);
     }
 
@@ -380,100 +388,103 @@ __device__ __forceinline__ void alpha_beta_gpu_iter(Board *board_parent, Move *f
         do_move(&board, &second_move, &second_undo);
     }
     
-    alpha[curr_depth] = alpha_parent;
-    beta[curr_depth] = beta_parent;
+    if (nmoves == -1 || idx < nmoves){
+        alpha[curr_depth] = alpha_parent;
+        beta[curr_depth] = beta_parent;
 
-    if (is_illegal(&board))
-    {
-        scores[curr_depth] = INF;
-    }
-    else if (curr_depth == 0)
-    {
-        scores[curr_depth] = evaluate(&board);
-    }
-    else
-    {
-        count = gen_moves(&board, &(moves[0]));
-        curr_idx = count - 1;
-    }
-
-    while (curr_idx >= 0)
-    {
-        count = -1;
-        board_illegal = 0;
-        while (count != 0 && !moves[curr_idx].already_executed)
-        {
-            count = 0;
-            curr_depth--;
-            do_move(&board, &(moves[curr_idx]), &undo[curr_depth]);
-            can_move[curr_depth] = 0;
-            beta_reached[curr_depth] = 0;
-            alpha[curr_depth] = -beta[curr_depth + 1];
-            beta[curr_depth] = -alpha[curr_depth + 1];
-            board_illegal = is_illegal(&board);
-            if (curr_depth > 0 && !board_illegal)
-            {
-                count = gen_moves(&board, &(moves[curr_idx + 1]));
-                curr_idx += count;
-            }
-        }
-        // terminal nodes
-        if (count == 0 && board_illegal)
+        if (is_illegal(&board))
         {
             scores[curr_depth] = INF;
         }
-        else if (curr_depth == 0 || count == 0)
+        else if (curr_depth == 0)
         {
             scores[curr_depth] = evaluate(&board);
         }
+        else
+        {
+            count = gen_moves(&board, &(moves[0]));
+            curr_idx = count - 1;
+        }
 
-        if (curr_idx >= 0)
+        while (curr_idx >= 0)
         {
-            undo_move(&board, &(moves[curr_idx]), &(undo[curr_depth]));
-            curr_depth++;
-            curr_idx--;
-        }
-        // at this point, we should have the correct value of scores[curr_depth]
-        if (-scores[curr_depth - 1] > -INF)
-        {
-            can_move[curr_depth] = 1;
-        }
-        if (-scores[curr_depth - 1] >= beta[curr_depth])
-        {
-            scores[curr_depth] = beta[curr_depth];
-            beta_reached[curr_depth] = 1;
-            while (!moves[curr_idx].already_executed)
+            count = -1;
+            board_illegal = 0;
+            while (count != 0 && !moves[curr_idx].already_executed)
             {
+                count = 0;
+                curr_depth--;
+                do_move(&board, &(moves[curr_idx]), &undo[curr_depth]);
+                can_move[curr_depth] = 0;
+                beta_reached[curr_depth] = 0;
+                alpha[curr_depth] = -beta[curr_depth + 1];
+                beta[curr_depth] = -alpha[curr_depth + 1];
+                board_illegal = is_illegal(&board);
+                if (curr_depth > 0 && !board_illegal)
+                {
+                    count = gen_moves(&board, &(moves[curr_idx + 1]));
+                    curr_idx += count;
+                }
+            }
+            // terminal nodes
+            if (count == 0 && board_illegal)
+            {
+                scores[curr_depth] = INF;
+            }
+            else if (curr_depth == 0 || count == 0)
+            {
+                scores[curr_depth] = evaluate(&board);
+            }
+
+            if (curr_idx >= 0)
+            {
+                undo_move(&board, &(moves[curr_idx]), &(undo[curr_depth]));
+                curr_depth++;
                 curr_idx--;
             }
-        }
-        else if (-scores[curr_depth - 1] > alpha[curr_depth])
-        {
-            alpha[curr_depth] = -scores[curr_depth - 1];
-        }
-        // all children executed, time to check... checks
-        if (moves[curr_idx].already_executed || curr_idx < 0)
-        {
-            if (!beta_reached[curr_depth])
+            // at this point, we should have the correct value of scores[curr_depth]
+            if (-scores[curr_depth - 1] > -INF)
             {
-                scores[curr_depth] = alpha[curr_depth];
-                if (!can_move[curr_depth])
+                can_move[curr_depth] = 1;
+            }
+            if (-scores[curr_depth - 1] >= beta[curr_depth])
+            {
+                scores[curr_depth] = beta[curr_depth];
+                beta_reached[curr_depth] = 1;
+                while (!moves[curr_idx].already_executed)
                 {
-                    if (is_check(&board, board.color))
+                    curr_idx--;
+                }
+            }
+            else if (-scores[curr_depth - 1] > alpha[curr_depth])
+            {
+                alpha[curr_depth] = -scores[curr_depth - 1];
+            }
+            // all children executed, time to check... checks
+            if (moves[curr_idx].already_executed || curr_idx < 0)
+            {
+                if (!beta_reached[curr_depth])
+                {
+                    scores[curr_depth] = alpha[curr_depth];
+                    if (!can_move[curr_depth])
                     {
-                        scores[curr_depth] = -MATE;
-                    }
-                    else
-                    {
-                        scores[curr_depth] = 0;
+                        if (is_check(&board, board.color))
+                        {
+                            scores[curr_depth] = -MATE;
+                        }
+                        else
+                        {
+                            scores[curr_depth] = 0;
+                        }
                     }
                 }
             }
         }
-    }
-    // undo_move(&board, &(moves_parent[idx+1]), &undo[curr_depth]);
-    // scores_parent[idx+1] = -scores[curr_depth];
-    scores_parent[idx] = scores[curr_depth];
+        // undo_move(&board, &(moves_parent[idx+1]), &undo[curr_depth]);
+        // scores_parent[idx+1] = -scores[curr_depth];
+        scores_parent[idx] = scores[curr_depth];
+        }
+    
 }
 
 /*
@@ -574,19 +585,21 @@ __device__ __forceinline__ void alpha_beta_gpu_iter(Board *board_parent, int dep
 }
 */
 
-__global__ void alpha_beta_gpu_kernel(Board *board, Move *first_moves, Move *second_moves, int childIdx, int depth, int alpha, int beta, int *scores)
+__global__ void alpha_beta_gpu_kernel(Board *board, Move *first_moves, Move *second_moves, int *father_pos, int depth, int alpha, int beta, int *scores, int count)
 {
-    alpha_beta_gpu_iter(board, first_moves, second_moves, childIdx, depth, alpha, beta, scores);
+    alpha_beta_gpu_iter(board, first_moves, second_moves, father_pos, depth, alpha, beta, scores, count);
 }
 
 __global__ void alpha_beta_gpu_kernel(Board *board, Move *first_moves, int depth, int alpha, int beta, int *scores)
 {
-    alpha_beta_gpu_iter(board, first_moves, NULL, -1, depth, alpha, beta, scores);
+    int none = -1;
+    alpha_beta_gpu_iter(board, first_moves, NULL, &none, depth, alpha, beta, scores, -1);
 }
 
 __global__ void alpha_beta_gpu_kernel(Board *board, int depth, int alpha, int beta, int *scores)
 {
-    alpha_beta_gpu_iter(board, NULL, NULL, -1, depth, alpha, beta, scores);
+    int none = -1;
+    alpha_beta_gpu_iter(board, NULL, NULL, &none, depth, alpha, beta, scores, -1);
 }
 
 /*
@@ -680,14 +693,13 @@ int alpha_beta_cpu(Board *board, int depth, int ply, int alpha, int beta, int *p
  * Assumptions:
  *   the node is not illegal (check in the Sequental Alpha-Beta)
  */
-void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
+void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int count)
 {
 
     if (s >= 2)
     {
-
         cudaStream_t *streams;
-        int **scores, **d_scores;
+        int *scores, *d_scores;
 
         int nchildren;
 
@@ -723,9 +735,9 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
             d_second_moves = (Move **)malloc(node->nchild * sizeof(Move *));
 
             // Allocate the Score Table
-            scores = (int **)malloc(node->nchild * sizeof(int *));
+            scores = (int *)malloc(count * sizeof(int));
             // Allocate the Score Table as a matrix of scores: each kernel will use its own row
-            d_scores = (int **)malloc(node->nchild * sizeof(int *));
+            checkCudaErrors(cudaMalloc(&d_scores, count * sizeof(int)));
         }
 
         stream_idx = 0;
@@ -742,17 +754,6 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
         }
 
         stream_idx = 0;
-        // For each child move, allocate a row of the Score Table
-        for (int i = 0; i < node->nchild; i++)
-        {
-            nchildren = node->children[i]->nchild;
-            if (nchildren > 0)
-            {
-                scores[i] = (int *)malloc(nchildren * sizeof(int));
-                cudaMallocAsync(&(d_scores[i]), nchildren * sizeof(int), streams[stream_idx++]);
-                stream_idx %= num_streams;
-            }
-        }
 
         // Insert the Moves in the Move Array and in the Move Matrix
         for (int i = 0; i < node->nchild; i++)
@@ -784,51 +785,47 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
                 stream_idx %= num_streams;
             }
         }
-
-        // Launch the Search
+        
+        Move *d_moves;
+        int *d_father_pos;
+        checkCudaErrors(cudaMalloc(&d_moves, count * sizeof(Move)));
+        checkCudaErrors(cudaMalloc(&d_father_pos, count * sizeof(int)));
+        int pos = 0;
+        // Launch the Search<
         stream_idx = 0;
         for (int i = 0; i < node->nchild; i++)
         {
             nchildren = node->children[i]->nchild;
-            if (nchildren > 0)
-            {
-                // no shared memory so far
-                alpha_beta_gpu_kernel<<<1, nchildren, 0, streams[stream_idx++]>>>(d_board, d_first_moves, d_second_moves[i], i, d, alpha, beta, d_scores[i]);
-                stream_idx %= num_streams;
-            }
+            checkCudaErrors(cudaMemcpy(d_moves + pos, d_second_moves[i], nchildren * sizeof(Move), cudaMemcpyHostToDevice));
+            int *father_pos = (int*) malloc(nchildren * sizeof(int));
+            for (int j = 0; j < nchildren; j++)
+                father_pos[j] = i;
+            checkCudaErrors(cudaMemcpy(d_father_pos + pos, father_pos, nchildren * sizeof(int), cudaMemcpyHostToDevice));
+            free(father_pos);
+            pos += nchildren;
         }
+
+        if (node->nchild > 0) {
+
+            alpha_beta_gpu_kernel<<<count/128 + 1, 128, 0, streams[stream_idx++]>>>(d_board, d_first_moves, d_moves, d_father_pos, d, alpha, beta, d_scores, count);
+            stream_idx %= num_streams;
+        }
+
+        cudaFree(d_moves);
+        cudaFree(d_father_pos);
 
         // Retrieve the results
-        stream_idx = 0;
-        for (int i = 0; i < node->nchild; i++)
-        {
-            nchildren = node->children[i]->nchild;
-            if (nchildren > 0)
-            {
-                checkCudaErrors(cudaMemcpyAsync(scores[i], d_scores[i], nchildren * sizeof(int), cudaMemcpyDeviceToHost, streams[stream_idx++]));
-                stream_idx %= num_streams;
-            }
-        }
+        checkCudaErrors(cudaMemcpy(scores, d_scores, count * sizeof(int), cudaMemcpyDeviceToHost));
 
         cudaDeviceSynchronize();
 
         // Update the Search Tree
+        int k = 0;
         for (int i = 0; i < node->nchild; i++)
         {
             for (int j = 0; j < node->children[i]->nchild; j++)
             {
-                node->children[i]->children[j]->score = scores[i][j];
-            }
-        }
-
-        // Free the Score Table
-        for (int i = 0; i < node->nchild; i++)
-        {
-            nchildren = node->children[i]->nchild;
-            if (nchildren > 0)
-            {
-                checkCudaErrors(cudaFree(d_scores[i]));
-                free(scores[i]);
+                node->children[i]->children[j]->score = scores[k++];
             }
         }
 
@@ -846,7 +843,7 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta)
         // Free all the arrays
         if (node->nchild > 0)
         {
-            free(d_scores);
+            checkCudaErrors(cudaFree(d_scores));
             free(scores);
             free(second_moves);
             free(d_second_moves);
@@ -948,14 +945,15 @@ void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta,
         //node->score = evaluate(&(node->board)); //TODO REMOVE ONCE DEBUGGED
         return; // score has already been defined by the parallel search on terminal nodes
     }
+    int count = 0;
     if (ply <= s - 2)
     {
-        gen_search_tree(node);
+        count = gen_search_tree(node);
     }
     if (ply == s - 2 || (ply == 0 && (s == 1 || s == 0)))
     {
         // perform the Parallel Search (it does not create additional nodes, but enriches them with more accurate scores coming from the deeper parallel search)
-        alpha_beta_parallel(node, s, d, alpha, beta);
+        alpha_beta_parallel(node, s, d, alpha, beta, count);
     }
     if (isPV)
     {
