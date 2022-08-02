@@ -40,7 +40,6 @@ __device__ __host__ void do_move(Board *board, Move *move, Undo *undo) {
     undo->castle = board->castle;
     undo->ep = board->ep;
     move->already_executed = 1;
-    Move move2 = *move;
     // remove the moving piece from its starting position
     board_set(board, move->src, EMPTY);
     // define the ending position of the piece
@@ -120,7 +119,7 @@ int score_move(Board *board, Move *move) {
     unsigned char dst = move->dst;
     unsigned char piece = board_get_piece(board, src);
     unsigned char capture = board_get_piece(board, dst);
-    int piece_material = 0;
+    int piece_material;
     int capture_material = 0;
     //if (COLOR(piece)) {
         switch (PIECE(piece)) {

@@ -161,6 +161,7 @@ void initial_sort_moves_new(Board *board, int *positions, int len)
             }
         }
     }
+    /*
     if (count >= 1)
     {
         Move tmp;
@@ -168,6 +169,7 @@ void initial_sort_moves_new(Board *board, int *positions, int len)
         moves[positions[0]] = moves[0];
         moves[0] = tmp;
     }
+    */
     free(best_indexes);
 }
 
@@ -183,7 +185,7 @@ void gen_search_tree(STNode node)
     //Move moves[MAX_MOVES];
     cudaStream_t *streams;
 
-    int num_multiproc, max_shmem, max_threads_per_block;
+    int num_multiproc, max_shmem, max_threads_per_block, num_registers;
     const int shmem_per_node = 64 * (sizeof(bb) + sizeof(char));
 
     int *d_count, *count;
@@ -198,11 +200,25 @@ void gen_search_tree(STNode node)
     // Get the Max Size of the Shared Memory
     checkCudaErrors(cudaDeviceGetAttribute(&max_shmem, cudaDevAttrMaxSharedMemoryPerBlock, 0));
 
+    // Get the Max number of Registers Per Block
+    checkCudaErrors(cudaDeviceGetAttribute(&num_registers, cudaDevAttrMaxRegistersPerBlock, 0));
+
+    //printf("registers:%d\n", num_registers);
+
     // Get the Max number of Nodes per Block, based on the available shared memory
-    const int max_nodes_per_block = max_shmem / shmem_per_node;
+    const int max_nodes_per_block_shmem = max_shmem / shmem_per_node;
+
+    // Get the Max number of Nodes per Block, based on the available registers
+    const int max_nodes_per_block_regs = num_registers / (128*THREADS_PER_NODE);
+
+ //   printf("max number of threads based on regs: %d\n", max_nodes_per_block_regs);
 
     // Effective number of nodes per Block, depending on the structural limitations of the GPU
-    const int nodes_per_block = min(max_nodes_per_block, max_threads_per_block / THREADS_PER_NODE);
+    //const int nodes_per_block = min(max_nodes_per_block_regs, min(max_nodes_per_block_shmem, max_threads_per_block / THREADS_PER_NODE));
+    const int nodes_per_block = min(max_nodes_per_block_regs, min(max_nodes_per_block_shmem, max_threads_per_block / THREADS_PER_NODE));
+
+
+  //  printf("nodes per block:%d\n", nodes_per_block);
 
     // Get the Necessary Number of Blocks
     const int num_blocks = node->nchild / nodes_per_block + 1;
@@ -943,7 +959,7 @@ void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta,
     }
     if (isPV)
     {
-        if (ply < LEN_POSITIONS && node->nchild > positions[ply])
+        if (ply < LEN_POSITIONS)// && node->nchild > positions[ply])
         {
             STNode tmp = node->children[0];
             node->children[0] = node->children[positions[ply]];

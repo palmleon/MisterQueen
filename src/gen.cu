@@ -42,7 +42,7 @@ __device__ __host__ int is_check(Board *board, char color){
     const bb opponent_pieces = players_pieces[color_bit ^ 1];
     bb mask = ~own_pieces;
     const bb mask_pawn = opponent_pieces | board->ep;
-    const bb mask_pawn_opp = own_pieces | board->ep;
+   // const bb mask_pawn_opp = own_pieces | board->ep;
     bb dsts = 0;
 
     for(int sq = 0; sq < 64; sq++){
@@ -94,7 +94,7 @@ __device__ __host__ int is_check(Board *board, char color){
 }
 
 __device__ __host__ int is_illegal(Board *board){
-    return is_check(board, board->color ^ BLACK);
+     return is_check(board, board->color ^ BLACK);
 }
 
 /*
@@ -411,7 +411,7 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
     // GENERATE CASTLES
     mask = ~opponent_pieces;
     // look for opponent attacks in the squares where the king should move
-    //dsts = 0;
+    dsts = 0;
     if ((board.castle & castles[color_bit*2]) || board.castle & castles[color_bit*2+1]){
         //for (int sq = 0; sq < 64; sq++){
         for(int sq = tid_y * (64 / THREADS_PER_NODE); sq < (tid_y + 1) * (64 / THREADS_PER_NODE); sq++){
@@ -468,35 +468,37 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
             }
             dsts_array[sq] = dsts;
         }
-        __syncthreads();
-        if (tid_y == 0) {
-            for (int sq = 1; sq < 64; sq++) {
-                dsts_array[0] |= dsts_array[sq];
-            }
-            for (int i = 0; i < 2; i++) {
-                // check if the player can castle and, if that is the case,
-                // where it can castle and whether there are pieces
-                // between the king and the rook
-                bb mask = castle_masks_2[color_bit*2+i];
-                if ((board.castle & castles[color_bit*2+i])
-                    && (!(board.all & castle_masks_1[color_bit*2+i]))){
-                        // if the opponent can only move to squares (dsts)
-                        // which do not attack the king during castle (mask)
-                        // emit the castle
-                    if (!(dsts_array[0] & mask)) {
-                        EMIT_MOVE(moves_local, castle_king_pos_before[color_bit], castle_king_pos_after[color_bit*2+i]);
-                    }
+    }
+    __syncthreads();
+    if (tid_y != 0)
+    {
+        return;
+    }
+    if ((board.castle & castles[color_bit*2]) || board.castle & castles[color_bit*2+1]){
+        for (int sq = 1; sq < 64; sq++) {
+            dsts_array[0] |= dsts_array[sq];
+        }
+        for (int i = 0; i < 2; i++) {
+            // check if the player can castle and, if that is the case,
+            // where it can castle and whether there are pieces
+            // between the king and the rook
+            bb mask = castle_masks_2[color_bit*2+i];
+            if ((board.castle & castles[color_bit*2+i])
+                && (!(board.all & castle_masks_1[color_bit*2+i]))){
+                    // if the opponent can only move to squares (dsts)
+                    // which do not attack the king during castle (mask)
+                    // emit the castle
+                if (!(dsts_array[0] & mask)) {
+                    EMIT_MOVE(moves_local, castle_king_pos_before[color_bit], castle_king_pos_after[color_bit*2+i]);
                 }
             }
         }
     }
-    if (tid_y == 0) {
-        count_arr[tid_x] = moves_local - moves_local_start;
+    count_arr[tid_x] = moves_local - moves_local_start;
 
-        // copy the moves to the global memory vector
-        for (int i = 0; i < MAX_MOVES; i++) {
-            moves_glob[i] = moves[i];
-        }
+    // copy the moves to the global memory vector
+    for (int i = 0; i < MAX_MOVES; i++) {
+        moves_glob[i] = moves[i];
     }
     return;
 }

@@ -9,15 +9,15 @@ SRC_EXT_CU = cu
 # Path to the source directory, relative to the makefile
 SRC_PATH = src
 # General compiler flags
-COMPILE_FLAGS = --std c++03 --device-c -w
+COMPILE_FLAGS = --std c++03 --device-c -w -arch sm_61
 # Additional release-specific flags
-RCOMPILE_FLAGS = 
+RCOMPILE_FLAGS = -Xptxas -v
 # Additional debug-specific flags
 DCOMPILE_FLAGS = -g -G -D __CUDACC_DEBUG__ #-D DEBUG
 # Add additional include paths
 INCLUDES = -I $(SRC_PATH)/ 
 # General linker settings
-LINK_FLAGS =
+LINK_FLAGS = -arch sm_61
 # Additional release-specific linker settings
 RLINK_FLAGS = 
 # Additional debug-specific linker settings
