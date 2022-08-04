@@ -6,13 +6,10 @@
 #include "search.h"
 #include "eval.h"
 #include "gen.h"
+#include "gpu.h"
 #include "move.h"
 #include "stree.h"
 #include "util.h"
-
-#define LEN_POSITIONS 3
-#define MAX_DEPTH_PAR 3
-#define MAX_DEPTH_SEQ 3
 
 // RICORDA CHE IL PUNTEGGIO DELLA MOSSA VIENE VALUTATO NELLA SORT MOVES e integrato nella board_set()
 
@@ -343,151 +340,6 @@ void undo_search_tree(STNode node)
     }
 }
 
-/*  Iterative Alpha-Beta Pruning on GPU
- *  Args:
- *      boards: boards of the nodes to start from
- *      childIdx, id of the father node, used to access the right d_scores array
- *      depth: depth of the search
- *      alpha_parent, beta_parent: alpha, beta defined from the caller
- *      scores_parent: array storing the scores of the different nodes
- */
-
-__device__ __forceinline__ void alpha_beta_gpu_iter(Board *board_parent, Move *first_moves, Move *second_moves, int *pos_parent, int *scores_parent, int depth, int alpha_parent, int beta_parent, int nmoves, int baseIdx)
-{
-    // Thread indexes x, y
-    //unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x ;
-    unsigned int idx = baseIdx + threadIdx.x;
-
-    // Board board = boards_parent[idx];
-    Board board = *board_parent;
-    Move first_move, second_move;
-    Move moves[MAX_MOVES * (MAX_DEPTH_PAR)];
-    int can_move[MAX_DEPTH_PAR + 1] = {0};
-    Undo first_undo, second_undo;
-    Undo undo[MAX_DEPTH_PAR + 1];
-    int scores[MAX_DEPTH_PAR + 1];
-    int alpha[MAX_DEPTH_PAR + 1];
-    int beta[MAX_DEPTH_PAR + 1];
-    int beta_reached[MAX_DEPTH_PAR + 1] = {0};
-    int curr_depth = depth;
-    int count = 0, board_illegal, curr_idx = -1;
-    // int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    // moves[0] = moves_parent[idx+1];
-    // do_move(&board, &(moves_parent[idx+1]), &undo[curr_depth]);
-
-    // Check whether the thread is not in excess
-    if (nmoves > 0 && idx >= nmoves) { return; }
-
-    // Creating the initial board
-    if (first_moves != NULL) {
-        if (pos_parent != NULL)
-            first_move = first_moves[pos_parent[idx]];
-        else
-            first_move = first_moves[idx];
-        do_move(&board, &first_move, &first_undo);
-    }
-
-    if (second_moves != NULL) {
-        second_move = second_moves[idx];
-        do_move(&board, &second_move, &second_undo);
-    }
-
-    alpha[curr_depth] = alpha_parent;
-    beta[curr_depth] = beta_parent;
-
-    if (is_illegal(&board))
-    {
-        scores[curr_depth] = INF;
-    }
-    else if (curr_depth == 0)
-    {
-        scores[curr_depth] = evaluate(&board);
-    }
-    else
-    {
-        count = gen_moves(&board, &(moves[0]));
-        curr_idx = count - 1;
-    }
-
-    while (curr_idx >= 0)
-    {
-        count = -1;
-        board_illegal = 0;
-        while (count != 0 && !moves[curr_idx].already_executed)
-        {
-            count = 0;
-            curr_depth--;
-            do_move(&board, &(moves[curr_idx]), &undo[curr_depth]);
-            can_move[curr_depth] = 0;
-            beta_reached[curr_depth] = 0;
-            alpha[curr_depth] = -beta[curr_depth + 1];
-            beta[curr_depth] = -alpha[curr_depth + 1];
-            board_illegal = is_illegal(&board);
-            if (curr_depth > 0 && !board_illegal)
-            {
-                count = gen_moves(&board, &(moves[curr_idx + 1]));
-                curr_idx += count;
-            }
-        }
-        // terminal nodes
-        if (count == 0 && board_illegal)
-        {
-            scores[curr_depth] = INF;
-        }
-        else if (curr_depth == 0 || count == 0)
-        {
-            scores[curr_depth] = evaluate(&board);
-        }
-
-        if (curr_idx >= 0)
-        {
-            undo_move(&board, &(moves[curr_idx]), &(undo[curr_depth]));
-            curr_depth++;
-            curr_idx--;
-        }
-        // at this point, we should have the correct value of scores[curr_depth]
-        if (-scores[curr_depth - 1] > -INF)
-        {
-            can_move[curr_depth] = 1;
-        }
-        if (-scores[curr_depth - 1] >= beta[curr_depth])
-        {
-            scores[curr_depth] = beta[curr_depth];
-            beta_reached[curr_depth] = 1;
-            while (!moves[curr_idx].already_executed)
-            {
-                curr_idx--;
-            }
-        }
-        else if (-scores[curr_depth - 1] > alpha[curr_depth])
-        {
-            alpha[curr_depth] = -scores[curr_depth - 1];
-        }
-        // all children executed, time to check... checks
-        if (moves[curr_idx].already_executed || curr_idx < 0)
-        {
-            if (!beta_reached[curr_depth])
-            {
-                scores[curr_depth] = alpha[curr_depth];
-                if (!can_move[curr_depth])
-                {
-                    if (is_check(&board, board.color))
-                    {
-                        scores[curr_depth] = -MATE;
-                    }
-                    else
-                    {
-                        scores[curr_depth] = 0;
-                    }
-                }
-            }
-        }
-    }
-    // undo_move(&board, &(moves_parent[idx+1]), &undo[curr_depth]);
-    // scores_parent[idx+1] = -scores[curr_depth];
-    scores_parent[idx] = scores[curr_depth];
-    
-}
 
 /*
 __device__ __forceinline__ void alpha_beta_gpu_iter(Board *board_parent, int depth, int alpha_parent, int beta_parent, Move* moves_parent, int* scores_parent) {
@@ -586,21 +438,6 @@ __device__ __forceinline__ void alpha_beta_gpu_iter(Board *board_parent, int dep
     alpha_beta_gpu_iter(board_parent, depth, alpha, beta, moves_parent, scores);
 }
 */
-
-__global__ void alpha_beta_gpu_kernel(Board *board, Move *first_moves, Move *second_moves, int *pos_parent, int *scores, int depth, int alpha, int beta, int count, int baseIdx)
-{
-    alpha_beta_gpu_iter(board, first_moves, second_moves, pos_parent, scores, depth, alpha, beta, count, baseIdx);
-}
-
-__global__ void alpha_beta_gpu_kernel(Board *board, Move *first_moves, int depth, int alpha, int beta, int *scores)
-{
-    alpha_beta_gpu_iter(board, first_moves, NULL, NULL, scores, depth, alpha, beta, -1, -1);
-}
-
-__global__ void alpha_beta_gpu_kernel(Board *board, int depth, int alpha, int beta, int *scores)
-{
-    alpha_beta_gpu_iter(board, NULL, NULL, NULL, scores, depth, alpha, beta, -1, -1);
-}
 
 /*
 int alpha_beta_cpu(Board *board, int depth, int ply, int alpha, int beta, int *positions, int len_positions) {
