@@ -352,11 +352,12 @@ void undo_search_tree(STNode node)
  *      scores_parent: array storing the scores of the different nodes
  */
 
-__device__ __forceinline__ void alpha_beta_gpu_iter(Board *board_parent, Move *first_moves, Move *second_moves, int *father_pos, int depth, int alpha_parent, int beta_parent, int *scores_parent, int nmoves)
+__device__ __forceinline__ void alpha_beta_gpu_iter(Board *board_parent, Move *first_moves, Move *second_moves, int *pos_parent, int *scores_parent, int depth, int alpha_parent, int beta_parent, int nmoves, int baseIdx)
 {
-        // Thread indexes x, y
-    unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x ;
-    
+    // Thread indexes x, y
+    //unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x ;
+    unsigned int idx = baseIdx + threadIdx.x;
+
     // Board board = boards_parent[idx];
     Board board = *board_parent;
     Move first_move, second_move;
@@ -374,10 +375,13 @@ __device__ __forceinline__ void alpha_beta_gpu_iter(Board *board_parent, Move *f
     // moves[0] = moves_parent[idx+1];
     // do_move(&board, &(moves_parent[idx+1]), &undo[curr_depth]);
 
+    // Check whether the thread is not in excess
+    if (nmoves > 0 && idx >= nmoves) { return; }
+
     // Creating the initial board
     if (first_moves != NULL) {
-        if (*father_pos != -1)
-            first_move = first_moves[father_pos[idx]];
+        if (pos_parent != NULL)
+            first_move = first_moves[pos_parent[idx]];
         else
             first_move = first_moves[idx];
         do_move(&board, &first_move, &first_undo);
@@ -387,103 +391,101 @@ __device__ __forceinline__ void alpha_beta_gpu_iter(Board *board_parent, Move *f
         second_move = second_moves[idx];
         do_move(&board, &second_move, &second_undo);
     }
-    
-    if (nmoves == -1 || idx < nmoves){
-        alpha[curr_depth] = alpha_parent;
-        beta[curr_depth] = beta_parent;
 
-        if (is_illegal(&board))
+    alpha[curr_depth] = alpha_parent;
+    beta[curr_depth] = beta_parent;
+
+    if (is_illegal(&board))
+    {
+        scores[curr_depth] = INF;
+    }
+    else if (curr_depth == 0)
+    {
+        scores[curr_depth] = evaluate(&board);
+    }
+    else
+    {
+        count = gen_moves(&board, &(moves[0]));
+        curr_idx = count - 1;
+    }
+
+    while (curr_idx >= 0)
+    {
+        count = -1;
+        board_illegal = 0;
+        while (count != 0 && !moves[curr_idx].already_executed)
+        {
+            count = 0;
+            curr_depth--;
+            do_move(&board, &(moves[curr_idx]), &undo[curr_depth]);
+            can_move[curr_depth] = 0;
+            beta_reached[curr_depth] = 0;
+            alpha[curr_depth] = -beta[curr_depth + 1];
+            beta[curr_depth] = -alpha[curr_depth + 1];
+            board_illegal = is_illegal(&board);
+            if (curr_depth > 0 && !board_illegal)
+            {
+                count = gen_moves(&board, &(moves[curr_idx + 1]));
+                curr_idx += count;
+            }
+        }
+        // terminal nodes
+        if (count == 0 && board_illegal)
         {
             scores[curr_depth] = INF;
         }
-        else if (curr_depth == 0)
+        else if (curr_depth == 0 || count == 0)
         {
             scores[curr_depth] = evaluate(&board);
         }
-        else
+
+        if (curr_idx >= 0)
         {
-            count = gen_moves(&board, &(moves[0]));
-            curr_idx = count - 1;
+            undo_move(&board, &(moves[curr_idx]), &(undo[curr_depth]));
+            curr_depth++;
+            curr_idx--;
         }
-
-        while (curr_idx >= 0)
+        // at this point, we should have the correct value of scores[curr_depth]
+        if (-scores[curr_depth - 1] > -INF)
         {
-            count = -1;
-            board_illegal = 0;
-            while (count != 0 && !moves[curr_idx].already_executed)
+            can_move[curr_depth] = 1;
+        }
+        if (-scores[curr_depth - 1] >= beta[curr_depth])
+        {
+            scores[curr_depth] = beta[curr_depth];
+            beta_reached[curr_depth] = 1;
+            while (!moves[curr_idx].already_executed)
             {
-                count = 0;
-                curr_depth--;
-                do_move(&board, &(moves[curr_idx]), &undo[curr_depth]);
-                can_move[curr_depth] = 0;
-                beta_reached[curr_depth] = 0;
-                alpha[curr_depth] = -beta[curr_depth + 1];
-                beta[curr_depth] = -alpha[curr_depth + 1];
-                board_illegal = is_illegal(&board);
-                if (curr_depth > 0 && !board_illegal)
-                {
-                    count = gen_moves(&board, &(moves[curr_idx + 1]));
-                    curr_idx += count;
-                }
-            }
-            // terminal nodes
-            if (count == 0 && board_illegal)
-            {
-                scores[curr_depth] = INF;
-            }
-            else if (curr_depth == 0 || count == 0)
-            {
-                scores[curr_depth] = evaluate(&board);
-            }
-
-            if (curr_idx >= 0)
-            {
-                undo_move(&board, &(moves[curr_idx]), &(undo[curr_depth]));
-                curr_depth++;
                 curr_idx--;
             }
-            // at this point, we should have the correct value of scores[curr_depth]
-            if (-scores[curr_depth - 1] > -INF)
+        }
+        else if (-scores[curr_depth - 1] > alpha[curr_depth])
+        {
+            alpha[curr_depth] = -scores[curr_depth - 1];
+        }
+        // all children executed, time to check... checks
+        if (moves[curr_idx].already_executed || curr_idx < 0)
+        {
+            if (!beta_reached[curr_depth])
             {
-                can_move[curr_depth] = 1;
-            }
-            if (-scores[curr_depth - 1] >= beta[curr_depth])
-            {
-                scores[curr_depth] = beta[curr_depth];
-                beta_reached[curr_depth] = 1;
-                while (!moves[curr_idx].already_executed)
+                scores[curr_depth] = alpha[curr_depth];
+                if (!can_move[curr_depth])
                 {
-                    curr_idx--;
-                }
-            }
-            else if (-scores[curr_depth - 1] > alpha[curr_depth])
-            {
-                alpha[curr_depth] = -scores[curr_depth - 1];
-            }
-            // all children executed, time to check... checks
-            if (moves[curr_idx].already_executed || curr_idx < 0)
-            {
-                if (!beta_reached[curr_depth])
-                {
-                    scores[curr_depth] = alpha[curr_depth];
-                    if (!can_move[curr_depth])
+                    if (is_check(&board, board.color))
                     {
-                        if (is_check(&board, board.color))
-                        {
-                            scores[curr_depth] = -MATE;
-                        }
-                        else
-                        {
-                            scores[curr_depth] = 0;
-                        }
+                        scores[curr_depth] = -MATE;
+                    }
+                    else
+                    {
+                        scores[curr_depth] = 0;
                     }
                 }
             }
         }
-        // undo_move(&board, &(moves_parent[idx+1]), &undo[curr_depth]);
-        // scores_parent[idx+1] = -scores[curr_depth];
-        scores_parent[idx] = scores[curr_depth];
-        }
+    }
+    // undo_move(&board, &(moves_parent[idx+1]), &undo[curr_depth]);
+    // scores_parent[idx+1] = -scores[curr_depth];
+    scores_parent[idx] = scores[curr_depth];
     
 }
 
@@ -585,21 +587,19 @@ __device__ __forceinline__ void alpha_beta_gpu_iter(Board *board_parent, int dep
 }
 */
 
-__global__ void alpha_beta_gpu_kernel(Board *board, Move *first_moves, Move *second_moves, int *father_pos, int depth, int alpha, int beta, int *scores, int count)
+__global__ void alpha_beta_gpu_kernel(Board *board, Move *first_moves, Move *second_moves, int *pos_parent, int *scores, int depth, int alpha, int beta, int count, int baseIdx)
 {
-    alpha_beta_gpu_iter(board, first_moves, second_moves, father_pos, depth, alpha, beta, scores, count);
+    alpha_beta_gpu_iter(board, first_moves, second_moves, pos_parent, scores, depth, alpha, beta, count, baseIdx);
 }
 
 __global__ void alpha_beta_gpu_kernel(Board *board, Move *first_moves, int depth, int alpha, int beta, int *scores)
 {
-    int none = -1;
-    alpha_beta_gpu_iter(board, first_moves, NULL, &none, depth, alpha, beta, scores, -1);
+    alpha_beta_gpu_iter(board, first_moves, NULL, NULL, scores, depth, alpha, beta, -1, -1);
 }
 
 __global__ void alpha_beta_gpu_kernel(Board *board, int depth, int alpha, int beta, int *scores)
 {
-    int none = -1;
-    alpha_beta_gpu_iter(board, NULL, NULL, &none, depth, alpha, beta, scores, -1);
+    alpha_beta_gpu_iter(board, NULL, NULL, NULL, scores, depth, alpha, beta, -1, -1);
 }
 
 /*
@@ -695,28 +695,31 @@ int alpha_beta_cpu(Board *board, int depth, int ply, int alpha, int beta, int *p
  */
 void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int count)
 {
+    if (node->nchild == 0) { return; }
 
     if (s >= 2)
     {
         cudaStream_t *streams;
-        int *scores, *d_scores;
-
         int nchildren;
 
+        // Define all inputs and outputs
+        //Move **second_moves, **d_second_moves;
+        int *pos_parent, *d_pos_parent;
         Move *first_moves, *d_first_moves;
-        Move **second_moves, **d_second_moves;
-
+        Move *second_moves, *d_second_moves;
+        int *scores, *d_scores;
         Board *d_board;
 
-        int num_multiproc, num_streams;
+        // Define the number of streams (TODO try different configurations)
+        const int num_streams = node->nchild;
         int stream_idx;
-        checkCudaErrors(cudaDeviceGetAttribute(&num_multiproc, cudaDevAttrMultiProcessorCount, 0));
-        //num_multiproc++; //define an additional stream in 
-        //num_streams = num_multiproc;
-        num_streams = node->nchild;
-        // Allocate the cudaStreams
-        streams = (cudaStream_t*) malloc (num_streams * sizeof(cudaStream_t));
+        
+        // Define the number of nodes per kernel and the effective size of the 2nd gen moves array
+        const int nodes_per_stream = count / num_streams + 1;
+        const int num_moves = nodes_per_stream * num_streams;
 
+        // Allocate and create the cudaStreams
+        streams = (cudaStream_t*) malloc (num_streams * sizeof(cudaStream_t));
         for (int i = 0; i < num_streams; i++){
             checkCudaErrors(cudaStreamCreate(&(streams[i])));
         }
@@ -724,22 +727,28 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int cou
         // Allocate the Board to start from
         checkCudaErrors(cudaMalloc(&d_board, sizeof(Board)));
         
-        if (node->nchild > 0)
-        {
-            // Allocate the Move Array containing the 1st generation children
-            first_moves = (Move *)malloc(node->nchild * sizeof(Move));
-            checkCudaErrors(cudaMalloc(&d_first_moves, node->nchild * sizeof(Move)));
+        // Allocate the Move Array containing the 1st generation moves
+        first_moves = (Move *)malloc(node->nchild * sizeof(Move));
+        checkCudaErrors(cudaMalloc(&d_first_moves, node->nchild * sizeof(Move)));
 
-            // Allocate the Move Matrix containing the 2nd generation children
-            second_moves = (Move **)malloc(node->nchild * sizeof(Move *));
-            d_second_moves = (Move **)malloc(node->nchild * sizeof(Move *));
+        // Allocate the Move Array containing the 2nd generation moves
+        /*
+        second_moves = (Move **)malloc(node->nchild * sizeof(Move *));
+        d_second_moves = (Move **)malloc(node->nchild * sizeof(Move *));
+        */
+        second_moves = (Move *)malloc(num_moves * sizeof(Move *));
+        checkCudaErrors(cudaMalloc(&d_second_moves, num_moves * sizeof(Move)));
 
-            // Allocate the Score Table
-            scores = (int *)malloc(count * sizeof(int));
-            // Allocate the Score Table as a matrix of scores: each kernel will use its own row
-            checkCudaErrors(cudaMalloc(&d_scores, count * sizeof(int)));
-        }
+        // Allocate the Score Array
+        scores = (int *)malloc(num_moves * sizeof(int));
+        checkCudaErrors(cudaMalloc(&d_scores, num_moves * sizeof(int)));
 
+        // Allocate the vector containing the father index for all the 2nd generation nodes
+        pos_parent = (int *) malloc(num_moves * sizeof(int));
+        checkCudaErrors(cudaMalloc(&d_pos_parent, num_moves * sizeof(int)));
+        
+
+        /*
         stream_idx = 0;
         // For each child, allocate a row in the Move Matrix
         for (int i = 0; i < node->nchild; i++)
@@ -752,16 +761,23 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int cou
                 stream_idx %= num_streams;
             }
         }
+        */
 
+        // Create the vector containing all the 2nd generation moves
+        //checkCudaErrors(cudaMalloc(&d_moves, count * sizeof(Move)));
+
+    
         stream_idx = 0;
 
-        // Insert the Moves in the Move Array and in the Move Matrix
-        for (int i = 0; i < node->nchild; i++)
+        // Define both the 1st and 2nd generation moves
+        for (int i = 0, pos = 0; i < node->nchild && pos < count; i++)
         {
             first_moves[i] = node->children[i]->move;
             for (int j = 0; j < node->children[i]->nchild; j++)
             {
-                second_moves[i][j] = node->children[i]->children[j]->move;
+                pos_parent[pos] = i;
+                second_moves[pos] = node->children[i]->children[j]->move;
+                pos++;
             }
         }
 
@@ -769,11 +785,9 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int cou
         checkCudaErrors(cudaMemcpy(d_board, &(node->board), sizeof(Board), cudaMemcpyHostToDevice));
         
         // Transfer the 1st generation Move Array to the GPU
-        if (node->nchild > 0)
-        {
-            checkCudaErrors(cudaMemcpy(d_first_moves, first_moves, node->nchild * sizeof(Move), cudaMemcpyHostToDevice));
-        }
+        checkCudaErrors(cudaMemcpy(d_first_moves, first_moves, node->nchild * sizeof(Move), cudaMemcpyHostToDevice));
 
+        /*
         // Transfer the 2nd generation Move Matrix to the GPU
         stream_idx = 0;
         for (int i = 0; i < node->nchild; i++)
@@ -785,50 +799,55 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int cou
                 stream_idx %= num_streams;
             }
         }
+        */
+
+        // Transfer the 2nd generation moves and the father pos array to the GPU, using streams
+        for (int i = 0; i < num_streams; i++) {
+            checkCudaErrors(cudaMemcpyAsync(d_second_moves + i * nodes_per_stream, second_moves + i * nodes_per_stream, nodes_per_stream * sizeof(Move), cudaMemcpyHostToDevice, streams[i]));
+            checkCudaErrors(cudaMemcpyAsync(d_pos_parent + i * nodes_per_stream, pos_parent + i * nodes_per_stream, nodes_per_stream * sizeof(Move), cudaMemcpyHostToDevice, streams[i]));
+        }
         
-        Move *d_moves;
-        int *d_father_pos;
-        checkCudaErrors(cudaMalloc(&d_moves, count * sizeof(Move)));
-        checkCudaErrors(cudaMalloc(&d_father_pos, count * sizeof(int)));
+        /*
         int pos = 0;
-        // Launch the Search<
+        // Launch the Search
         stream_idx = 0;
         for (int i = 0; i < node->nchild; i++)
         {
             nchildren = node->children[i]->nchild;
             checkCudaErrors(cudaMemcpy(d_moves + pos, d_second_moves[i], nchildren * sizeof(Move), cudaMemcpyHostToDevice));
-            int *father_pos = (int*) malloc(nchildren * sizeof(int));
+            int *pos_parent = (int*) malloc(nchildren * sizeof(int));
             for (int j = 0; j < nchildren; j++)
-                father_pos[j] = i;
-            checkCudaErrors(cudaMemcpy(d_father_pos + pos, father_pos, nchildren * sizeof(int), cudaMemcpyHostToDevice));
-            free(father_pos);
+                pos_parent[j] = i;
+            checkCudaErrors(cudaMemcpy(d_pos_parent + pos, pos_parent, nchildren * sizeof(int), cudaMemcpyHostToDevice));
+            free(pos_parent);
             pos += nchildren;
         }
 
-        if (node->nchild > 0) {
+        alpha_beta_gpu_kernel<<<count/128 + 1, 128, 0, streams[stream_idx++]>>>(d_board, d_first_moves, d_moves, d_pos_parent, d, alpha, beta, d_scores, count);
+        */
 
-            alpha_beta_gpu_kernel<<<count/128 + 1, 128, 0, streams[stream_idx++]>>>(d_board, d_first_moves, d_moves, d_father_pos, d, alpha, beta, d_scores, count);
-            stream_idx %= num_streams;
+        // Launch the Search
+        for (int i = 0; i < num_streams; i++) {
+            alpha_beta_gpu_kernel<<<1, nodes_per_stream, 0, streams[i]>>>(d_board, d_first_moves, d_second_moves, d_pos_parent, d_scores, d, alpha, beta, count, i*nodes_per_stream);
         }
 
-        cudaFree(d_moves);
-        cudaFree(d_father_pos);
-
         // Retrieve the results
-        checkCudaErrors(cudaMemcpy(scores, d_scores, count * sizeof(int), cudaMemcpyDeviceToHost));
+        for (int i = 0; i < num_streams; i++) {
+            checkCudaErrors(cudaMemcpyAsync(scores + i * nodes_per_stream, d_scores + i * nodes_per_stream, nodes_per_stream * sizeof(Move), cudaMemcpyDeviceToHost, streams[i]));
+        }
 
         cudaDeviceSynchronize();
 
         // Update the Search Tree
-        int k = 0;
-        for (int i = 0; i < node->nchild; i++)
+        for (int i = 0, pos = 0; i < node->nchild && pos < count; i++)
         {
             for (int j = 0; j < node->children[i]->nchild; j++)
             {
-                node->children[i]->children[j]->score = scores[k++];
+                node->children[i]->children[j]->score = scores[pos++];
             }
         }
 
+        /*
         // Free the Move Matrix
         for (int i = 0; i < node->nchild; i++)
         {
@@ -839,23 +858,24 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int cou
                 free(second_moves[i]);
             }
         }
+        */
 
-        // Free all the arrays
-        if (node->nchild > 0)
-        {
-            checkCudaErrors(cudaFree(d_scores));
-            free(scores);
-            free(second_moves);
-            free(d_second_moves);
-            checkCudaErrors(cudaFree(d_first_moves));
-            free(first_moves);
-        }
+        // Free all the arrays and the board
+        free(pos_parent);
+        checkCudaErrors(cudaFree(d_pos_parent));
+        free(scores);
+        checkCudaErrors(cudaFree(d_scores));
+        free(second_moves);
+        checkCudaErrors(cudaFree(d_second_moves));
+        free(first_moves);
+        checkCudaErrors(cudaFree(d_first_moves));
+        
         checkCudaErrors(cudaFree(d_board));
 
+        // Destroy the Streams
         for (int i = 0; i < num_streams; i++){
             checkCudaErrors(cudaStreamDestroy(streams[i]));
         }
-
         free(streams);
     }
 
