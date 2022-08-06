@@ -73,7 +73,7 @@ int initial_sort_moves_rec(Board *board, int *positions, int len, int ply, int a
     return result;
 }
 
-void initial_sort_moves_new(Board *board, int *positions, int len)
+void initial_sort_moves(Board *board, int *positions, int len)
 {
     Undo undo;
     Move moves[MAX_MOVES];
@@ -514,7 +514,7 @@ int root_search_new(Board *board, int s, int d, int alpha, int beta, Move *best_
     // Define the PV to hopefully follow the best case
     if (LEN_POSITIONS > 0) {
         positions = (int *)malloc(LEN_POSITIONS * sizeof(int));
-        initial_sort_moves_new(board, positions, LEN_POSITIONS);
+        initial_sort_moves(board, positions, LEN_POSITIONS);
     }
     
     // Generate the 1st generation children of the root node, if s != 0 (otherwise, the root node is terminal and should be explored on the GPU)
