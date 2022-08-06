@@ -427,7 +427,7 @@ void bk_tests() {
     int passed = 0;
     printf("Launching tests!\n");
     for (int i = 0; i < NTESTS; i++) {
-        //if (i == 181){
+        //if (i == 1-1){
             char *fen = TESTS[i * 2];
             char *bm = TESTS[i * 2 + 1];
             int result = bk_test(i, fen, bm);

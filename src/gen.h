@@ -5,7 +5,7 @@
 #include "board.h"
 #include "move.h"
 
-#define THREADS_PER_NODE 64
+#define THREADS_PER_NODE 32
 
 __device__ __host__ int is_check(Board *board, char color);
 __device__ __host__ int is_illegal(Board *board);

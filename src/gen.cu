@@ -84,8 +84,83 @@ __device__ __host__ int is_check(Board *board, char color){
     return (dsts & opponent_pieces & board->kings) != (long long) 0;
 }
 
+__device__ __forceinline__ int is_check_gpu(Board *board, char color, int* shmem){
+    int tid_y = threadIdx.y;
+    bb *dsts_array = (bb*) ((char*) shmem + threadIdx.x * 64 * sizeof(bb));
+    
+    const int color_bit = (color ^ BLACK) >> 3;
+    const bb players_pieces[2] = {board->white, board->black}; // array defined to avoid an if-else
+    const bb front_right_mask[2] = {0xfefefefefefefefeL, 0x7f7f7f7f7f7f7f7fL};
+    const bb front_left_mask[2] = {0x7f7f7f7f7f7f7f7fL, 0xfefefefefefefefeL};
+    const bb own_pieces = players_pieces[color_bit];
+    const bb opponent_pieces = players_pieces[color_bit ^ 1];
+    bb mask = ~own_pieces;
+    const bb mask_pawn = opponent_pieces | board->ep;
+    
+    //for(int sq = 0; sq < 64; sq++){
+    for(int sq = tid_y * (64 / THREADS_PER_NODE); sq < (tid_y + 1) * (64 / THREADS_PER_NODE); sq++){
+        bb dsts = 0;
+        char piece = board_get_piece(board, sq);
+        if (COLOR(piece) >> 3 == color_bit){
+            switch(PIECE(piece)){
+                case PAWN: {
+                    bb pawn_bb = BIT(sq);
+                    bb a1 = pawn_bb & front_right_mask[color_bit];
+                    bb a1_vec[2] = {a1 << 7, a1 >> 7};
+                    a1 = a1_vec[color_bit] & mask_pawn;
+                    bb a2 = pawn_bb & front_left_mask[color_bit];
+                    bb a2_vec[2] = {a2 << 9, a2 >> 9};
+                    a2 = a2_vec[color_bit] & mask_pawn;
+                    dsts |= a1;
+                    dsts |= a2;      
+                }              
+                    break;
+                case KNIGHT:
+                    #ifdef __CUDA_ARCH__
+                    dsts |= d_BB_KNIGHT[sq] & mask;
+                    #else
+                    dsts |= BB_KNIGHT[sq] & mask;
+                    #endif
+                    break;
+                case BISHOP:
+                    dsts |= bb_bishop(sq, board->all) & mask;
+                    break;
+                case ROOK:
+                    dsts |= bb_rook(sq, board->all) & mask;
+                    break;
+                case QUEEN:
+                    dsts |= bb_queen(sq, board->all) & mask;
+                    break;
+                case KING:
+                    #ifdef __CUDA_ARCH__
+                    dsts |= d_BB_KING[sq] & mask;
+                    #else
+                    dsts |= BB_KING[sq] & mask;
+                    #endif
+                    break;
+                default: // empty piece
+                    break;
+            }
+        }
+        dsts_array[sq] = dsts;
+    }
+    __syncthreads();
+    if (tid_y == 0) { 
+        for (int sq = 1; sq < 64; sq++){
+            dsts_array[0] |= dsts_array[sq];
+        }
+    }
+    __syncthreads();
+    return (dsts_array[0] & opponent_pieces & board->kings) != (long long) 0;
+}
+
+
 __device__ __host__ int is_illegal(Board *board){
      return is_check(board, board->color ^ BLACK);
+}
+
+__device__ __forceinline__ int is_illegal_gpu(Board *board, int *shmem){
+    return is_check_gpu(board, board->color ^ BLACK, shmem);
 }
 
 /*
@@ -245,15 +320,15 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
     
     Board board = board_arr[tid_x]; // input board
 
-    if (is_illegal(&board)){
+    // declare different pointers to the same contiguous memory area: it is the only way to use the shared memory
+    extern __shared__ int shmem[];
+    bb *dsts_array = (bb*) ((char*) shmem + threadIdx.x * 64 * sizeof(bb));
+    char *pieces = (char*) shmem + blockDim.x * 64 * sizeof(bb) + threadIdx.x * 64 * sizeof(char);
+
+    if (is_illegal_gpu(&board, shmem)){
         count_arr[tid_x] = 0;
         return;
     }
-
-    // declare different pointers to the same contiguous memory area: it is the only way to use the shared memory
-    extern __shared__ int *shmem[];
-    bb *dsts_array = (bb*) ((char*) shmem + threadIdx.x * 64 * sizeof(bb));
-    char *pieces = (char*) shmem + blockDim.x * 64 * sizeof(bb) + threadIdx.x * 64 * sizeof(char);
 
     Move moves[MAX_MOVES];
     Move *moves_local = moves; // moving pointer of the moves array

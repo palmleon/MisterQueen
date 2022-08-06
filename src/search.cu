@@ -6,7 +6,6 @@
 #include "search.h"
 #include "eval.h"
 #include "gen.h"
-#include "gpu.h"
 #include "move.h"
 #include "stree.h"
 #include "util.h"
@@ -234,6 +233,7 @@ void undo_search_tree(STNode node)
  * Assumptions:
  *   the node is not illegal (check in the Sequental Alpha-Beta)
  */
+/*
 void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int count)
 {
     if (node->nchild == 0) { return; }
@@ -416,8 +416,9 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int cou
         checkCudaErrors(cudaFree(d_board));
     }
 }
+*/
 
-void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta, int isPV, int *positions)
+void alpha_beta_cpu_new(STNode node, int s, int ply, int alpha, int beta, int isPV, int *positions)
 {
 
     int result;
@@ -429,6 +430,7 @@ void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta,
     }
     if (ply >= s)
     {
+        node->score = evaluate(&(node->board));
         return; // score has already been defined by the parallel search on terminal nodes
     }
     int count = 0;
@@ -436,11 +438,13 @@ void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta,
     {
         count = gen_search_tree(node);
     }
+    /*
     if (ply == s - 2 || (ply == 0 && (s == 1 || s == 0)))
     {
         // perform the Parallel Search (it does not create additional nodes, but enriches them with more accurate scores coming from the deeper parallel search)
         alpha_beta_parallel(node, s, d, alpha, beta, count);
     }
+    */
     if (isPV)
     {
         if (ply < LEN_POSITIONS)
@@ -454,11 +458,11 @@ void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta,
     {
         if (isPV && i == 0)
         {
-            alpha_beta_cpu_new(node->children[i], s, d, ply + 1, -beta, -alpha, 1, positions);
+            alpha_beta_cpu_new(node->children[i], s, ply + 1, -beta, -alpha, 1, positions);
         }
         else
         {
-            alpha_beta_cpu_new(node->children[i], s, d, ply + 1, -beta, -alpha, 0, positions);
+            alpha_beta_cpu_new(node->children[i], s, ply + 1, -beta, -alpha, 0, positions);
         }
         int score = -node->children[i]->score;
         if (score > -INF)
@@ -496,7 +500,8 @@ void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta,
     }
 }
 
-int root_search_new(Board *board, int s, int d, int alpha, int beta, Move *best_move)
+
+int root_search_new(Board *board, int s, int alpha, int beta, Move *best_move)
 {
 
     // If the board is illegal, it is pointless to perform the search
@@ -544,7 +549,7 @@ int root_search_new(Board *board, int s, int d, int alpha, int beta, Move *best_
     /* Perform the search, using the Alpha Beta Pruning Algorithm
      * The algorithm will update the search_tree, updating the score of all the children nodes */
 
-    alpha_beta_cpu_new(search_tree->root, s, d, 0, alpha, beta, 1, positions);
+    alpha_beta_cpu_new(search_tree->root, s, 0, alpha, beta, 1, positions);
 
     int result = alpha;
     // Fetch the best move and store it
@@ -596,14 +601,15 @@ int do_search(Search *search, Board *board)
     int result = 1;
     int score = 0;
     const int s = MAX_DEPTH_SEQ;
-    const int d = MAX_DEPTH_PAR;
+    //const int d = MAX_DEPTH_PAR;
     int lo = INF;
     int hi = INF;
     int alpha = score - lo;
     int beta = score + hi;
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     // score = root_search(board, depth, 0, alpha, beta, &search->move);
-    score = root_search_new(board, s, d, alpha, beta, &(search->move));
+    //score = root_search_new(board, s, d, alpha, beta, &(search->move));
+    score = root_search_new(board, s, alpha, beta, &(search->move));
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
     int millis = compute_interval_ms(&start, &end);
     if (search->move.src == NOT_MOVE.src && search->move.dst == NOT_MOVE.dst)
@@ -629,7 +635,7 @@ int do_search(Search *search, Board *board)
             char move_string[16];
             move_to_string(&search->move, move_string);
             printf("Stats:\n| depth: %d\n| score: %d\n| time: %d ms\n",
-                   s + d, score, millis);
+                   s, score, millis);
         }
         if (search->uci)
         {
