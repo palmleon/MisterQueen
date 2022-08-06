@@ -196,11 +196,7 @@ int gen_moves(Board *board, Move *moves){
                         }
                         break;
                     case KNIGHT:
-                        #ifdef __CUDA_ARCH__
-                        dsts |= d_BB_KNIGHT[sq] & mask;
-                        #else
                         dsts |= BB_KNIGHT[sq] & mask;
-                        #endif
                         break;
                     case BISHOP:
                         dsts |= bb_bishop(sq, board->all) & mask;
@@ -212,11 +208,7 @@ int gen_moves(Board *board, Move *moves){
                         dsts |= bb_queen(sq, board->all) & mask;
                         break;
                     case KING:
-                        #ifdef __CUDA_ARCH__
-                        dsts |= d_BB_KING[sq] & mask;
-                        #else
                         dsts |= BB_KING[sq] & mask;
-                        #endif
                         break;
                     default: // empty piece
                         break;
@@ -240,7 +232,7 @@ int gen_moves(Board *board, Move *moves){
         }
     }
 
-    return moves - ptr; // incompatible with parallel code, for now it is just for refactoring
+    return moves - ptr; 
 }
 
 
