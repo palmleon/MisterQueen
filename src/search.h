@@ -7,7 +7,7 @@
 #define INF 10000000
 #define MATE 1000000
 #define LEN_POSITIONS 3
-#define MAX_DEPTH_PAR 2
+#define MAX_DEPTH_PAR 1
 #define MAX_DEPTH_SEQ 4
 
 int do_search(Board *board, int uci, Move *move);

@@ -417,7 +417,7 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int cou
     }
 }
 
-void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta, int isPV, int *positions)
+void alpha_beta_cpu(STNode node, int s, int d, int ply, int alpha, int beta, int isPV, int *positions)
 {
 
     int result;
@@ -454,11 +454,11 @@ void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta,
     {
         if (isPV && i == 0)
         {
-            alpha_beta_cpu_new(node->children[i], s, d, ply + 1, -beta, -alpha, 1, positions);
+            alpha_beta_cpu(node->children[i], s, d, ply + 1, -beta, -alpha, 1, positions);
         }
         else
         {
-            alpha_beta_cpu_new(node->children[i], s, d, ply + 1, -beta, -alpha, 0, positions);
+            alpha_beta_cpu(node->children[i], s, d, ply + 1, -beta, -alpha, 0, positions);
         }
         int score = -node->children[i]->score;
         if (score > -INF)
@@ -496,7 +496,7 @@ void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta,
     }
 }
 
-int root_search_new(Board *board, int s, int d, int alpha, int beta, Move *best_move)
+int root_search(Board *board, int s, int d, int alpha, int beta, Move *best_move)
 {
 
     // If the board is illegal, it is pointless to perform the search
@@ -544,7 +544,7 @@ int root_search_new(Board *board, int s, int d, int alpha, int beta, Move *best_
     /* Perform the search, using the Alpha Beta Pruning Algorithm
      * The algorithm will update the search_tree, updating the score of all the children nodes */
 
-    alpha_beta_cpu_new(search_tree->root, s, d, 0, alpha, beta, 1, positions);
+    alpha_beta_cpu(search_tree->root, s, d, 0, alpha, beta, 1, positions);
 
     int result = alpha;
     // Fetch the best move and store it
@@ -603,7 +603,7 @@ int do_search(Board *board, int uci, Move *move)
     int beta = score + hi;
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     // score = root_search(board, depth, 0, alpha, beta, &search->move);
-    score = root_search_new(board, s, d, alpha, beta, move);
+    score = root_search(board, s, d, alpha, beta, move);
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
     int millis = compute_interval_ms(&start, &end);
     if (move->src == NOT_MOVE.src && move->dst == NOT_MOVE.dst)
