@@ -590,7 +590,7 @@ int root_search_new(Board *board, int s, int d, int alpha, int beta, Move *best_
     return result;
 }
 
-int do_search(Search *search, Board *board)
+int do_search(Board *board, int uci, Move *move)
 {
     struct timespec start, end;
     int result = 1;
@@ -603,10 +603,10 @@ int do_search(Search *search, Board *board)
     int beta = score + hi;
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     // score = root_search(board, depth, 0, alpha, beta, &search->move);
-    score = root_search_new(board, s, d, alpha, beta, &(search->move));
+    score = root_search_new(board, s, d, alpha, beta, move);
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
     int millis = compute_interval_ms(&start, &end);
-    if (search->move.src == NOT_MOVE.src && search->move.dst == NOT_MOVE.dst)
+    if (move->src == NOT_MOVE.src && move->dst == NOT_MOVE.dst)
     {
         printf("Impossible to find a valid move: ");
         if (score == INF)
@@ -624,17 +624,13 @@ int do_search(Search *search, Board *board)
     }
     else
     {
-        if (search->uci)
+        if (uci)
         {
             char move_string[16];
-            move_to_string(&search->move, move_string);
+            move_to_string(move, move_string);
             printf("Stats:\n| depth: %d\n| score: %d\n| time: %d ms\n",
                    s + d, score, millis);
-        }
-        if (search->uci)
-        {
-            char move_string[16];
-            notate_move(board, &search->move, move_string);
+            notate_move(board, move, move_string);
             // move_to_string(&search->move, move_string);
             printf("| best move: %s\n", move_string);
         }

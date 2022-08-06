@@ -53,7 +53,7 @@ int main(void) {
     
     struct timespec start, end;
     Board board;
-    Search search;
+    Move move;
     char command[10] = DEBUG_CMD;
     char board_file[100] = DEBUG_BOARD;
     board_reset(&board); // load the board as in the initial position
@@ -74,8 +74,7 @@ int main(void) {
         scanf("%s", command);
         #endif
         if (strncmp(command, "bm", 2) == 0) {
-            search.uci = 1;
-            do_search(&search, &board);
+            do_search(&board, 1, &move);
         }
         else if (strncmp(command, "square", 6) == 0) {
             printf("Board file: ");

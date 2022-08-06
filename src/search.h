@@ -10,13 +10,6 @@
 #define MAX_DEPTH_PAR 2
 #define MAX_DEPTH_SEQ 4
 
-typedef struct {
-    // input
-    int uci;
-    // output
-    Move move;
-} Search;
-
-int do_search(Search *search, Board *board);
+int do_search(Board *board, int uci, Move *move);
 
 #endif //SEARCH_H
