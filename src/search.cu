@@ -443,7 +443,7 @@ void alpha_beta_cpu_new(STNode node, int s, int d, int ply, int alpha, int beta,
     }
     if (isPV)
     {
-        if (ply < LEN_POSITIONS)// && node->nchild > positions[ply])
+        if (ply < LEN_POSITIONS)
         {
             STNode tmp = node->children[0];
             node->children[0] = node->children[positions[ply]];
