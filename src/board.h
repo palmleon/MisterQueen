@@ -3,9 +3,7 @@
 
 #include "bb.h"
 
-//#define WHITE 0x00
 #define WHITE 0x0
-//#define BLACK 0x10
 #define BLACK 0x8
 
 
@@ -24,24 +22,12 @@
 #define WHITE_QUEEN 0x5
 #define WHITE_KING 0x6
 
-/*
-#define BLACK_PAWN 0x11
-#define BLACK_KNIGHT 0x12
-#define BLACK_BISHOP 0x13
-#define BLACK_ROOK 0x14
-#define BLACK_QUEEN 0x15
-#define BLACK_KING 0x16
-*/
-
 #define BLACK_PAWN 0x9
 #define BLACK_KNIGHT 0xa
 #define BLACK_BISHOP 0xb
 #define BLACK_ROOK 0xc
 #define BLACK_QUEEN 0xd
 #define BLACK_KING 0xe
-
-//#define PIECE(x) ((x) & 0x0f)
-//#define COLOR(x) ((x) & 0x10)
 
 #define PIECE(x) ((x) & 0x7)
 #define COLOR(x) ((x) & 0x8)
@@ -60,8 +46,6 @@
 #define MATERIAL_ROOK 500
 #define MATERIAL_QUEEN 900
 #define MATERIAL_KING 20000
-
-//const int piece_material[7] = {0, MATERIAL_PAWN, MATERIAL_KNIGHT, MATERIAL_BISHOP, MATERIAL_ROOK, MATERIAL_QUEEN, MATERIAL_KING};
 
 extern const int POSITION_WHITE_PAWN[64];
 extern const int POSITION_WHITE_KNIGHT[64];
@@ -91,33 +75,19 @@ extern __constant__ int d_POSITION_BLACK_KING[64];
 
 typedef struct __align__(128) {
     unsigned char squares[32];
-    //int white_material;
-    //int black_material;
+
     int position; // position score, >0 for white advantage, <0 for black advantage
     int material; // material score, >0 for white advantage, <0 for black advantage
-    //int white_position;
-    //int black_position;
+
     bb ep;  // used for "en-passant" captures
     bb all; // each bit represents a square, if at '1' it's occupied
     bb white; // same as the "all" bitmap, but only with white pieces
     bb black; // same as the "all" bitmap, but only with black pieces
-    //bb white_pawns; // same as the "all" bitmap, but only with white pawns // merge the bbs related to the same piece
-    //bb black_pawns; // same as the "all" bitmap, but only with black pawns
     bb pawns;
-    //bb white_knights; // and so on
-    //bb black_knights;
     bb knights;
-    //bb white_bishops;
-    //bb black_bishops;
     bb bishops;
-    //bb white_rooks;
-    //bb black_rooks;
     bb rooks;
-    //bb white_queens;
-    //bb black_queens;
     bb queens;
-    //bb white_kings;
-    //bb black_kings;
     bb kings;
     char color;
     char castle;

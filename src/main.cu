@@ -9,9 +9,6 @@
 #define DEBUG_CMD "bk"
 #define DEBUG_BOARD ""
 
-//static Board board;
-//static Search search;
-
 void print_menu(void) {
     printf("-------------------\n");
     printf("insert a command:\n");
@@ -68,10 +65,6 @@ int main(void) {
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
   
     printf("Tables transferred to the GPU! (Time: %lu ms)\n", compute_interval_ms(&start, &end));  
-
-    //int max_shmem;
-    //checkCudaErrors(cudaDeviceGetAttribute(&max_shmem, cudaDevAttrMaxSharedMemoryPerBlock, 0));
-    //printf("Max shmem per block: %d\n", max_shmem);
     
     #ifndef DEBUG
     while(1) {

@@ -5,22 +5,6 @@
 #include "gen.h"
 #include "move.h"
 
-//void make_move(Board *board, Move *move) {
-//    Undo undo; // throw-away
-//    do_move(board, move, &undo);
-//}
-
-/*void do_null_move(Board *board, Undo *undo) {
-    undo->ep = board->ep;
-    board->ep = 0L;
-    board->color ^= BLACK;
-}
-
-void undo_null_move(Board *board, Undo *undo) {
-    board->ep = undo->ep;
-    board->color ^= BLACK;
-}*/
-
 Move NOT_MOVE = { 128, 128, 128, 128 }; //default move for representing illegal moves
 
 __device__ __host__ void do_move(Board *board, Move *move, Undo *undo) {
@@ -128,48 +112,36 @@ int score_move(Board *board, Move *move) {
                 COLOR(piece) ?
                     (result += (POSITION_BLACK_PAWN[dst] - POSITION_BLACK_PAWN[src])) :
                     (result += (POSITION_WHITE_PAWN[dst] - POSITION_WHITE_PAWN[src]));
-                //result -= POSITION_BLACK_PAWN[src];
-                //result += POSITION_BLACK_PAWN[dst];
                 break;
             case KNIGHT:
                 piece_material = MATERIAL_KNIGHT;
                 COLOR(piece) ?
                     (result += (POSITION_BLACK_KNIGHT[dst] - POSITION_BLACK_KNIGHT[src])) :
                     (result += (POSITION_WHITE_KNIGHT[dst] - POSITION_WHITE_KNIGHT[src]));
-                //result -= POSITION_BLACK_KNIGHT[src];
-                //result += POSITION_BLACK_KNIGHT[dst];
                 break;
             case BISHOP:
                 piece_material = MATERIAL_BISHOP;
                 COLOR(piece) ?
                     (result += (POSITION_BLACK_BISHOP[dst] - POSITION_BLACK_BISHOP[src])) :
                     (result += (POSITION_WHITE_BISHOP[dst] - POSITION_WHITE_BISHOP[src]));
-                //result -= POSITION_BLACK_BISHOP[src];
-                //result += POSITION_BLACK_BISHOP[dst];
                 break;
             case ROOK:
                 piece_material = MATERIAL_ROOK;
                 COLOR(piece) ?
                     (result += (POSITION_BLACK_ROOK[dst] - POSITION_BLACK_ROOK[src])) :
                     (result += (POSITION_WHITE_ROOK[dst] - POSITION_WHITE_ROOK[src]));
-                //result -= POSITION_BLACK_ROOK[src];
-                //result += POSITION_BLACK_ROOK[dst];
                 break;
             case QUEEN:
                 piece_material = MATERIAL_QUEEN;
                 COLOR(piece) ?
                     (result += (POSITION_BLACK_QUEEN[dst] - POSITION_BLACK_QUEEN[src])) :
                     (result += (POSITION_WHITE_QUEEN[dst] - POSITION_WHITE_QUEEN[src]));
-                //result -= POSITION_BLACK_QUEEN[src];
-                //result += POSITION_BLACK_QUEEN[dst];
                 break;
             case KING:
                 piece_material = MATERIAL_KING;
                 COLOR(piece) ?
                     (result += (POSITION_BLACK_KING[dst] - POSITION_BLACK_KING[src])) :
                     (result += (POSITION_WHITE_KING[dst] - POSITION_WHITE_KING[src]));
-                //result -= POSITION_BLACK_KING[src];
-                //result += POSITION_BLACK_KING[dst];
                 break;
         }
     if (capture) {
@@ -177,32 +149,26 @@ int score_move(Board *board, Move *move) {
                 case PAWN:
                     capture_material = MATERIAL_PAWN;
                     COLOR(capture) ? (result += POSITION_BLACK_PAWN[dst]) : (result += POSITION_WHITE_PAWN[dst]);
-                    //result += POSITION_BLACK_PAWN[dst];
                     break;
                 case KNIGHT:
                     capture_material = MATERIAL_KNIGHT;
                     COLOR(capture) ? (result += POSITION_BLACK_KNIGHT[dst]) : (result += POSITION_WHITE_KNIGHT[dst]);
-                    //result += POSITION_BLACK_KNIGHT[dst];
                     break;
                 case BISHOP:
                     capture_material = MATERIAL_BISHOP;
                     COLOR(capture) ? (result += POSITION_BLACK_BISHOP[dst]) : (result += POSITION_WHITE_BISHOP[dst]);
-                    //result += POSITION_BLACK_BISHOP[dst];
                     break;
                 case ROOK:
                     capture_material = MATERIAL_ROOK;
                     COLOR(capture) ? (result += POSITION_BLACK_ROOK[dst]) : (result += POSITION_WHITE_ROOK[dst]);
-                    //result += POSITION_BLACK_ROOK[dst];
                     break;
                 case QUEEN:
                     capture_material = MATERIAL_QUEEN;
                     COLOR(capture) ? (result += POSITION_BLACK_QUEEN[dst]) : (result += POSITION_WHITE_QUEEN[dst]);
-                    //result += POSITION_BLACK_QUEEN[dst];
                     break;
                 case KING:
                     capture_material = MATERIAL_KING;
                     COLOR(capture) ? (result += POSITION_BLACK_KING[dst]) : (result += POSITION_WHITE_KING[dst]);
-                    //result += POSITION_BLACK_KING[dst];
                     break;
             }
 

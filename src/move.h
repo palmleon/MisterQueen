@@ -22,9 +22,6 @@ typedef struct __align__(16) {
 
 extern Move NOT_MOVE; //default move for representing illegal moves
 
-/*void make_move(Board *board, Move *move);
-void do_null_move(Board *board, Undo *undo);
-void undo_null_move(Board *board, Undo *undo);*/
 __device__ __host__ void do_move(Board *board, Move *move, Undo *undo);
 __device__ __host__ void undo_move(Board *board, Move *move, Undo *undo);
 int score_move(Board *board, Move *move);

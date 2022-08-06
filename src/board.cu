@@ -61,35 +61,17 @@ __device__ __host__ void board_set(Board *board, int sq, char piece) {
     #endif
     
     bb* piece_masks[6] = {&(board->pawns), &(board->knights), &(board->bishops), &(board->rooks), &(board->queens), &(board->kings)};
-    //bb* piece_masks[12] = {&(board->white_pawns), &(board->white_knights), &(board->white_bishops), &(board->white_rooks), &(board->white_queens), &(board->white_kings), &(board->black_pawns), &(board->black_knights), &(board->black_bishops), &(board->black_rooks), &(board->black_queens), &(board->black_kings)};
     bb* color_masks[2] = {&(board->white), &(board->black)};
-    //int sq_shift[2] = {4,0};
-    //char sq_masks[2] = {0x0f, 0xf0};
-    //char previous = board->squares[sq]; // take the previous piece on that square
     unsigned char previous = board_get_piece(board, sq);
     board_set_piece(board, sq, piece);
-    //const char color_previous = COLOR(previous) >> 4;
-    //const char color_piece = COLOR(piece) >> 4;
-    /*printf("%d %d %d %d\n", COLOR(previous), COLOR(previous) >> 1, COLOR(previous) >> 2, COLOR(previous) >> 3);
-    printf("color: %d\n", COLOR(previous));
-    printf("piece: %d\n", PIECE(previous));
-    const unsigned char color = COLOR(previous);
-    */
-    const unsigned char color_previous = COLOR(previous) / 8; //>> 3;// >> 3;
-    const unsigned char color_piece = COLOR(piece) / 8; //>> 3;
+    const unsigned char color_previous = COLOR(previous) / 8;
+    const unsigned char color_piece = COLOR(piece) / 8;
     if (previous) { // was the square empty?
         // There was sth before: remove the previous piece
         bb mask = ~BIT(sq);
         board->all &= mask; // bitwise removal of the piece
- //       printf("Board->all: %lu\n", board->all);
         board->material -= materials[PIECE(previous)-1]*coeff[color_previous];
-//        printf("Board->material: %lu\n", board->material);
-        board->position -= position_tables[color_previous*6+(PIECE(previous)-1)][sq] * coeff[color_previous];
-//        printf("Board->position: %lu\n", board->position);
-        
-        //*(piece_masks[PIECE(previous)-1]) &= mask;
-        //*(piece_masks[color_previous*6+PIECE(previous)-1]) &= mask;
-
+        board->position -= position_tables[color_previous*6+(PIECE(previous)-1)][sq] * coeff[color_previous];       
         *(piece_masks[PIECE(previous)-1]) &= mask;
         *(color_masks[color_previous]) &= mask;
     }
@@ -98,8 +80,6 @@ __device__ __host__ void board_set(Board *board, int sq, char piece) {
         board->all |= bit;
         board->material += materials[PIECE(piece)-1]*coeff[color_piece];
         board->position += position_tables[color_piece*6+(PIECE(piece)-1)][sq]*coeff[color_piece];
-        //*(piece_masks[PIECE(piece)-1]) |= bit;
-        //*(piece_masks[color_piece*6+PIECE(piece)-1]) |= bit;
         *(piece_masks[PIECE(piece)-1]) |= bit;
         *(color_masks[color_piece]) |= bit;
     }
@@ -111,7 +91,6 @@ void board_print(Board *board) {
         for (int file = 0; file < 8; file++) {
             int sq = RF(rank,file);
             char c;
-            //short int piece = board->squares[RF(rank, file)];
             char piece = board_get_piece(board, sq);
             switch (PIECE(piece)) {
                 case EMPTY:  c = '.'; break;
@@ -181,8 +160,6 @@ void board_load_fen(Board *board, char *fen) {
             break;
         case 'b':
             board->color = BLACK;
-            //board->hash ^= HASH_COLOR;
-            //board->pawn_hash ^= HASH_COLOR;
             break;
         default: return;
     }
@@ -203,10 +180,6 @@ void board_load_fen(Board *board, char *fen) {
             break;
         }
     }
-    //board->hash ^= HASH_CASTLE[CASTLE_ALL];
-    //board->hash ^= HASH_CASTLE[board->castle];
-    //board->pawn_hash ^= HASH_CASTLE[CASTLE_ALL];
-    //board->pawn_hash ^= HASH_CASTLE[board->castle];
     i++;
     if (fen[i] == '-') {
         i++;
@@ -217,8 +190,6 @@ void board_load_fen(Board *board, char *fen) {
         if (fen[i] >= '1' && fen[i] <= '8') {
             int ep_rank = fen[i] - '1';
             board->ep = BIT(RF(ep_rank, ep_file));
-            //board->hash ^= HASH_EP[LSB(board->ep) % 8];
-            //board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8];
             i++;
         }
     }
@@ -326,8 +297,6 @@ void board_load_file_fen(Board *board, char *filename) {
             break;
         case 'b':
             board->color = BLACK;
-            //board->hash ^= HASH_COLOR;
-            //board->pawn_hash ^= HASH_COLOR;
             break;
         default: return;
     }
@@ -348,10 +317,6 @@ void board_load_file_fen(Board *board, char *filename) {
             break;
         }
     }
-    //board->hash ^= HASH_CASTLE[CASTLE_ALL];
-    //board->hash ^= HASH_CASTLE[board->castle];
-    //board->pawn_hash ^= HASH_CASTLE[CASTLE_ALL];
-   // board->pawn_hash ^= HASH_CASTLE[board->castle];
     i++;
     if (fen[i] >= 'a' && fen[i] <= 'h') {
         int ep_file = fen[i] - 'a';
@@ -359,8 +324,6 @@ void board_load_file_fen(Board *board, char *filename) {
         if (fen[i] >= '1' && fen[i] <= '8') {
             int ep_rank = fen[i] - '1';
             board->ep = BIT(RF(ep_rank, ep_file));
-            //board->hash ^= HASH_EP[LSB(board->ep) % 8];
-            //board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8];
         }
     }
     fclose(file_ptr);
@@ -439,8 +402,6 @@ void board_load_file_square(Board *board, char *filename) {
             break;
         case 'b':
             board->color = BLACK;
-            //board->hash ^= HASH_COLOR;
-            //board->pawn_hash ^= HASH_COLOR;
             break;
         default: return;
     }
@@ -460,10 +421,6 @@ void board_load_file_square(Board *board, char *filename) {
             break;
         }
     }
-    //board->hash ^= HASH_CASTLE[CASTLE_ALL];
-    //board->hash ^= HASH_CASTLE[board->castle];
-    //board->pawn_hash ^= HASH_CASTLE[CASTLE_ALL];
-    //board->pawn_hash ^= HASH_CASTLE[board->castle];
     i++;
     if (line[i] >= 'a' && line[i] <= 'h') {
         int ep_file = line[i] - 'a';
@@ -471,8 +428,6 @@ void board_load_file_square(Board *board, char *filename) {
         if (line[i] >= '1' && line[i] <= '8') {
             int ep_rank = line[i] - '1';
             board->ep = BIT(RF(ep_rank, ep_file));
-            //board->hash ^= HASH_EP[LSB(board->ep) % 8];
-            //board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8];
         }
     }
     fclose(file_ptr);

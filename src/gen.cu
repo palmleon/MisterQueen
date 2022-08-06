@@ -19,10 +19,6 @@
 #define EMIT_PROMOTIONS(m, a, b) \
     EMIT_PROMOTION(m, a, b, QUEEN) \
     EMIT_PROMOTION(m, a, b, KNIGHT)
-    /*
-    EMIT_PROMOTION(m, a, b, ROOK) \
-    EMIT_PROMOTION(m, a, b, BISHOP) 
-    */
 
 /* To verify if the current player is in check, 
    we generate all the opponent moves 
@@ -30,11 +26,8 @@
    color: player that may be in check
 */
 __device__ __host__ int is_check(Board *board, char color){
-    // for black, board->color >> 4 = 0x01
-    // for white, board->color >> 4 = 0x00
+
     const int color_bit = (color ^ BLACK) >> 3;
-    // coeff = -1 for white, +1 for black
-    //const int coeff[2] = {-1, 1};
     const bb players_pieces[2] = {board->white, board->black}; // array defined to avoid an if-else
     const bb front_right_mask[2] = {0xfefefefefefefefeL, 0x7f7f7f7f7f7f7f7fL};
     const bb front_left_mask[2] = {0x7f7f7f7f7f7f7f7fL, 0xfefefefefefefefeL};
@@ -42,11 +35,9 @@ __device__ __host__ int is_check(Board *board, char color){
     const bb opponent_pieces = players_pieces[color_bit ^ 1];
     bb mask = ~own_pieces;
     const bb mask_pawn = opponent_pieces | board->ep;
-   // const bb mask_pawn_opp = own_pieces | board->ep;
     bb dsts = 0;
 
     for(int sq = 0; sq < 64; sq++){
-        //char piece = board->squares[sq];
         char piece = board_get_piece(board, sq);
         if (COLOR(piece) >> 3 == color_bit){
             switch(PIECE(piece)){
@@ -108,15 +99,9 @@ __device__ __host__ int is_illegal(Board *board){
  * Each of these tables is a bitmap, representing where it is possible to move
  * To better understand the tables, read the bb_init() function in bb.c
  */
-__device__ __host__ int gen_moves(Board *board, Move *moves){
+int gen_moves(Board *board, Move *moves){
     Move *ptr = moves;
-    // for black, board->color >> 4 = 0x01
-    // for white, board->color >> 4 = 0x00
-    //const int color_bit = board->color >> 4;
-    //const int color_bit = board->color >> 3;
     const int color_bit = board->color / 8;
-    // coeff = -1 for white, +1 for black
-    //const int coeff[2] = {-1, 1};
     const bb players_pieces[2] = {board->white, board->black}; // array defined to avoid an if-else
     const bb promo[2] = {0xff00000000000000L, 0x00000000000000ffL}; // representation of the promotion rank
     const bb third_rank[2] = {0x0000000000ff0000L, 0x0000ff0000000000L}; // used for initial double move of pawn
@@ -134,7 +119,6 @@ __device__ __host__ int gen_moves(Board *board, Move *moves){
     const int castle_king_pos_after[4] = {6, 2, 62, 58};
 
     for(int sq = 0; sq < 64; sq++){
-        //char piece = board->squares[sq];
         char piece = board_get_piece(board, sq);
         bb dsts = 0;
         // move a piece only if it is of the current moving player!
@@ -161,11 +145,7 @@ __device__ __host__ int gen_moves(Board *board, Move *moves){
                     }
                     break;
                 case KNIGHT:
-                    #ifdef __CUDA_ARCH__
-                    dsts |= d_BB_KNIGHT[sq] & mask;
-                    #else
                     dsts |= BB_KNIGHT[sq] & mask;
-                    #endif
                     break;
                 case BISHOP:
                     dsts = bb_bishop(sq, board->all) & mask;
@@ -177,11 +157,7 @@ __device__ __host__ int gen_moves(Board *board, Move *moves){
                     dsts = bb_queen(sq, board->all) & mask;
                     break;
                 case KING:
-                    #ifdef __CUDA_ARCH__
-                    dsts |= d_BB_KING[sq] & mask;
-                    #else
                     dsts |= BB_KING[sq] & mask;
-                    #endif
                     break;
                 default: // empty piece
                     break;
@@ -205,7 +181,6 @@ __device__ __host__ int gen_moves(Board *board, Move *moves){
     bb dsts = 0;
     if ((board->castle & castles[color_bit*2]) || board->castle & castles[color_bit*2+1]){
         for (int sq = 0; sq < 64; sq++){
-            //char piece = board->squares[sq];
             char piece = board_get_piece(board, sq);
             if (COLOR(piece) != board->color){
                 switch(PIECE(piece)){
@@ -271,16 +246,11 @@ __device__ __host__ int gen_moves(Board *board, Move *moves){
 
 __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr, int baseNodeIdx, int nNodes){
     
-    // Thread indexes x, y
     const int tid_x = baseNodeIdx + threadIdx.x; // index of the Node
     const int tid_y = threadIdx.y; // index of the Thread 
     
     if (tid_x >= nNodes) { return; }
     
-    //bb dsts_array[64];
-    //__shared__ char pieces[64];
-    
-    //int *pieces = (int*) ((char*) dsts_array + 64*sizeof(bb));
     Board board = board_arr[tid_x]; // input board
 
     if (is_illegal(&board)){
@@ -297,9 +267,7 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
     Move *moves_local = moves; // moving pointer of the moves array
     Move *moves_glob = moves_arr + MAX_MOVES * tid_x; // index where to write the new moves
     Move *moves_local_start = moves; // start point of the moves vector
-    // for black, board->color >> 3 = 0x01
-    // for white, board->color >> 3 = 0x00
-    //const int color_bit = board->color >> 3;
+
     const int color_bit = board.color / 8;
     const bb players_pieces[2] = {board.white, board.black}; // array defined to avoid an if-else
     const bb promo[2] = {0xff00000000000000L, 0x00000000000000ffL}; // representation of the promotion rank
@@ -319,12 +287,9 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
     bb dsts; 
 
     for(int sq = tid_y * (64 / THREADS_PER_NODE); sq < (tid_y + 1) * (64 / THREADS_PER_NODE); sq++){
-        //char piece = board->squares[sq];
-        //char piece = board_get_piece_gpu(board, sq);
         pieces[sq] = board_get_piece(&board, sq);
         char piece = pieces[sq];
         dsts = 0;
-        //dsts_array[sq] = 0;
         // move a piece only if it is of the current moving player!
         if (COLOR(piece) == board.color){
             bb pawn_bb;
@@ -346,39 +311,22 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
                     dsts |= p2;
                     dsts |= a1;
                     dsts |= a2;
-                    //dsts_array[sq] |= p1;
-                    //dsts_array[sq] |= p2;
-                    //dsts_array[sq] |= a1;
-                    //dsts_array[sq] |= a2;
                     }
                     break;
                 case KNIGHT:
-                    #ifdef __CUDA_ARCH__
-                    //dsts_array[sq] |= d_BB_KNIGHT[sq] & mask;
                     dsts |= d_BB_KNIGHT[sq] & mask;
-                    #else
-                    //dsts |= BB_KNIGHT[sq] & mask;
-                    #endif
                     break;
                 case BISHOP:
-                    //dsts_array[sq] = bb_bishop(sq, board->all) & mask;
                     dsts = bb_bishop(sq, board.all) & mask;
                     break;
                 case ROOK:
-                    //dsts_array[sq] = bb_rook(sq, board->all) & mask;
                     dsts = bb_rook(sq, board.all) & mask;
                     break;
                 case QUEEN:
-                    //dsts_array[sq] = bb_queen(sq, board->all) & mask;
                     dsts = bb_queen(sq, board.all) & mask;
                     break;
                 case KING:
-                    #ifdef __CUDA_ARCH__
-                    //dsts_array[sq] |= d_BB_KING[sq] & mask;
                     dsts |= d_BB_KING[sq] & mask;                    
-                    #else
-                    //dsts |= BB_KING[sq] & mask;
-                    #endif
                     break;
                 default: // empty piece
                     break;
@@ -393,7 +341,6 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
             // Emit all the moves
             dsts = dsts_array[sq];
             char piece = pieces[sq];
-            //char piece = board_get_piece_gpu(board, sq);
             while (dsts) {
                 int dst;
                 POP_LSB(dst, dsts);
@@ -413,10 +360,7 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
     // look for opponent attacks in the squares where the king should move
     dsts = 0;
     if ((board.castle & castles[color_bit*2]) || board.castle & castles[color_bit*2+1]){
-        //for (int sq = 0; sq < 64; sq++){
         for(int sq = tid_y * (64 / THREADS_PER_NODE); sq < (tid_y + 1) * (64 / THREADS_PER_NODE); sq++){
-            //char piece = board_get_piece_gpu(board, sq);
-            //dsts = 0;
             char piece = pieces[sq];
             if (COLOR(piece) != board.color){
                 switch(PIECE(piece)){
@@ -428,36 +372,28 @@ __global__ void gen_moves_gpu(Board *board_arr, Move *moves_arr, int *count_arr,
                         bb a2 = pawn_bb & front_left_mask[color_bit ^ 1];
                         bb a2_vec[2] = {a2 << 9, a2 >> 9};
                         a2 = a2_vec[color_bit^1] & mask_pawn_opp;
-                        //dsts |= a1 | a2;
                         dsts = a1 | a2;
-                        //dsts_array[sq] |= a1 | a2;
                         }
                         break;
                     case KNIGHT:
                         #ifdef __CUDA_ARCH__
-                        //dsts |= d_BB_KNIGHT[sq] & mask;
                         dsts = d_BB_KNIGHT[sq] & mask;
-                        //dsts_array[sq] |= d_BB_KNIGHT[sq] & mask;
                         #else
                         dsts = BB_KNIGHT[sq] & mask;
                         #endif
                         break;
                     case BISHOP:
-                        dsts /*|*/= bb_bishop(sq, board.all) & mask;
-                        //dsts_array[sq] |= bb_bishop(sq, board->all) & mask;
+                        dsts = bb_bishop(sq, board.all) & mask;
                         break;
                     case ROOK:
-                        dsts /*|*/= bb_rook(sq, board.all) & mask;
-                        //dsts_array[sq] |= bb_rook(sq, board->all) & mask;
+                        dsts = bb_rook(sq, board.all) & mask;
                         break;
                     case QUEEN:
-                        dsts /*|*/= bb_queen(sq, board.all) & mask;
-                        //dsts_array[sq] |= bb_queen(sq, board->all) & mask;
+                        dsts = bb_queen(sq, board.all) & mask;
                         break;
                     case KING:
                         #ifdef __CUDA_ARCH__
-                        dsts /*|*/= d_BB_KING[sq] & mask;
-                        //dsts_array[sq] |= d_BB_KING[sq] & mask;
+                        dsts = d_BB_KING[sq] & mask;
                         #else
                         dsts |= BB_KING[sq] & mask;
                         #endif
