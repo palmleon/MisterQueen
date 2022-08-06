@@ -226,198 +226,6 @@ void undo_search_tree(STNode node)
     }
 }
 
-/*
- * Parallel Alpha-Beta on terminal nodes up to depth d, starting at depth s
- * This function provides more accurate scores for the nodes at depth s, so that they can be used by the Sequential Alpha-Beta con CPU,
- * instead of just evaluating the terminal nodes.
- * Assumptions:
- *   the node is not illegal (check in the Sequental Alpha-Beta)
- */
-/*
-void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int count)
-{
-    if (node->nchild == 0) { return; }
-
-    if (s >= 2)
-    {
-        cudaStream_t *streams;
-        int nchildren;
-
-        // Define all inputs and outputs
-        int *pos_parent, *d_pos_parent;
-        Move *first_moves, *d_first_moves;
-        Move *second_moves, *d_second_moves;
-        int *scores, *d_scores;
-        Board *d_board;
-
-        // Define the number of streams (TODO try different configurations)
-        const int num_streams = node->nchild;
-        int stream_idx;
-        
-        // Define the number of nodes per kernel and the effective size of the 2nd gen moves array
-        const int nodes_per_stream = count / num_streams + 1;
-        const int num_moves = nodes_per_stream * num_streams;
-
-        // Allocate and create the cudaStreams
-        streams = (cudaStream_t*) malloc (num_streams * sizeof(cudaStream_t));
-        for (int i = 0; i < num_streams; i++){
-            checkCudaErrors(cudaStreamCreate(&(streams[i])));
-        }
-
-        // Allocate the Board to start from
-        checkCudaErrors(cudaMalloc(&d_board, sizeof(Board)));
-        
-        // Allocate the Move Array containing the 1st generation moves
-        first_moves = (Move *)malloc(node->nchild * sizeof(Move));
-        checkCudaErrors(cudaMalloc(&d_first_moves, node->nchild * sizeof(Move)));
-
-        // Allocate the Move Array containing the 2nd generation moves
-        second_moves = (Move *)malloc(num_moves * sizeof(Move *));
-        checkCudaErrors(cudaMalloc(&d_second_moves, num_moves * sizeof(Move)));
-
-        // Allocate the Score Array
-        scores = (int *)malloc(num_moves * sizeof(int));
-        checkCudaErrors(cudaMalloc(&d_scores, num_moves * sizeof(int)));
-
-        // Allocate the vector containing the father index for all the 2nd generation nodes
-        pos_parent = (int *) malloc(num_moves * sizeof(int));
-        checkCudaErrors(cudaMalloc(&d_pos_parent, num_moves * sizeof(int)));
-
-        stream_idx = 0;
-
-        // Define both the 1st and 2nd generation moves
-        for (int i = 0, pos = 0; i < node->nchild && pos < count; i++)
-        {
-            first_moves[i] = node->children[i]->move;
-            for (int j = 0; j < node->children[i]->nchild; j++)
-            {
-                pos_parent[pos] = i;
-                second_moves[pos] = node->children[i]->children[j]->move;
-                pos++;
-            }
-        }
-
-        // Transfer the node Board to the GPU
-        checkCudaErrors(cudaMemcpy(d_board, &(node->board), sizeof(Board), cudaMemcpyHostToDevice));
-        
-        // Transfer the 1st generation Move Array to the GPU
-        checkCudaErrors(cudaMemcpy(d_first_moves, first_moves, node->nchild * sizeof(Move), cudaMemcpyHostToDevice));
-
-        // Transfer the 2nd generation moves and the father pos array to the GPU, using streams
-        for (int i = 0; i < num_streams; i++) {
-            checkCudaErrors(cudaMemcpyAsync(d_second_moves + i * nodes_per_stream, second_moves + i * nodes_per_stream, nodes_per_stream * sizeof(Move), cudaMemcpyHostToDevice, streams[i]));
-            checkCudaErrors(cudaMemcpyAsync(d_pos_parent + i * nodes_per_stream, pos_parent + i * nodes_per_stream, nodes_per_stream * sizeof(Move), cudaMemcpyHostToDevice, streams[i]));
-        }
-        
-        // Launch the Search
-        for (int i = 0; i < num_streams; i++) {
-            alpha_beta_gpu_kernel<<<1, nodes_per_stream, 0, streams[i]>>>(d_board, d_first_moves, d_second_moves, d_pos_parent, d_scores, d, alpha, beta, count, i*nodes_per_stream);
-        }
-
-        // Retrieve the results
-        for (int i = 0; i < num_streams; i++) {
-            checkCudaErrors(cudaMemcpyAsync(scores + i * nodes_per_stream, d_scores + i * nodes_per_stream, nodes_per_stream * sizeof(Move), cudaMemcpyDeviceToHost, streams[i]));
-        }
-
-        cudaDeviceSynchronize();
-
-        // Update the Search Tree
-        for (int i = 0, pos = 0; i < node->nchild && pos < count; i++)
-        {
-            for (int j = 0; j < node->children[i]->nchild; j++)
-            {
-                node->children[i]->children[j]->score = scores[pos++];
-            }
-        }
-
-        // Free all the arrays and the board
-        free(pos_parent);
-        checkCudaErrors(cudaFree(d_pos_parent));
-        free(scores);
-        checkCudaErrors(cudaFree(d_scores));
-        free(second_moves);
-        checkCudaErrors(cudaFree(d_second_moves));
-        free(first_moves);
-        checkCudaErrors(cudaFree(d_first_moves));
-        
-        checkCudaErrors(cudaFree(d_board));
-
-        // Destroy the Streams
-        for (int i = 0; i < num_streams; i++){
-            checkCudaErrors(cudaStreamDestroy(streams[i]));
-        }
-        free(streams);
-    }
-
-    // Special Cases
-    else if (s == 1)
-    {
-        Board *d_board;
-        Move *moves, *d_moves;
-        int *scores, *d_scores;
-
-        checkCudaErrors(cudaMalloc(&d_board, sizeof(Board)));
-        if (node->nchild > 0)
-        {
-            moves = (Move *)malloc(node->nchild * sizeof(Move));
-            checkCudaErrors(cudaMalloc(&d_moves, node->nchild * sizeof(Move)));
-            scores = (int *)malloc(node->nchild * sizeof(int));
-            checkCudaErrors(cudaMalloc(&d_scores, node->nchild * sizeof(int)));
-        }
-
-        for (int i = 0; i < node->nchild; i++)
-        {
-            moves[i] = node->children[i]->move;
-        }
-
-        if (node->nchild > 0)
-        {
-            checkCudaErrors(cudaMemcpy(d_board, &(node->board), sizeof(Board), cudaMemcpyHostToDevice));
-            checkCudaErrors(cudaMemcpy(d_moves, moves, node->nchild * sizeof(Move), cudaMemcpyHostToDevice));
-
-            alpha_beta_gpu_kernel<<<1, node->nchild>>>(d_board, d_moves, d, alpha, beta, d_scores);
-
-            checkCudaErrors(cudaMemcpy(scores, d_scores, node->nchild * sizeof(int), cudaMemcpyDeviceToHost));
-        }
-
-        for (int i = 0; i < node->nchild; i++)
-        {
-            node->children[i]->score = scores[i];
-        }
-
-        if (node->nchild > 0)
-        {
-            checkCudaErrors(cudaFree(d_scores));
-            free(scores);
-            checkCudaErrors(cudaFree(d_moves));
-            free(moves);
-        }
-        checkCudaErrors(cudaFree(d_board));
-    }
-    else if (s == 0)
-    {
-        Board *d_board;
-        int *score, *d_score;
-
-        checkCudaErrors(cudaMalloc(&d_board, sizeof(Board)));
-        score = (int *)malloc(sizeof(int));
-        checkCudaErrors(cudaMalloc(&d_score, sizeof(int)));
-
-        checkCudaErrors(cudaMemcpy(d_board, &(node->board), sizeof(Board), cudaMemcpyHostToDevice));
-
-        alpha_beta_gpu_kernel<<<1, 1>>>(d_board, d, alpha, beta, d_score);
-
-        checkCudaErrors(cudaMemcpy(score, d_score, sizeof(int), cudaMemcpyDeviceToHost));
-
-        node->score = *score;
-
-        checkCudaErrors(cudaFree(d_score));
-        free(score);
-        checkCudaErrors(cudaFree(d_board));
-    }
-}
-*/
-
 void alpha_beta_cpu_new(STNode node, int s, int ply, int alpha, int beta, int isPV, int *positions)
 {
 
@@ -595,7 +403,7 @@ int root_search_new(Board *board, int s, int alpha, int beta, Move *best_move)
     return result;
 }
 
-int do_search(Search *search, Board *board)
+int do_search(Board *board, int uci, Move* move)
 {
     struct timespec start, end;
     int result = 1;
@@ -609,10 +417,10 @@ int do_search(Search *search, Board *board)
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     // score = root_search(board, depth, 0, alpha, beta, &search->move);
     //score = root_search_new(board, s, d, alpha, beta, &(search->move));
-    score = root_search_new(board, s, alpha, beta, &(search->move));
+    score = root_search_new(board, s, alpha, beta, move);
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
     int millis = compute_interval_ms(&start, &end);
-    if (search->move.src == NOT_MOVE.src && search->move.dst == NOT_MOVE.dst)
+    if (move->src == NOT_MOVE.src && move->dst == NOT_MOVE.dst)
     {
         printf("Impossible to find a valid move: ");
         if (score == INF)
@@ -630,17 +438,13 @@ int do_search(Search *search, Board *board)
     }
     else
     {
-        if (search->uci)
+        if (uci)
         {
             char move_string[16];
-            move_to_string(&search->move, move_string);
+            move_to_string(move, move_string);
             printf("Stats:\n| depth: %d\n| score: %d\n| time: %d ms\n",
                    s, score, millis);
-        }
-        if (search->uci)
-        {
-            char move_string[16];
-            notate_move(board, &search->move, move_string);
+            notate_move(board, move, move_string);
             // move_to_string(&search->move, move_string);
             printf("| best move: %s\n", move_string);
         }
