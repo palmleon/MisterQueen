@@ -9,7 +9,7 @@ for depth in {4..10}; do
     # set the new MAX_DEPTH
     sed -e "7s/[0-9]* *$/$depth/" -i $SRC_PATH/config.h
         
-    for thrnode in 8 16; do
+    for thrnode in 16 32; do
 
         # set the new THREADS_PER_NODE
         sed -e "6s/[0-9]* *$/$thrnode/" -i $SRC_PATH/config.h
