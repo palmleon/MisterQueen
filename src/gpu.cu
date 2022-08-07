@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "bb.h"
 #include "board.h"
+#include "config.h"
 #include "move.h"
 #include "search.h"
 #include "gpu.h"

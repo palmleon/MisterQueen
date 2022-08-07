@@ -4,12 +4,12 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include "search.h"
+#include "config.h"
 #include "eval.h"
 #include "gen.h"
 #include "gpu.h"
 #include "move.h"
 #include "util.h"
-
 
 #define LEN_POSITIONS 3
 

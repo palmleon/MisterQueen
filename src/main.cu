@@ -1,10 +1,12 @@
-#include "search.h"
-#include "bk.h"
-#include "util.h"
 #include <sys/time.h>
 #include <string.h>
 #include <stdio.h>
+#include "bk.h"
+#include "config.h"
+#include "search.h"
+#include "util.h"
 
+#define DEBUG
 #define DEBUG_CMD "bk"
 #define DEBUG_BOARD ""
 
@@ -66,7 +68,9 @@ int main(void) {
   
     printf("Tables transferred to the GPU! (Time: %d ms)\n", (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000);
 
+    #ifndef DEBUG
     while(1) {
+    #endif
         print_menu();
         #ifndef DEBUG
         scanf("%s", command);
@@ -92,6 +96,8 @@ int main(void) {
             bk_tests();
         else if (strncmp(command, "q", 1) == 0)
             return 0;
+    #ifndef DEBUG
     }
+    #endif
 }
 
