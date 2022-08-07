@@ -336,7 +336,7 @@ __device__ __forceinline__ void alpha_beta_gpu_iter(Board *board_parent, Move *f
 
     Board board = *board_parent;
     Move first_move, second_move;
-    Move moves[MAX_MOVES * (MAX_DEPTH_PAR)];
+    Move moves[MAX_MOVES * (MAX_DEPTH_PAR)+1];
     int can_move[MAX_DEPTH_PAR + 1] = {0};
     Undo first_undo, second_undo;
     Undo undo[MAX_DEPTH_PAR + 1];

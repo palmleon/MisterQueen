@@ -116,7 +116,7 @@ int gen_search_tree(STNode node)
     Undo undo;
     cudaStream_t *streams;
 
-    int num_multiproc, max_shmem, max_threads_per_block, num_registers;
+    int num_multiproc, max_shmem, max_threads_per_block, max_registers;
     const int shmem_per_node = 64 * (sizeof(bb) + sizeof(char));
 
     int *d_count, *count;
@@ -132,15 +132,15 @@ int gen_search_tree(STNode node)
     checkCudaErrors(cudaDeviceGetAttribute(&max_shmem, cudaDevAttrMaxSharedMemoryPerBlock, 0));
 
     // Get the Max number of Registers Per Block
-    checkCudaErrors(cudaDeviceGetAttribute(&num_registers, cudaDevAttrMaxRegistersPerBlock, 0));
+    checkCudaErrors(cudaDeviceGetAttribute(&max_registers, cudaDevAttrMaxRegistersPerBlock, 0));
 
-    //printf("registers:%d\n", num_registers);
+    //printf("registers:%d\n", max_registers);
 
     // Get the Max number of Nodes per Block, based on the available shared memory
     const int max_nodes_per_block_shmem = max_shmem / shmem_per_node;
 
     // Get the Max number of Nodes per Block, based on the available registers
-    const int max_nodes_per_block_regs = num_registers / (128*THREADS_PER_NODE);
+    const int max_nodes_per_block_regs = max_registers / (128*THREADS_PER_NODE);
 
     // Effective number of nodes per Block, depending on the structural limitations of the GPU
     const int nodes_per_block = min(max_nodes_per_block_regs, min(max_nodes_per_block_shmem, max_threads_per_block / THREADS_PER_NODE));
@@ -236,7 +236,7 @@ void undo_search_tree(STNode node)
  */
 void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int count)
 {
-    if (node->nchild == 0) { return; }
+    if (node->nchild == 0 || count == 0) { return; }
 
     if (s >= 2)
     {
@@ -394,27 +394,6 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int cou
         }
         checkCudaErrors(cudaFree(d_board));
     }
-    else if (s == 0)
-    {
-        Board *d_board;
-        int *score, *d_score;
-
-        checkCudaErrors(cudaMalloc(&d_board, sizeof(Board)));
-        score = (int *)malloc(sizeof(int));
-        checkCudaErrors(cudaMalloc(&d_score, sizeof(int)));
-
-        checkCudaErrors(cudaMemcpy(d_board, &(node->board), sizeof(Board), cudaMemcpyHostToDevice));
-
-        alpha_beta_gpu_kernel<<<1, 1>>>(d_board, d, alpha, beta, d_score);
-
-        checkCudaErrors(cudaMemcpy(score, d_score, sizeof(int), cudaMemcpyDeviceToHost));
-
-        node->score = *score;
-
-        checkCudaErrors(cudaFree(d_score));
-        free(score);
-        checkCudaErrors(cudaFree(d_board));
-    }
 }
 
 void alpha_beta_cpu(STNode node, int s, int d, int ply, int alpha, int beta, int isPV, int *positions)
@@ -427,16 +406,27 @@ void alpha_beta_cpu(STNode node, int s, int d, int ply, int alpha, int beta, int
         node->score = INF;
         return;
     }
+    if (node->nchild == 0 && ply < s)
+    {
+        node->score = evaluate(&node->board);
+        return;
+    }
     if (ply >= s)
     {
+        if (d <= 0){
+            node->score = evaluate(&node->board);
+        }
         return; // score has already been defined by the parallel search on terminal nodes
     }
     int count = 0;
     if (ply <= s - 2)
     {
         count = gen_search_tree(node);
+        if (count == 0) {
+            int a = 1;
+        }
     }
-    if (ply == s - 2 || (ply == 0 && (s == 1 || s == 0)))
+    if (d > 0 && (ply == s - 2 || (ply == 0 && (s == 1 || s == 0))))
     {
         // perform the Parallel Search (it does not create additional nodes, but enriches them with more accurate scores coming from the deeper parallel search)
         alpha_beta_parallel(node, s, d, alpha, beta, count);
@@ -520,18 +510,13 @@ int root_search(Board *board, int s, int d, int alpha, int beta, Move *best_move
     // Generate the 1st generation children of the root node, if s != 0 (otherwise, the root node is terminal and should be explored on the GPU)
     Undo undo;
     Move tmp, moves[MAX_MOVES];
-    int count = 0;
-
-    if (s > 0)
+    int count = gen_moves(&(search_tree->root->board), moves);
+    STNode_init_children(search_tree->root, count);
+    for (int i = 0; i < count; i++)
     {
-        count = gen_moves(&(search_tree->root->board), moves);
-        STNode_init_children(search_tree->root, count);
-        for (int i = 0; i < count; i++)
-        {
-            do_move(board, &(moves[i]), &undo);
-            search_tree->root->children[i] = STNode_init(board, &(moves[i]));
-            undo_move(board, &(moves[i]), &undo);
-        }
+        do_move(board, &(moves[i]), &undo);
+        search_tree->root->children[i] = STNode_init(board, &(moves[i]));
+        undo_move(board, &(moves[i]), &undo);
     }
 
     // Reorder moves for correct move-score association
