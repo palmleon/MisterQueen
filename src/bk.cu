@@ -407,15 +407,14 @@ int bk_test(int index, char *fen, char *bm) {
     board_load_fen(&board, fen);
     //printf("Curr color: %s\n", board.color? "BLACK": "WHITE");
     //board_print(&board);
-    Search search;
-    search.uci = 0;
+    Move move;
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-    do_search(&search, &board);
+    do_search(&board, 0, &move);
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);    
     u_int64_t elapsed = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000;
     char notation[16];
-    notate_move(&board, &search.move, notation);
+    notate_move(&board, &move, notation);
     char padded[16];
     sprintf(padded, " %s ", notation);
     int result = strstr(bm, padded) != NULL;
@@ -446,7 +445,6 @@ void test_position(int index) {
     }
     Board board;
     board_load_fen(&board, TESTS[index * 2]);
-    Search search;
-    search.uci = 1;
-    do_search(&search, &board);
+    Move move;
+    do_search(&board, 1, &move);
 }

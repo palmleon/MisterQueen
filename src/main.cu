@@ -5,12 +5,9 @@
 #include <string.h>
 #include <stdio.h>
 
-//#define DEBUG
 #define DEBUG_CMD "bk"
 #define DEBUG_BOARD ""
 
-//static Board board;
-//static Search search;
 
 void print_menu(void) {
     printf("-------------------\n");
@@ -23,57 +20,6 @@ void print_menu(void) {
     printf("q: quit\n");
     printf("-------------------\n");
 }
-
-/*__global__ void print_value(void){
-    printf("BLACK_KING\n");
-    for(int i = 0; i < 64; i++){
-        printf("%d: %d\n", i, d_POSITION_BLACK_KING[i]);
-    }
-    printf("BLACK_QUEEN\n");
-    for(int i = 0; i < 64; i++){
-        printf("%d: %d\n", i, d_POSITION_BLACK_QUEEN[i]);
-    }
-    printf("BLACK_ROOK\n");
-    for(int i = 0; i < 64; i++){
-        printf("%d: %d\n", i, d_POSITION_BLACK_ROOK[i]);
-    }
-    printf("BLACK_BISHOP\n");
-    for(int i = 0; i < 64; i++){
-        printf("%d: %d\n", i, d_POSITION_BLACK_BISHOP[i]);
-    }
-    printf("BLACK_KNIGHT\n");
-    for(int i = 0; i < 64; i++){
-        printf("%d: %d\n", i, d_POSITION_BLACK_KNIGHT[i]);
-    }
-    printf("BLACK_PAWN\n");
-    for(int i = 0; i < 64; i++){
-        printf("%d: %d\n", i, d_POSITION_BLACK_PAWN[i]);
-    }
-    printf("WHITE_KING\n");
-    for(int i = 0; i < 64; i++){
-        printf("%d: %d\n", i, d_POSITION_WHITE_KING[i]);
-    }
-    printf("WHITE_QUEEN\n");
-    for(int i = 0; i < 64; i++){
-        printf("%d: %d\n", i, d_POSITION_WHITE_QUEEN[i]);
-    }
-    printf("WHITE_ROOK\n");
-    for(int i = 0; i < 64; i++){
-        printf("%d: %d\n", i, d_POSITION_WHITE_ROOK[i]);
-    }
-    printf("WHITE_BISHOP\n");
-    for(int i = 0; i < 64; i++){
-        printf("%d: %d\n", i, d_POSITION_WHITE_BISHOP[i]);
-    }
-    printf("WHITE_KNIGHT\n");
-    for(int i = 0; i < 64; i++){
-        printf("%d: %d\n", i, d_POSITION_WHITE_KNIGHT[i]);
-    }
-    printf("WHITE_PAWN\n");
-    for(int i = 0; i < 64; i++){
-        printf("%d: %d\n", i, d_POSITION_WHITE_PAWN[i]);
-    }
-}*/
 
 void transfer_tables_to_gpu(void) {
     checkCudaErrors(cudaMemcpyToSymbol(d_BB_KNIGHT, BB_KNIGHT, 64 * sizeof(bb)));
@@ -100,7 +46,6 @@ void transfer_tables_to_gpu(void) {
     checkCudaErrors(cudaMemcpyToSymbol(d_POSITION_BLACK_ROOK, POSITION_BLACK_ROOK, 64 * sizeof(int)));
     checkCudaErrors(cudaMemcpyToSymbol(d_POSITION_BLACK_QUEEN, POSITION_BLACK_QUEEN, 64 * sizeof(int)));
     checkCudaErrors(cudaMemcpyToSymbol(d_POSITION_BLACK_KING, POSITION_BLACK_KING, 64 * sizeof(int)));
-    //print_value<<<1,1>>>();
     cudaDeviceSynchronize();  
 }
 
@@ -108,7 +53,7 @@ int main(void) {
     
     struct timespec start, end;
     Board board;
-    Search search;
+    Move move;
     char command[10] = DEBUG_CMD;
     char board_file[100] = DEBUG_BOARD;
     board_reset(&board); // load the board as in the initial position
@@ -127,8 +72,7 @@ int main(void) {
         scanf("%s", command);
         #endif
         if (strncmp(command, "bm", 2) == 0) {
-            search.uci = 1;
-            do_search(&search, &board);
+            do_search(&board, 1, &move);
         }
         else if (strncmp(command, "square", 6) == 0) {
             printf("Board file: ");

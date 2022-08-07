@@ -37,7 +37,7 @@ int initial_sort_moves_rec(Board *board, int *positions, int len, int ply, int a
         result = INF;
     }
     else if (len <= 0) {
-        result = evaluate(board); // + evaluate_pawns(board);
+        result = evaluate(board);
     }
     else {
         Undo undo;
@@ -107,19 +107,15 @@ void initial_sort_moves(Board *board, Move *moves, int count, int *positions, in
 
 int alpha_beta_cpu(Board *board, int depth, int ply, int alpha, int beta, int *positions, int len_positions) {
     int result;
-    //int num_multiproc;
-    //cudaDeviceGetAttribute(&num_multiproc, cudaDevAttrMultiProcessorCount, 0);
-    //printf("Multiprocessors: %d\n", num_multiproc);
     if (is_illegal(board)) {
         result = INF;
     }
     else if (depth <= 0) {
-        result = evaluate(board); // + evaluate_pawns(board);
+        result = evaluate(board); 
     }
     else {
         Undo undo;
         Move moves[MAX_MOVES];
-        //int scores[MAX_MOVES];
         int count = gen_moves(board, moves);
         int *scores = (int*) malloc (count * sizeof(int));
         int can_move = 0;
@@ -157,12 +153,9 @@ int alpha_beta_cpu(Board *board, int depth, int ply, int alpha, int beta, int *p
             checkCudaErrors(cudaMemcpy(d_moves, moves, count * sizeof(Move), cudaMemcpyHostToDevice));
             checkCudaErrors(cudaMemcpy(d_scores, scores, count * sizeof(int), cudaMemcpyHostToDevice));
             alpha_beta_gpu_kernel<<<count-1, dim3(1, THREADS_PER_NODE, 1), 64 * (sizeof(bb) + sizeof(int))>>>(d_board, depth - 1, -beta, -alpha, d_moves, d_scores); // first move already counted
-            //alpha_beta_gpu_kernel<<<num_multiproc, (count-1)/num_multiproc + 1>>>(d_board, depth - 1, ply + 1, -beta, -alpha, d_moves, d_scores, count-1);
             checkCudaErrors(cudaMemcpy(scores, d_scores, count * sizeof(int), cudaMemcpyDeviceToHost));
             cudaFree(d_board); cudaFree(d_moves); cudaFree(d_scores);
             for (int i = 1; i < count; i++){
-                //alpha_beta_gpu_iter(board, depth - 1, -beta, -alpha, moves, scores, i-1);
-                //undo_move(board, move, &undo);
                 if (scores[i] > -INF) {
                     can_move = 1;
                 }
@@ -190,10 +183,6 @@ int alpha_beta_cpu(Board *board, int depth, int ply, int alpha, int beta, int *p
 int root_search(Board *board, int depth, int ply, int alpha, int beta, Move *result) {
     Undo undo;
     Move moves[MAX_MOVES];
-    //int num_multiproc;
-    //cudaDeviceGetAttribute(&num_multiproc, cudaDevAttrMultiProcessorCount, 0);
-    //printf("Multiprocessors: %d\n", num_multiproc);
-    //int scores[MAX_MOVES];
     int positions[LEN_POSITIONS];
     int count = gen_moves(board, moves);
     int *scores = (int*) malloc (count * sizeof(int));
@@ -238,7 +227,7 @@ int root_search(Board *board, int depth, int ply, int alpha, int beta, Move *res
     return alpha;
 }
 
-int do_search(Search *search, Board *board) {
+int do_search(Board *board, int uci, Move *move) {
     struct timespec start, end;
     int result = 1;
     int score = 0;
@@ -248,86 +237,17 @@ int do_search(Search *search, Board *board) {
     int alpha = score - lo;
     int beta = score + hi;
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-    score = root_search(board, depth, 0, alpha, beta, &search->move);
+    score = root_search(board, depth, 0, alpha, beta, move);
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-    if (search->uci) {
+    if (uci) {
         char move_string[16];
-        move_to_string(&search->move, move_string);
+        move_to_string(move, move_string);
         int millis = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000;
         printf("Stats:\n| depth: %d\n| score: %d\n| time: %d ms\n",
                depth, score, millis);
-    }
-    if (search->uci) {
-        char move_string[16];
-        notate_move(board, &search->move, move_string);
-        //move_to_string(&search->move, move_string);
+        notate_move(board, move, move_string);
         printf("| best move: %s\n", move_string);
     }
     return result;
 
 }
-
-/*__global__ void alpha_beta_gpu_kernel(Board *board_parent, int depth, int alpha, int beta, Move* moves_parent, int* scores) {
-    //int result;
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    int alpha_reg = alpha;
-    Board board = *board_parent;
-    Move moves[MAX_MOVES];
-    Undo undo;
-    int final_score;
-    //if (idx > nthreads)
-    //    return;
-    //for (int i = 0; i < nmoves; i++){
-    do_move(&board, &(moves_parent[idx+1]), &undo);
-    //do_move(&board, &(moves_parent[idx]), &undo);
-    
-    if (is_illegal(&board)) {
-        final_score = INF;
-    }
-    else if (depth <= 0) {
-        final_score = evaluate(&board);
-    }
-    else {
-        Undo undo;
-        int count = gen_moves(&board, moves);
-        int can_move = 0;
-        int beta_reached = 0;
-        for (int i = 0; i < count && !beta_reached; i++) {
-            Move *move = &(moves[i]);
-            do_move(&board,  move, &undo);
-            //Board *board2 = &board;
-            //int score = 0;
-            int score = -alpha_beta_gpu_device(&board, depth - 1, ply + 1, -beta, -alpha_reg);
-            //int score = -alpha_beta_gpu_device(&board, 0, 1, 1, 1);
-            //int score = -alpha_beta_gpu_device(board_parent, depth - 1, ply + 1, -beta, -alpha);
-            undo_move(&board, move, &undo);
-            if (score > -INF) {
-                can_move = 1;
-            }
-            if (score >= beta) {
-                //return beta;
-                final_score = beta;
-                beta_reached = 1;
-                //break;
-            }
-            else if (score > alpha_reg) {
-                alpha_reg = score;
-            }
-        }
-        if (!beta_reached){
-            final_score = alpha_reg;
-            //result = alpha;
-            if (!can_move) {
-                if (is_check(&board, board.color)) {
-                    //result = -MATE + ply;
-                    final_score = -MATE + ply;
-                } else {
-                    //result = 0;
-                    final_score = 0;
-                }
-            }
-        }
-    }
-    scores[idx+1] = -final_score;
-}*/
-

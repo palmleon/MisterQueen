@@ -10,15 +10,6 @@
 #define MAX_DEPTH 6
 #define THREADS_PER_NODE 16
 
-typedef struct {
-    // input
-    int uci;
-    // output
-    Move move;
-    // internal
-    //int nodes;
-} Search;
-
-int do_search(Search *search, Board *board);
+int do_search(Board *board, int uci, Move *move);
 
 #endif //SEARCH_H
