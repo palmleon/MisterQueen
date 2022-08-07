@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "board.h"
+#include "config.h"
 #include "gen.h"
 #include "move.h"
 

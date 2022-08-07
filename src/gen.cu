@@ -1,5 +1,6 @@
 #include <string.h>
 #include <math.h>
+#include "config.h"
 #include "gen.h"
 
 #define EMIT_MOVE(m, a, b) \

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include "config.h"
 #include "search.h"
 #include "eval.h"
 #include "gen.h"

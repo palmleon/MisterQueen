@@ -1,6 +1,7 @@
 #include "gpu.h"
 #include "gen.h"
 #include "board.h"
+#include "config.h"
 #include "move.h"
 #include "search.h"
 #include "eval.h"

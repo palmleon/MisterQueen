@@ -4,8 +4,6 @@
 #include "bb.h"
 #include "board.h"
 
-#define MAX_MOVES 256
-
 typedef struct __align__(4) {
     unsigned char src;
     unsigned char dst;
