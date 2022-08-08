@@ -1,25 +1,23 @@
-## Mister Queen
+# (Parallel) Mister Queen
 
-Mr. Queen is a chess engine written in C.
+Mr. Queen is a chess engine written in C, originally developed by [Michael Fogleman](https://www.michaelfogleman.com/).
 
-#### Features
+The purpose of this project was to parallelize the original Chess Engine using two different techniques.
 
-* Bitboards and "magic" bitboards for board representation and super-fast move
-  generation.
-* Custom, hash-based opening book based on over three million games from the
-  FICS database.
-* Zobrist hashing and a transposition table storing exact values and the best
-  move.
-* Null move pruning, aspiration windows, iterative deepening, quiescence
-  search.
-* Supports the Universal Chess Interface (UCI).
-* Passes all perft tests.
+## The original engine
 
-#### Limitations
+The original engine implemented many advanced search techniques, e.g. Iterative Deepening or Transposition Tables, which have been removed because they were not parallelizable at all on a GPU without adding a noticeable synchronization overhead.
 
-* Unaware of draw by repetition.
-* Basic evaluation includes only material and piece-square values.
+## Parallelization Techniques
 
----
+Two different techniques have been explored:
 
-<p align="center"><img src="http://i.imgur.com/oiWiEvK.png"></p>
+- PV-split
+- "SeqPar" Search
+
+Both the methods try to infer the Principal Variation, i.e. to order the search tree such that the left-most branch contains the best move. This is achieved by executing a sequential search at much lower depth.
+
+Once the PV has been found, the engine executes the Alpha-Beta pruning algorithm to find the best move.
+
+- In PV-split, the PV is executed sequentially, while all the sibling node are launched in parallel (you can find it in branch ```inlining``` )
+- In SeqPar Search, the whole Search Tree is explored sequentially up to depth s, while the terminal nodes are further explored up to depth d; so the total depth is equal to s+d (you can find it in branch ```rockisuda```)
