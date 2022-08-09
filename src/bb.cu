@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "bb.h"
-//#include "util.h"
 
 __constant__ bb d_BB_KNIGHT[64];
 __constant__ bb d_BB_KING[64];

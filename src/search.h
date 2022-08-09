@@ -3,7 +3,6 @@
 
 #include "board.h"
 #include "move.h"
-//#include "util.h"
 
 #define INF 10000000
 #define MATE 1000000

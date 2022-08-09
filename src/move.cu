@@ -6,22 +6,6 @@
 #include "gen.h"
 #include "move.h"
 
-//void make_move(Board *board, Move *move) {
-//    Undo undo; // throw-away
-//    do_move(board, move, &undo);
-//}
-
-/*void do_null_move(Board *board, Undo *undo) {
-    undo->ep = board->ep;
-    board->ep = 0L;
-    board->color ^= BLACK;
-}
-
-void undo_null_move(Board *board, Undo *undo) {
-    board->ep = undo->ep;
-    board->color ^= BLACK;
-}*/
-
 void do_move(Board *board, Move *move, Undo *undo) {
     const bb rank_2nd[2] = {0x000000000000ff00L, 0x00ff000000000000L};
     const bb rank_4th[2] = {0x00000000ff000000L, 0x000000ff00000000L};
@@ -121,90 +105,71 @@ int score_move(Board *board, Move *move) {
     unsigned char capture = board_get_piece(board, dst);
     int piece_material = 0;
     int capture_material = 0;
-    //if (COLOR(piece)) {
-        switch (PIECE(piece)) {
-            case PAWN:
-                piece_material = MATERIAL_PAWN;
-                COLOR(piece) ?
-                    (result += (POSITION_BLACK_PAWN[dst] - POSITION_BLACK_PAWN[src])) :
-                    (result += (POSITION_WHITE_PAWN[dst] - POSITION_WHITE_PAWN[src]));
-                //result -= POSITION_BLACK_PAWN[src];
-                //result += POSITION_BLACK_PAWN[dst];
-                break;
-            case KNIGHT:
-                piece_material = MATERIAL_KNIGHT;
-                COLOR(piece) ?
-                    (result += (POSITION_BLACK_KNIGHT[dst] - POSITION_BLACK_KNIGHT[src])) :
-                    (result += (POSITION_WHITE_KNIGHT[dst] - POSITION_WHITE_KNIGHT[src]));
-                //result -= POSITION_BLACK_KNIGHT[src];
-                //result += POSITION_BLACK_KNIGHT[dst];
-                break;
-            case BISHOP:
-                piece_material = MATERIAL_BISHOP;
-                COLOR(piece) ?
-                    (result += (POSITION_BLACK_BISHOP[dst] - POSITION_BLACK_BISHOP[src])) :
-                    (result += (POSITION_WHITE_BISHOP[dst] - POSITION_WHITE_BISHOP[src]));
-                //result -= POSITION_BLACK_BISHOP[src];
-                //result += POSITION_BLACK_BISHOP[dst];
-                break;
-            case ROOK:
-                piece_material = MATERIAL_ROOK;
-                COLOR(piece) ?
-                    (result += (POSITION_BLACK_ROOK[dst] - POSITION_BLACK_ROOK[src])) :
-                    (result += (POSITION_WHITE_ROOK[dst] - POSITION_WHITE_ROOK[src]));
-                //result -= POSITION_BLACK_ROOK[src];
-                //result += POSITION_BLACK_ROOK[dst];
-                break;
-            case QUEEN:
-                piece_material = MATERIAL_QUEEN;
-                COLOR(piece) ?
-                    (result += (POSITION_BLACK_QUEEN[dst] - POSITION_BLACK_QUEEN[src])) :
-                    (result += (POSITION_WHITE_QUEEN[dst] - POSITION_WHITE_QUEEN[src]));
-                //result -= POSITION_BLACK_QUEEN[src];
-                //result += POSITION_BLACK_QUEEN[dst];
-                break;
-            case KING:
-                piece_material = MATERIAL_KING;
-                COLOR(piece) ?
-                    (result += (POSITION_BLACK_KING[dst] - POSITION_BLACK_KING[src])) :
-                    (result += (POSITION_WHITE_KING[dst] - POSITION_WHITE_KING[src]));
-                //result -= POSITION_BLACK_KING[src];
-                //result += POSITION_BLACK_KING[dst];
-                break;
-        }
+    switch (PIECE(piece)) {
+        case PAWN:
+            piece_material = MATERIAL_PAWN;
+            COLOR(piece) ?
+                (result += (POSITION_BLACK_PAWN[dst] - POSITION_BLACK_PAWN[src])) :
+                (result += (POSITION_WHITE_PAWN[dst] - POSITION_WHITE_PAWN[src]));
+            break;
+        case KNIGHT:
+            piece_material = MATERIAL_KNIGHT;
+            COLOR(piece) ?
+                (result += (POSITION_BLACK_KNIGHT[dst] - POSITION_BLACK_KNIGHT[src])) :
+                (result += (POSITION_WHITE_KNIGHT[dst] - POSITION_WHITE_KNIGHT[src]));
+            break;
+        case BISHOP:
+            piece_material = MATERIAL_BISHOP;
+            COLOR(piece) ?
+                (result += (POSITION_BLACK_BISHOP[dst] - POSITION_BLACK_BISHOP[src])) :
+                (result += (POSITION_WHITE_BISHOP[dst] - POSITION_WHITE_BISHOP[src]));
+            break;
+        case ROOK:
+            piece_material = MATERIAL_ROOK;
+            COLOR(piece) ?
+                (result += (POSITION_BLACK_ROOK[dst] - POSITION_BLACK_ROOK[src])) :
+                (result += (POSITION_WHITE_ROOK[dst] - POSITION_WHITE_ROOK[src]));
+            break;
+        case QUEEN:
+            piece_material = MATERIAL_QUEEN;
+            COLOR(piece) ?
+                (result += (POSITION_BLACK_QUEEN[dst] - POSITION_BLACK_QUEEN[src])) :
+                (result += (POSITION_WHITE_QUEEN[dst] - POSITION_WHITE_QUEEN[src]));
+            break;
+        case KING:
+            piece_material = MATERIAL_KING;
+            COLOR(piece) ?
+                (result += (POSITION_BLACK_KING[dst] - POSITION_BLACK_KING[src])) :
+                (result += (POSITION_WHITE_KING[dst] - POSITION_WHITE_KING[src]));
+            break;
+    }
     if (capture) {
-             switch (PIECE(capture)) {
-                case PAWN:
-                    capture_material = MATERIAL_PAWN;
-                    COLOR(capture) ? (result += POSITION_BLACK_PAWN[dst]) : (result += POSITION_WHITE_PAWN[dst]);
-                    //result += POSITION_BLACK_PAWN[dst];
-                    break;
-                case KNIGHT:
-                    capture_material = MATERIAL_KNIGHT;
-                    COLOR(capture) ? (result += POSITION_BLACK_KNIGHT[dst]) : (result += POSITION_WHITE_KNIGHT[dst]);
-                    //result += POSITION_BLACK_KNIGHT[dst];
-                    break;
-                case BISHOP:
-                    capture_material = MATERIAL_BISHOP;
-                    COLOR(capture) ? (result += POSITION_BLACK_BISHOP[dst]) : (result += POSITION_WHITE_BISHOP[dst]);
-                    //result += POSITION_BLACK_BISHOP[dst];
-                    break;
-                case ROOK:
-                    capture_material = MATERIAL_ROOK;
-                    COLOR(capture) ? (result += POSITION_BLACK_ROOK[dst]) : (result += POSITION_WHITE_ROOK[dst]);
-                    //result += POSITION_BLACK_ROOK[dst];
-                    break;
-                case QUEEN:
-                    capture_material = MATERIAL_QUEEN;
-                    COLOR(capture) ? (result += POSITION_BLACK_QUEEN[dst]) : (result += POSITION_WHITE_QUEEN[dst]);
-                    //result += POSITION_BLACK_QUEEN[dst];
-                    break;
-                case KING:
-                    capture_material = MATERIAL_KING;
-                    COLOR(capture) ? (result += POSITION_BLACK_KING[dst]) : (result += POSITION_WHITE_KING[dst]);
-                    //result += POSITION_BLACK_KING[dst];
-                    break;
-            }
+        switch (PIECE(capture)) {
+        case PAWN:
+            capture_material = MATERIAL_PAWN;
+            COLOR(capture) ? (result += POSITION_BLACK_PAWN[dst]) : (result += POSITION_WHITE_PAWN[dst]);
+            break;
+        case KNIGHT:
+            capture_material = MATERIAL_KNIGHT;
+            COLOR(capture) ? (result += POSITION_BLACK_KNIGHT[dst]) : (result += POSITION_WHITE_KNIGHT[dst]);
+            break;
+        case BISHOP:
+            capture_material = MATERIAL_BISHOP;
+            COLOR(capture) ? (result += POSITION_BLACK_BISHOP[dst]) : (result += POSITION_WHITE_BISHOP[dst]);
+            break;
+        case ROOK:
+            capture_material = MATERIAL_ROOK;
+            COLOR(capture) ? (result += POSITION_BLACK_ROOK[dst]) : (result += POSITION_WHITE_ROOK[dst]);
+            break;
+        case QUEEN:
+            capture_material = MATERIAL_QUEEN;
+            COLOR(capture) ? (result += POSITION_BLACK_QUEEN[dst]) : (result += POSITION_WHITE_QUEEN[dst]);
+            break;
+        case KING:
+            capture_material = MATERIAL_KING;
+            COLOR(capture) ? (result += POSITION_BLACK_KING[dst]) : (result += POSITION_WHITE_KING[dst]);
+            break;
+        }
 
         result += capture_material;
     }
@@ -373,7 +338,6 @@ void notate_move(Board *board, Move *move, char *result) {
     Undo undo;
     do_move(board, move, &undo);
     if (is_check(board)) {
-        //if (has_legal_moves(board)) {
         if (gen_legal_moves(board, moves)){
             *result++ = '+';
         }

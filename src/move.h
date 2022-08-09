@@ -18,9 +18,6 @@ typedef struct __align__ (16) {
     char castle;
 } Undo;
 
-/*void make_move(Board *board, Move *move);
-void do_null_move(Board *board, Undo *undo);
-void undo_null_move(Board *board, Undo *undo);*/
 void do_move(Board *board, Move *move, Undo *undo);
 void undo_move(Board *board, Move *move, Undo *undo);
 int score_move(Board *board, Move *move);

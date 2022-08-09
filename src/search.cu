@@ -211,7 +211,6 @@ int root_search(Board *board, int depth, int ply, int alpha, int beta, Move *res
         checkCudaErrors(cudaMemcpy(d_moves, moves, count * sizeof(Move), cudaMemcpyHostToDevice));
         checkCudaErrors(cudaMemcpy(d_scores, scores, count * sizeof(int), cudaMemcpyHostToDevice));
         alpha_beta_gpu_kernel<<<count-1, dim3(1, THREADS_PER_NODE, 1),  64 * (sizeof(bb)  + sizeof(int))>>>(d_board, depth - 1, -beta, -alpha, d_moves, d_scores);
-        //alpha_beta_gpu_kernel<<<num_multiproc, (count-1)/num_multiproc + 1>>>(d_board, depth - 1, ply + 1, -beta, -alpha, d_moves, d_scores, count-1);
         checkCudaErrors(cudaMemcpy(scores, d_scores, count * sizeof(int), cudaMemcpyDeviceToHost));
         cudaFree(d_board); cudaFree(d_moves); cudaFree(d_scores);
         for (int i = 1; i < count; i++){
