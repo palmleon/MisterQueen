@@ -3,14 +3,12 @@
 #include <string.h>
 #include <stdio.h>
 
+#define DEBUG
+#define DEBUG_CMD "bk"
+#define DEBUG_BOARD ""
 
-static Board board;
-static Search search;
-
-void handle_go(void) {
-    search.uci = 1;
-    do_search(&search, &board);
-}
+//static Board board;
+//static Search search;
 
 void print_menu(void) {
     printf("-------------------\n");
@@ -24,22 +22,37 @@ void print_menu(void) {
     printf("-------------------\n");
 }
 
-int main(int argc, char **argv) {
+int main(void) {
+    
+    Board board;
+    Search search;
+    char command[10] = DEBUG_CMD;
+    char board_file[100] = DEBUG_BOARD;
+    board_reset(&board); // load the board as in the initial position
+
     bb_init();
-    if (argc == 3) { // load board from file
-        if (strcmp(argv[2], "fen") == 0)
-            board_load_file_fen(&board, argv[1]);
-        else if (strcmp(argv[2], "square") == 0)
-            board_load_file_square(&board, argv[1]);
-    }
-    else
-        board_reset(&board); // load the board as in the initial position
-    char command[10] = "bk";
+
     while(1) {
         print_menu();
-        //scanf("%s", command);
-        if (strncmp(command, "bm", 2) == 0)
-            handle_go();
+#ifndef DEBUG
+        scanf("%s", command);
+#endif
+        if (strncmp(command, "bm", 2) == 0) {
+            search.uci = 1;
+            do_search(&search, &board);
+        }
+        else if (strncmp(command, "square", 6) == 0) {
+            printf("Board file: ");
+            scanf("%s", board_file);
+            board_load_file_square(&board, board_file);
+            printf("Board loaded!\n");
+        }
+        else if (strncmp(command, "fen", 3) == 0) {
+            printf("Board file: ");
+            scanf("%s", board_file);
+            board_load_file_fen(&board, board_file);
+            printf("Board loaded!\n");
+        }
         else if (strncmp(command, "pb", 2) == 0)
             board_print(&board);
         else if (strncmp(command, "bk", 2) == 0)

@@ -47,11 +47,13 @@ int gen_black_attacks_against(Board *board, Move *moves, bb mask);
 int gen_black_attacks(Board *board, Move *moves);
 int gen_black_checks(Board *board, Move *moves);
 
-int gen_moves(Board *board, Move *moves);
+//int gen_moves(Board *board, Move *moves);
+int gen_moves_new(Board *board, Move *moves);
 int gen_legal_moves(Board *board, Move *moves);
 int gen_attacks(Board *board, Move *moves);
 int gen_checks(Board *board, Move *moves);
-int is_check(Board *board);
+int is_check(Board *board, char color);
+//int is_check(Board *board);
 int is_illegal(Board *board);
 int has_legal_moves(Board *board);
 

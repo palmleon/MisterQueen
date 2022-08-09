@@ -2,19 +2,19 @@
 # The name of the executable to be created
 BIN_NAME := main
 # Compiler used
-C ?= gcc
+C ?= nvcc 
 # Extension of source files used in the project
 SRC_EXT = c
 # Path to the source directory, relative to the makefile
 SRC_PATH = src
 # General compiler flags
-COMPILE_FLAGS = -std=c99 -Wall 
+COMPILE_FLAGS = --std c++03
 # Additional release-specific flags
-RCOMPILE_FLAGS = -D NDEBUG -O3
+RCOMPILE_FLAGS = -D __CUDACC_DEBUG__
 # Additional debug-specific flags
-DCOMPILE_FLAGS = -D DEBUG -g -O0
+DCOMPILE_FLAGS = -g -G #-D DEBUG
 # Add additional include paths
-INCLUDES = -I $(SRC_PATH)/ -I $(SRC_PATH)/deps/tinycthread
+INCLUDES = -I $(SRC_PATH)/ 
 # General linker settings
 LINK_FLAGS = -lpthread
 # Additional release-specific linker settings
@@ -161,11 +161,6 @@ all: $(BIN_PATH)/$(BIN_NAME)
 	@$(RM) $(BIN_NAME)
 	@ln -s $(BIN_PATH)/$(BIN_NAME) $(BIN_NAME)
 
-.PHONY: run
-run: 
-	@echo "Launching MisterQueen!"
-	@./bin/release/main
-
 # Link the executable
 $(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
 	@echo "Linking: $@"
@@ -180,3 +175,8 @@ $(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
 $(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT)
 	@echo "Compiling: $< -> $@"
 	$(CMD_PREFIX)$(C) $(CFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
+
+.PHONY: run
+run:
+	@echo "Launching MisterQueen!"
+	@./bin/release/main
