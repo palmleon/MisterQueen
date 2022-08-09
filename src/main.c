@@ -32,11 +32,13 @@ int main(void) {
 
     bb_init();
 
+    #ifndef DEBUG
     while(1) {
+    #endif
         print_menu();
-#ifndef DEBUG
+        #ifndef DEBUG
         scanf("%s", command);
-#endif
+        #endif
         if (strncmp(command, "bm", 2) == 0) {
             search.uci = 1;
             do_search(&search, &board);
@@ -59,6 +61,8 @@ int main(void) {
             bk_tests();
         else if (strncmp(command, "q", 1) == 0)
             return 0;
+    #ifndef DEBUG
     }
+    #endif
 }
 
