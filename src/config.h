@@ -4,5 +4,4 @@
 #define MAX_MOVES 220
 
 #define MAX_DEPTH 8
-
 #endif

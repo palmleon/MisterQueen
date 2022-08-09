@@ -4,10 +4,10 @@ SRC_PATH="src"
 EXEC_PATH="bin/release/main"
 LOG_DIR="timings"
 
-for depth in {4..10}; do
+for depth in {4..8}; do
 
     # set the new MAX_DEPTH
-    sed -e "7s/[0-9]* *$/$depth/" -i $SRC_PATH/config.h
+    sed -e "6s/[0-9]* *$/$depth/" -i $SRC_PATH/config.h
     # set the log file name
     LOG_FILE="sequential_depth${depth}.log"
     # recompile everything
