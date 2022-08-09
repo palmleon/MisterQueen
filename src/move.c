@@ -4,14 +4,8 @@
 #include "board.h"
 #include "gen.h"
 #include "move.h"
+#include "config.h"
 
-/*#define TOGGLE_HASH(board) \
-    board->hash ^= HASH_CASTLE[board->castle]; \
-    board->pawn_hash ^= HASH_CASTLE[board->castle]; \
-    if (board->ep) { \
-        board->hash ^= HASH_EP[LSB(board->ep) % 8]; \
-        board->pawn_hash ^= HASH_EP[LSB(board->ep) % 8]; \
-    }*/
 
 void make_move(Board *board, Move *move) {
     Undo undo; // throw-away
@@ -19,26 +13,17 @@ void make_move(Board *board, Move *move) {
 }
 
 void do_null_move(Board *board, Undo *undo) {
-    //TOGGLE_HASH(board);
     undo->ep = board->ep;
     board->ep = 0L;
     board->color ^= BLACK;
-    //board->hash ^= HASH_COLOR;
-    //board->pawn_hash ^= HASH_COLOR;
-    //TOGGLE_HASH(board);
 }
 
 void undo_null_move(Board *board, Undo *undo) {
-    //TOGGLE_HASH(board);
     board->ep = undo->ep;
     board->color ^= BLACK;
-    //board->hash ^= HASH_COLOR;
-   // board->pawn_hash ^= HASH_COLOR;
-    //TOGGLE_HASH(board);
 }
 
 void do_move(Board *board, Move *move, Undo *undo) {
-    //TOGGLE_HASH(board);
     const bb rank_2nd[2] = {0x000000000000ff00L, 0x00ff000000000000L};
     const bb rank_4th[2] = {0x00000000ff000000L, 0x000000ff00000000L};
     const char castles_all[2] = {CASTLE_WHITE, CASTLE_BLACK};
@@ -51,8 +36,6 @@ void do_move(Board *board, Move *move, Undo *undo) {
     const int color_bit = board->color >> 4;
     const int coeff[2] = {1, -1};
     // store previous board data
-    //undo->piece = board->squares[move->src];
-    //undo->capture = board->squares[move->dst];
     undo->piece = board_get_piece(board, move->src);
     undo->capture = board_get_piece(board, move->dst);
     undo->castle = board->castle;
@@ -94,71 +77,10 @@ void do_move(Board *board, Move *move, Undo *undo) {
             board->castle &= ~castles_all_types[i];
     }
 
-
-    /*
-    if (undo->piece == WHITE_PAWN) {
-        bb src = BIT(move->src);
-        bb dst = BIT(move->dst);
-        if ((src & 0x000000000000ff00L) && (dst & 0x00000000ff000000L)) {
-            board->ep = BIT(move->src + 8);
-        }
-        if (dst == undo->ep) {
-            board_set(board, move->dst - 8, EMPTY);
-        }
-    }
-    else if (undo->piece == BLACK_PAWN) {
-        bb src = BIT(move->src);
-        bb dst = BIT(move->dst);
-        if ((src & 0x00ff000000000000L) && (dst & 0x000000ff00000000L)) {
-            board->ep = BIT(move->src - 8);
-        }
-        if (dst == undo->ep) {
-            board_set(board, move->dst + 8, EMPTY);
-        }
-    }
-    if (undo->piece == WHITE_KING) {
-        board->castle &= ~CASTLE_WHITE;
-        if (move->src == 4 && move->dst == 6) {
-            board_set(board, 7, EMPTY);
-            board_set(board, 5, WHITE_ROOK);
-        }
-        else if (move->src == 4 && move->dst == 2) {
-            board_set(board, 0, EMPTY);
-            board_set(board, 3, WHITE_ROOK);
-        }
-    }
-    else if (undo->piece == BLACK_KING) {
-        board->castle &= ~CASTLE_BLACK;
-        if (move->src == 60 && move->dst == 62) {
-            board_set(board, 63, EMPTY);
-            board_set(board, 61, BLACK_ROOK);
-        }
-        else if (move->src == 60 && move->dst == 58) {
-            board_set(board, 56, EMPTY);
-            board_set(board, 59, BLACK_ROOK);
-        }
-    }
-    if (move->src == 0 || move->dst == 0) {
-        board->castle &= ~CASTLE_WHITE_QUEEN;
-    }
-    if (move->src == 7 || move->dst == 7) {
-        board->castle &= ~CASTLE_WHITE_KING;
-    }
-    if (move->src == 56 || move->dst == 56) {
-        board->castle &= ~CASTLE_BLACK_QUEEN;
-    }
-    if (move->src == 63 || move->dst == 63) {
-        board->castle &= ~CASTLE_BLACK_KING;
-    }
-    */
     board->color ^= BLACK;
-    //board->hash ^= HASH_COLOR;
-    //board->pawn_hash ^= HASH_COLOR;
-    //TOGGLE_HASH(board);
 }
 
 void undo_move(Board *board, Move *move, Undo *undo) {
-    //TOGGLE_HASH(board);
     const int coeff[2] = {1, -1};
     const int color_bit = board->color >> 4;
     const char pawns[2] = {WHITE_PAWN, BLACK_PAWN};
@@ -167,7 +89,6 @@ void undo_move(Board *board, Move *move, Undo *undo) {
     const int king_arrival[4] = {6,2,62,58};
     const int rook_start[4] = {7,0,63,56};
     const int rook_arrival[4] = {5,3,61,59};
-    
     
     board_set(board, move->src, undo->piece);
     board_set(board, move->dst, undo->capture);
@@ -186,40 +107,7 @@ void undo_move(Board *board, Move *move, Undo *undo) {
             }
         }
     }
-    /*if (undo->piece == WHITE_PAWN) {
-        if (BIT(move->dst) == undo->ep) {
-            board_set(board, move->dst - 8, BLACK_PAWN);
-        }
-    }
-    else if (undo->piece == BLACK_PAWN) {
-        if (BIT(move->dst) == undo->ep) {
-            board_set(board, move->dst + 8, WHITE_PAWN);
-        }
-    }
-    else if (undo->piece == WHITE_KING) {
-        if (move->src == 4 && move->dst == 6) {
-            board_set(board, 7, WHITE_ROOK);
-            board_set(board, 5, EMPTY);
-        }
-        else if (move->src == 4 && move->dst == 2) {
-            board_set(board, 0, WHITE_ROOK);
-            board_set(board, 3, EMPTY);
-        }
-    }
-    else if (undo->piece == BLACK_KING) {
-        if (move->src == 60 && move->dst == 62) {
-            board_set(board, 63, BLACK_ROOK);
-            board_set(board, 61, EMPTY);
-        }
-        else if (move->src == 60 && move->dst == 58) {
-            board_set(board, 56, BLACK_ROOK);
-            board_set(board, 59, EMPTY);
-        }
-    }*/
     board->color ^= BLACK;
-    //board->hash ^= HASH_COLOR;
-    //board->pawn_hash ^= HASH_COLOR;
-    //TOGGLE_HASH(board);
 }
 
 // Compute score, but does not update it in the board struct
@@ -228,161 +116,75 @@ int score_move(Board *board, Move *move) {
     int result = 0;
     unsigned char src = move->src;
     unsigned char dst = move->dst;
-    //unsigned char piece = board->squares[src];
-    //unsigned char capture = board->squares[dst];
     unsigned char piece = board_get_piece(board, src);
     unsigned char capture = board_get_piece(board, dst);
     int piece_material = 0;
     int capture_material = 0;
-    //if (COLOR(piece)) {
         switch (PIECE(piece)) {
             case PAWN:
                 piece_material = MATERIAL_PAWN;
                 COLOR(piece) ?
                     (result += (POSITION_BLACK_PAWN[dst] - POSITION_BLACK_PAWN[src])) :
                     (result += (POSITION_WHITE_PAWN[dst] - POSITION_WHITE_PAWN[src]));
-                //result -= POSITION_BLACK_PAWN[src];
-                //result += POSITION_BLACK_PAWN[dst];
                 break;
             case KNIGHT:
                 piece_material = MATERIAL_KNIGHT;
                 COLOR(piece) ?
                     (result += (POSITION_BLACK_KNIGHT[dst] - POSITION_BLACK_KNIGHT[src])) :
                     (result += (POSITION_WHITE_KNIGHT[dst] - POSITION_WHITE_KNIGHT[src]));
-                //result -= POSITION_BLACK_KNIGHT[src];
-                //result += POSITION_BLACK_KNIGHT[dst];
                 break;
             case BISHOP:
                 piece_material = MATERIAL_BISHOP;
                 COLOR(piece) ?
                     (result += (POSITION_BLACK_BISHOP[dst] - POSITION_BLACK_BISHOP[src])) :
                     (result += (POSITION_WHITE_BISHOP[dst] - POSITION_WHITE_BISHOP[src]));
-                //result -= POSITION_BLACK_BISHOP[src];
-                //result += POSITION_BLACK_BISHOP[dst];
                 break;
             case ROOK:
                 piece_material = MATERIAL_ROOK;
                 COLOR(piece) ?
                     (result += (POSITION_BLACK_ROOK[dst] - POSITION_BLACK_ROOK[src])) :
                     (result += (POSITION_WHITE_ROOK[dst] - POSITION_WHITE_ROOK[src]));
-                //result -= POSITION_BLACK_ROOK[src];
-                //result += POSITION_BLACK_ROOK[dst];
                 break;
             case QUEEN:
                 piece_material = MATERIAL_QUEEN;
                 COLOR(piece) ?
                     (result += (POSITION_BLACK_QUEEN[dst] - POSITION_BLACK_QUEEN[src])) :
                     (result += (POSITION_WHITE_QUEEN[dst] - POSITION_WHITE_QUEEN[src]));
-                //result -= POSITION_BLACK_QUEEN[src];
-                //result += POSITION_BLACK_QUEEN[dst];
                 break;
             case KING:
                 piece_material = MATERIAL_KING;
                 COLOR(piece) ?
                     (result += (POSITION_BLACK_KING[dst] - POSITION_BLACK_KING[src])) :
                     (result += (POSITION_WHITE_KING[dst] - POSITION_WHITE_KING[src]));
-                //result -= POSITION_BLACK_KING[src];
-                //result += POSITION_BLACK_KING[dst];
                 break;
         }
-    /*}
-    else {
-        switch (PIECE(piece)) {
-            case PAWN:
-                piece_material = MATERIAL_PAWN;
-                result -= POSITION_WHITE_PAWN[src];
-                result += POSITION_WHITE_PAWN[dst];
-                break;
-            case KNIGHT:
-                piece_material = MATERIAL_KNIGHT;
-                result -= POSITION_WHITE_KNIGHT[src];
-                result += POSITION_WHITE_KNIGHT[dst];
-                break;
-            case BISHOP:
-                piece_material = MATERIAL_BISHOP;
-                result -= POSITION_WHITE_BISHOP[src];
-                result += POSITION_WHITE_BISHOP[dst];
-                break;
-            case ROOK:
-                piece_material = MATERIAL_ROOK;
-                result -= POSITION_WHITE_ROOK[src];
-                result += POSITION_WHITE_ROOK[dst];
-                break;
-            case QUEEN:
-                piece_material = MATERIAL_QUEEN;
-                result -= POSITION_WHITE_QUEEN[src];
-                result += POSITION_WHITE_QUEEN[dst];
-                break;
-            case KING:
-                piece_material = MATERIAL_KING;
-                result -= POSITION_WHITE_KING[src];
-                result += POSITION_WHITE_KING[dst];
-                break;
-        }
-    }*/
     if (capture) {
-        //if (COLOR(capture)) {
             switch (PIECE(capture)) {
                 case PAWN:
                     capture_material = MATERIAL_PAWN;
                     COLOR(capture) ? (result += POSITION_BLACK_PAWN[dst]) : (result += POSITION_WHITE_PAWN[dst]);
-                    //result += POSITION_BLACK_PAWN[dst];
                     break;
                 case KNIGHT:
                     capture_material = MATERIAL_KNIGHT;
                     COLOR(capture) ? (result += POSITION_BLACK_KNIGHT[dst]) : (result += POSITION_WHITE_KNIGHT[dst]);
-                    //result += POSITION_BLACK_KNIGHT[dst];
                     break;
                 case BISHOP:
                     capture_material = MATERIAL_BISHOP;
                     COLOR(capture) ? (result += POSITION_BLACK_BISHOP[dst]) : (result += POSITION_WHITE_BISHOP[dst]);
-                    //result += POSITION_BLACK_BISHOP[dst];
                     break;
                 case ROOK:
                     capture_material = MATERIAL_ROOK;
                     COLOR(capture) ? (result += POSITION_BLACK_ROOK[dst]) : (result += POSITION_WHITE_ROOK[dst]);
-                    //result += POSITION_BLACK_ROOK[dst];
                     break;
                 case QUEEN:
                     capture_material = MATERIAL_QUEEN;
                     COLOR(capture) ? (result += POSITION_BLACK_QUEEN[dst]) : (result += POSITION_WHITE_QUEEN[dst]);
-                    //result += POSITION_BLACK_QUEEN[dst];
                     break;
                 case KING:
                     capture_material = MATERIAL_KING;
                     COLOR(capture) ? (result += POSITION_BLACK_KING[dst]) : (result += POSITION_WHITE_KING[dst]);
-                    //result += POSITION_BLACK_KING[dst];
                     break;
             }
-        /*}
-        else {
-            switch (PIECE(capture)) {
-                case PAWN:
-                    capture_material = MATERIAL_PAWN;
-                    result += POSITION_WHITE_PAWN[dst];
-                    break;
-                case KNIGHT:
-                    capture_material = MATERIAL_KNIGHT;
-                    result += POSITION_WHITE_KNIGHT[dst];
-                    break;
-                case BISHOP:
-                    capture_material = MATERIAL_BISHOP;
-                    result += POSITION_WHITE_BISHOP[dst];
-                    break;
-                case ROOK:
-                    capture_material = MATERIAL_ROOK;
-                    result += POSITION_WHITE_ROOK[dst];
-                    break;
-                case QUEEN:
-                    capture_material = MATERIAL_QUEEN;
-                    result += POSITION_WHITE_QUEEN[dst];
-                    break;
-                case KING:
-                    capture_material = MATERIAL_KING;
-                    result += POSITION_WHITE_KING[dst];
-                    break;
-            }
-        }*/
         result += capture_material;
     }
     return result;
@@ -434,9 +236,7 @@ void move_from_string(Move *move, const char *str) {
 void notate_move(Board *board, Move *move, char *result) {
     Move moves[MAX_MOVES];
     int count = gen_legal_moves(board, moves);
-    //char piece = board->squares[move->src];
     char piece = board_get_piece(board, move->src);
-    //char capture = board->squares[move->dst];
     char capture = board_get_piece(board, move->dst);
     char rank1 = '1' + move->src / 8;
     char file1 = 'a' + move->src % 8;
@@ -464,7 +264,6 @@ void notate_move(Board *board, Move *move, char *result) {
         if (move->src == other->src) {
             continue; // same move
         }
-        //if (piece != board->squares[other->src]) {
         if (piece != board_get_piece(board, other->src)) {
             continue; // different piece
         }
@@ -553,7 +352,6 @@ void notate_move(Board *board, Move *move, char *result) {
     Undo undo;
     do_move(board, move, &undo);
     if (is_check(board, board->color)) {
-        //if (has_legal_moves(board)) {
         if (gen_legal_moves(board, moves)){
             *result++ = '+';
         }

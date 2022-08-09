@@ -3,4 +3,5 @@
 /main
 /scripts/*.pgn
 .idea
+.vscode
 
