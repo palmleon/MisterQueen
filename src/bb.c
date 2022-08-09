@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "bb.h"
-#include "util.h"
 
 bb BB_KNIGHT[64];
 bb BB_KING[64];

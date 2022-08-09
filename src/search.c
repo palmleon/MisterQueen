@@ -6,7 +6,7 @@
 #include "eval.h"
 #include "gen.h"
 #include "move.h"
-#include "util.h"
+#include "config.h"
 
 //#define XOR_SWAP(a, b) a = a ^ b; b = a ^ b; a = a ^ b;
 
@@ -377,7 +377,7 @@ int do_search(Search *search, Board *board) {
     int result = 1;
     double start = now();
     int score = 0;
-    int depth = 8;
+    int depth = MAX_DEPTH;
     int lo = INF;
     int hi = INF;
     int alpha = score - lo;

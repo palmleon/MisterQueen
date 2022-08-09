@@ -4,7 +4,6 @@
 #include "board.h"
 #include "gen.h"
 #include "move.h"
-#include "util.h"
 
 /*#define TOGGLE_HASH(board) \
     board->hash ^= HASH_CASTLE[board->castle]; \
