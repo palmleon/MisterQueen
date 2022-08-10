@@ -9,7 +9,7 @@ for depth in {4..8}; do
     # set the new MAX_DEPTH
     sed -e "6s/[0-9]* *$/$depth/" -i $SRC_PATH/config.h
     # set the log file name
-    LOG_FILE="sequential_depth${depth}.log"
+    LOG_FILE="sequential_depth_${depth}.log"
     # recompile everything
     make 
     # launch tests
