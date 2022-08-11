@@ -1,0 +1,37 @@
+Launching MisterQueen!
+-------------------
+insert a command:
+square: load a board in square format
+fen: load a board in fen format
+bm: generate the best move
+bk: do bk tests
+pb: print the board
+q: quit
+-------------------
+Launching tests!
+   1) PASS:      Qg6 [ Qg6 ] (Time: 19042762 ms)
+   1 of 1 tests passed.
+   2) FAIL:       c3 [ Rxb2 ] (Time: 9419 ms)
+   1 of 2 tests passed.
+   3) PASS:      Rg3 [ Rg3 ] (Time: 195578 ms)
+   2 of 3 tests passed.
+   4) PASS:    Qxh7+ [ Qxh7+ ] (Time: 5439205 ms)
+   3 of 4 tests passed.
+   5) PASS:     Qc4+ [ Qc4+ ] (Time: 100998 ms)
+   4 of 5 tests passed.
+   6) PASS:      Rb7 [ Rb7 ] (Time: 10212 ms)
+   5 of 6 tests passed.
+   7) PASS:      Ne3 [ Ne3 ] (Time: 82983 ms)
+   6 of 7 tests passed.
+   8) PASS:      Rf7 [ Rf7 ] (Time: 844190 ms)
+   7 of 8 tests passed.
+   9) PASS:     Bh2+ [ Bh2+ ] (Time: 4949813 ms)
+   8 of 9 tests passed.
+  10) PASS:     Rxh7 [ Rxh7 ] (Time: 1803826 ms)
+   9 of 10 tests passed.
+  11) PASS:     Bxc6 [ Bxc6 ] (Time: 1273175 ms)
+  10 of 11 tests passed.
+  12) PASS:    Qxf3+ [ Qxf3+ ] (Time: 17570 ms)
+  11 of 12 tests passed.
+  13) PASS:    Qxf8+ [ Qxf8+ ] (Time: 2222506 ms)
+  12 of 13 tests passed.
