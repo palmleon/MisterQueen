@@ -1,0 +1,779 @@
+Tables transferred to the GPU! (Time: 99 ms)
+-------------------
+insert a command:
+square: load a board in square format
+fen: load a board in fen format
+bm: generate the best move
+bk: do bk tests
+pb: print the board
+q: quit
+-------------------
+Launching tests!
+   1) PASS:      Qg6 [ Qg6 ] (Time: 5975 ms)
+   1 of 1 tests passed.
+   2) FAIL:      Kg7 [ Rxb2 ] (Time: 582 ms)
+   1 of 2 tests passed.
+   3) PASS:      Rg3 [ Rg3 ] (Time: 1165 ms)
+   2 of 3 tests passed.
+   4) PASS:    Qxh7+ [ Qxh7+ ] (Time: 969 ms)
+   3 of 4 tests passed.
+   5) PASS:     Qc4+ [ Qc4+ ] (Time: 1821 ms)
+   4 of 5 tests passed.
+   6) PASS:      Rb7 [ Rb7 ] (Time: 48 ms)
+   5 of 6 tests passed.
+   7) FAIL:      Qh4 [ Ne3 ] (Time: 4241 ms)
+   5 of 7 tests passed.
+   8) FAIL:     Nf7+ [ Rf7 ] (Time: 343 ms)
+   5 of 8 tests passed.
+   9) PASS:     Bh2+ [ Bh2+ ] (Time: 9745 ms)
+   6 of 9 tests passed.
+  10) PASS:     Rxh7 [ Rxh7 ] (Time: 492 ms)
+   7 of 10 tests passed.
+  11) FAIL:      Bd4 [ Bxc6 ] (Time: 600 ms)
+   7 of 11 tests passed.
+  12) PASS:    Qxf3+ [ Qxf3+ ] (Time: 4016 ms)
+   8 of 12 tests passed.
+  13) PASS:    Qxf8+ [ Qxf8+ ] (Time: 2535 ms)
+   9 of 13 tests passed.
+  14) FAIL:       b4 [ Qxh7+ ] (Time: 1835 ms)
+   9 of 14 tests passed.
+  15) PASS:     Rxb7 [ Rxb7 ] (Time: 397 ms)
+  10 of 15 tests passed.
+  16) PASS:      Nc3 [ Nc3 ] (Time: 904 ms)
+  11 of 16 tests passed.
+  17) PASS:      Ne5 [ Ne5 ] (Time: 1933 ms)
+  12 of 17 tests passed.
+  18) FAIL:      Kf1 [ Rh8 ] (Time: 288 ms)
+  12 of 18 tests passed.
+  19) PASS:       c6 [ c6 ] (Time: 3350 ms)
+  13 of 19 tests passed.
+  20) PASS:      Bb5 [ Bb5 ] (Time: 8754 ms)
+  14 of 20 tests passed.
+  21) FAIL:     Nh6+ [ Qh6 ] (Time: 2312 ms)
+  14 of 21 tests passed.
+  22) FAIL:      Qh5 [ Ba2 Nxf7 ] (Time: 1611 ms)
+  14 of 22 tests passed.
+  23) FAIL:      Rf4 [ g4 ] (Time: 2814 ms)
+  14 of 23 tests passed.
+  24) PASS:      Bd4 [ Bd4 ] (Time: 5595 ms)
+  15 of 24 tests passed.
+  25) PASS:     Qh4+ [ Qh4+ ] (Time: 33 ms)
+  16 of 25 tests passed.
+  26) FAIL:      Bc6 [ Bf5 ] (Time: 7557 ms)
+  16 of 26 tests passed.
+  27) PASS:     Qf8+ [ Qf8+ ] (Time: 6723 ms)
+  17 of 27 tests passed.
+  28) PASS:     Qe1+ [ Qe1+ ] (Time: 13839 ms)
+  18 of 28 tests passed.
+  29) PASS:       c6 [ c6 ] (Time: 3892 ms)
+  19 of 29 tests passed.
+  30) FAIL:      Ng5 [ Nxd6 ] (Time: 15791 ms)
+  19 of 30 tests passed.
+  31) PASS:     dxe6 [ Qxa8 d6 dxe6 g3 ] (Time: 1001 ms)
+  20 of 31 tests passed.
+  32) PASS:     Qd8+ [ Qd8+ ] (Time: 873 ms)
+  21 of 32 tests passed.
+  33) PASS:     Qe5+ [ Qe5+ Qf4 ] (Time: 901 ms)
+  22 of 33 tests passed.
+  34) PASS:      Bg1 [ Bg1 ] (Time: 5700 ms)
+  23 of 34 tests passed.
+  35) PASS:    Rxh7+ [ Rxh7+ ] (Time: 1391 ms)
+  24 of 35 tests passed.
+  36) FAIL:    Qxd4+ [ Re1+ ] (Time: 1968 ms)
+  24 of 36 tests passed.
+  37) FAIL:     Nab4 [ Nxd4+ ] (Time: 9227 ms)
+  24 of 37 tests passed.
+  38) PASS:     Rd8+ [ Qd3 Rd8+ ] (Time: 2132 ms)
+  25 of 38 tests passed.
+  39) PASS:      Na4 [ Na4 ] (Time: 28754 ms)
+  26 of 39 tests passed.
+  40) PASS:      Rc8 [ Rc8 ] (Time: 2271 ms)
+  27 of 40 tests passed.
+  41) FAIL:     Rf8+ [ Ka5 Kc5 b7 ] (Time: 55 ms)
+  27 of 41 tests passed.
+  42) PASS:      Ba5 [ Ba5 ] (Time: 1226 ms)
+  28 of 42 tests passed.
+  43) PASS:     Qxa8 [ Be7 Qxa8 ] (Time: 2152 ms)
+  29 of 43 tests passed.
+  44) PASS:     dxc4 [ dxc4 ] (Time: 8863 ms)
+  30 of 44 tests passed.
+  45) PASS:     Qxa1 [ Qxa1 ] (Time: 716 ms)
+  31 of 45 tests passed.
+  46) PASS:      Nb5 [ Nb5 ] (Time: 2777 ms)
+  32 of 46 tests passed.
+  47) PASS:     Nxd4 [ Nxd4 ] (Time: 1820 ms)
+  33 of 47 tests passed.
+  48) PASS:      Rb4 [ Rb4 ] (Time: 5976 ms)
+  34 of 48 tests passed.
+  49) FAIL:       e5 [ Qxh7+ ] (Time: 2593 ms)
+  34 of 49 tests passed.
+  50) FAIL:    Rxg7+ [ Rxb6+ ] (Time: 4894 ms)
+  34 of 50 tests passed.
+  51) FAIL:       c4 [ Rg4+ ] (Time: 1937 ms)
+  34 of 51 tests passed.
+  52) FAIL:       a3 [ Re7 c4 ] (Time: 3212 ms)
+  34 of 52 tests passed.
+  53) FAIL:    Nxf3+ [ Re1 ] (Time: 1514 ms)
+  34 of 53 tests passed.
+  54) PASS:     Qh1+ [ Qh1+ ] (Time: 8157 ms)
+  35 of 54 tests passed.
+  55) FAIL:      Re3 [ Qxg7+ ] (Time: 11053 ms)
+  35 of 55 tests passed.
+  56) PASS:    Bxf2+ [ Bxf2+ ] (Time: 4241 ms)
+  36 of 56 tests passed.
+  57) PASS:     Rf8+ [ Rf8+ ] (Time: 176 ms)
+  37 of 57 tests passed.
+  58) FAIL:      Rc5 [ Qd1+ ] (Time: 1301 ms)
+  37 of 58 tests passed.
+  59) PASS:      Nd5 [ Nd5 ] (Time: 2191 ms)
+  38 of 59 tests passed.
+  60) PASS:     Qh8+ [ Qh8+ ] (Time: 1827 ms)
+  39 of 60 tests passed.
+  61) PASS:     Qf7+ [ Qf7+ ] (Time: 228 ms)
+  40 of 61 tests passed.
+  62) FAIL:      Ra8 [ Rxg3+ ] (Time: 2690 ms)
+  40 of 62 tests passed.
+  63) PASS:     Nxf7 [ Nxf7 ] (Time: 2410 ms)
+  41 of 63 tests passed.
+  64) FAIL:      Qd4 [ g4+ ] (Time: 804 ms)
+  41 of 64 tests passed.
+  65) PASS:     Ne7+ [ Ne7+ ] (Time: 314 ms)
+  42 of 65 tests passed.
+  66) FAIL:     Rgf8 [ Qxe5 ] (Time: 2872 ms)
+  42 of 66 tests passed.
+  67) FAIL:      Qb3 [ Rxd5 ] (Time: 2127 ms)
+  42 of 67 tests passed.
+  68) FAIL:      Kg1 [ Qxe3 ] (Time: 1228 ms)
+  42 of 68 tests passed.
+  69) PASS:       f3 [ f3 h3 ] (Time: 1324 ms)
+  43 of 69 tests passed.
+  70) PASS:     Na2+ [ Na2+ ] (Time: 1271 ms)
+  44 of 70 tests passed.
+  71) FAIL:      Bg5 [ Nxa7+ ] (Time: 4089 ms)
+  44 of 71 tests passed.
+  72) PASS:       e6 [ e6 ] (Time: 4994 ms)
+  45 of 72 tests passed.
+  73) FAIL:      Nd5 [ Qd2 ] (Time: 3761 ms)
+  45 of 73 tests passed.
+  74) FAIL:     Qxe4 [ Qf1+ ] (Time: 4291 ms)
+  45 of 74 tests passed.
+  75) FAIL:    Rxe1+ [ Qd6 ] (Time: 20309 ms)
+  45 of 75 tests passed.
+  76) PASS:     Bxf6 [ Bxf6 ] (Time: 1087 ms)
+  46 of 76 tests passed.
+  77) PASS:      Ng3 [ Ng3 ] (Time: 9189 ms)
+  47 of 77 tests passed.
+  78) FAIL:    Qxe6+ [ Ng5+ ] (Time: 7541 ms)
+  47 of 78 tests passed.
+  79) FAIL:    O-O-O [ Qxh2+ ] (Time: 5532 ms)
+  47 of 79 tests passed.
+  80) FAIL:     Bxb6 [ Ra1 ] (Time: 19793 ms)
+  47 of 80 tests passed.
+  81) FAIL:     Bxg2 [ Bd6 ] (Time: 1873 ms)
+  47 of 81 tests passed.
+  82) PASS:     Bh7+ [ Bh7+ ] (Time: 8129 ms)
+  48 of 82 tests passed.
+  83) FAIL:    Rxe8+ [ Qxd7 ] (Time: 1391 ms)
+  48 of 83 tests passed.
+  84) PASS:     Qg8+ [ Qg8+ ] (Time: 3121 ms)
+  49 of 84 tests passed.
+  85) PASS:      Na6 [ Na6 ] (Time: 1577 ms)
+  50 of 85 tests passed.
+  86) FAIL:       c5 [ Ng4+ ] (Time: 166 ms)
+  50 of 86 tests passed.
+  87) FAIL:     cxd4 [ Rxe5 ] (Time: 496 ms)
+  50 of 87 tests passed.
+  88) FAIL:      Qg5 [ Rxg2+ ] (Time: 6372 ms)
+  50 of 88 tests passed.
+  89) PASS:       g5 [ g5 ] (Time: 4553 ms)
+  51 of 89 tests passed.
+  90) FAIL:    Nxh6+ [ Nxg7 ] (Time: 2388 ms)
+  51 of 90 tests passed.
+  91) FAIL:      Nc2 [ Be6 ] (Time: 7515 ms)
+  51 of 91 tests passed.
+  92) FAIL:      Bc4 [ Bxg4 ] (Time: 3245 ms)
+  51 of 92 tests passed.
+  93) FAIL:     Bb5+ [ Bh6 ] (Time: 867 ms)
+  51 of 93 tests passed.
+  94) PASS:      e4+ [ e4+ ] (Time: 213 ms)
+  52 of 94 tests passed.
+  95) PASS:     Ng4+ [ Ng4+ ] (Time: 887 ms)
+  53 of 95 tests passed.
+  96) PASS:     Qd8+ [ Qd8+ b3 ] (Time: 3573 ms)
+  54 of 96 tests passed.
+  97) FAIL:      Qd5 [ Qa8+ ] (Time: 3220 ms)
+  54 of 97 tests passed.
+  98) PASS:     Nxe4 [ Nxe4 ] (Time: 12871 ms)
+  55 of 98 tests passed.
+  99) PASS:      Rh5 [ Rh5 ] (Time: 1555 ms)
+  56 of 99 tests passed.
+ 100) PASS:      Be3 [ Be3 b6+ ] (Time: 16 ms)
+  57 of 100 tests passed.
+ 101) FAIL:       e3 [ Bc3 ] (Time: 1706 ms)
+  57 of 101 tests passed.
+ 102) PASS:    Qxf8+ [ Qxf8+ ] (Time: 2751 ms)
+  58 of 102 tests passed.
+ 103) FAIL:    Rxg6+ [ Qxg6+ ] (Time: 12307 ms)
+  58 of 103 tests passed.
+ 104) PASS:     Qxh5 [ Qxh5 ] (Time: 1815 ms)
+  59 of 104 tests passed.
+ 105) PASS:     Qxh4 [ Bxg3 Qxh4 ] (Time: 11871 ms)
+  60 of 105 tests passed.
+ 106) PASS:     Nf2+ [ Nf2+ ] (Time: 13471 ms)
+  61 of 106 tests passed.
+ 107) PASS:      Nb5 [ Nb5 ] (Time: 376 ms)
+  62 of 107 tests passed.
+ 108) PASS:      Qe5 [ Qe5 ] (Time: 10489 ms)
+  63 of 108 tests passed.
+ 109) PASS:       c3 [ c3 ] (Time: 13574 ms)
+  64 of 109 tests passed.
+ 110) PASS:      Be3 [ Be3 ] (Time: 6004 ms)
+  65 of 110 tests passed.
+ 111) PASS:     Qf1+ [ Qf1+ ] (Time: 102 ms)
+  66 of 111 tests passed.
+ 112) PASS:     Rxe6 [ Rxe6 ] (Time: 4294 ms)
+  67 of 112 tests passed.
+ 113) PASS:     Qxf6 [ Qxf6 ] (Time: 482 ms)
+  68 of 113 tests passed.
+ 114) PASS:    Bxh7+ [ Bxh7+ ] (Time: 1271 ms)
+  69 of 114 tests passed.
+ 115) PASS:      Nd6 [ Nd6 ] (Time: 858 ms)
+  70 of 115 tests passed.
+ 116) FAIL:      Nh3 [ Rd2 ] (Time: 14701 ms)
+  70 of 116 tests passed.
+ 117) PASS:      Ne4 [ Ne4 ] (Time: 9722 ms)
+  71 of 117 tests passed.
+ 118) FAIL:      Bc4 [ Rh4 ] (Time: 5951 ms)
+  71 of 118 tests passed.
+ 119) FAIL:     Nf2+ [ Qxd3 ] (Time: 9507 ms)
+  71 of 119 tests passed.
+ 120) FAIL:     Bxg7 [ Rhg1 g6 ] (Time: 1641 ms)
+  71 of 120 tests passed.
+ 121) FAIL:       f5 [ Bxf3+ ] (Time: 3587 ms)
+  71 of 121 tests passed.
+ 122) PASS:    Rxf1+ [ Rxf1+ ] (Time: 1442 ms)
+  72 of 122 tests passed.
+ 123) PASS:      Rc7 [ Bxd5 Rc7 Re6 ] (Time: 6179 ms)
+  73 of 123 tests passed.
+ 124) FAIL:      Rg7 [ g3 ] (Time: 1666 ms)
+  73 of 124 tests passed.
+ 125) FAIL:      Nf4 [ Bxd4+ ] (Time: 6503 ms)
+  73 of 125 tests passed.
+ 126) PASS:    Rxc6+ [ Rxc6+ ] (Time: 1963 ms)
+  74 of 126 tests passed.
+ 127) PASS:     Rxb7 [ Rxb7 ] (Time: 841 ms)
+  75 of 127 tests passed.
+ 128) FAIL:    Bxg7+ [ Qg6 ] (Time: 1677 ms)
+  75 of 128 tests passed.
+ 129) PASS:      Bf3 [ Bf3 ] (Time: 17186 ms)
+  76 of 129 tests passed.
+ 130) FAIL:      Nc4 [ Qh6 Qh8 ] (Time: 6723 ms)
+  76 of 130 tests passed.
+ 131) FAIL:      Bf6 [ Re8 ] (Time: 1982 ms)
+  76 of 131 tests passed.
+ 132) FAIL:    Qxf1+ [ Re1 ] (Time: 5903 ms)
+  76 of 132 tests passed.
+ 133) FAIL:      Rf4 [ Bh4 ] (Time: 2511 ms)
+  76 of 133 tests passed.
+ 134) FAIL:      Qf5 [ Rd1+ ] (Time: 3845 ms)
+  76 of 134 tests passed.
+ 135) PASS:      Nd4 [ Nd4 ] (Time: 2654 ms)
+  77 of 135 tests passed.
+ 136) FAIL:     Nxg7 [ Rc8+ ] (Time: 2238 ms)
+  77 of 136 tests passed.
+ 137) FAIL:      Ra7 [ Rd7 ] (Time: 7397 ms)
+  77 of 137 tests passed.
+ 138) PASS:       h5 [ h5 ] (Time: 1639 ms)
+  78 of 138 tests passed.
+ 139) PASS:     Nf6+ [ Nf6+ ] (Time: 6792 ms)
+  79 of 139 tests passed.
+ 140) PASS:      Bc7 [ Bc7 Rc7 ] (Time: 1329 ms)
+  80 of 140 tests passed.
+ 141) FAIL:      Kf1 [ Qxf4 ] (Time: 6122 ms)
+  80 of 141 tests passed.
+ 142) FAIL:      Na5 [ Re8 f6+ ] (Time: 2097 ms)
+  80 of 142 tests passed.
+ 143) PASS:    Rxh6+ [ Rxh6+ ] (Time: 5986 ms)
+  81 of 143 tests passed.
+ 144) FAIL:      Qb6 [ d3 ] (Time: 10968 ms)
+  81 of 144 tests passed.
+ 145) FAIL:    Bxf6+ [ Re8 ] (Time: 327 ms)
+  81 of 145 tests passed.
+ 146) PASS:      Bd3 [ Bc8 Bd3 Bh3 ] (Time: 47 ms)
+  82 of 146 tests passed.
+ 147) FAIL:       e5 [ Nxg4 ] (Time: 3905 ms)
+  82 of 147 tests passed.
+ 148) FAIL:       e7 [ Rxg7 ] (Time: 7589 ms)
+  82 of 148 tests passed.
+ 149) PASS:     Bxg2 [ Bxg2 ] (Time: 3602 ms)
+  83 of 149 tests passed.
+ 150) FAIL:      Bb4 [ Ba3 Be5 Bf8 e3 ] (Time: 14942 ms)
+  83 of 150 tests passed.
+ 151) FAIL:      Na3 [ Nc3 ] (Time: 2008 ms)
+  83 of 151 tests passed.
+ 152) PASS:      Ne4 [ Ne4 ] (Time: 4263 ms)
+  84 of 152 tests passed.
+ 153) FAIL:       a4 [ Nxd4 ] (Time: 8546 ms)
+  84 of 153 tests passed.
+ 154) PASS:    Qxf7+ [ Qxf7+ ] (Time: 3247 ms)
+  85 of 154 tests passed.
+ 155) FAIL:      Qc8 [ d6 ] (Time: 1670 ms)
+  85 of 155 tests passed.
+ 156) PASS:    Qxh6+ [ Qxh6+ ] (Time: 1010 ms)
+  86 of 156 tests passed.
+ 157) PASS:     Ne7+ [ Ne7+ ] (Time: 2012 ms)
+  87 of 157 tests passed.
+ 158) FAIL:     Qe6+ [ Rxg7+ ] (Time: 1726 ms)
+  87 of 158 tests passed.
+ 159) PASS:     Ne6+ [ Ne6+ ] (Time: 1736 ms)
+  88 of 159 tests passed.
+ 160) PASS:    Qxd7+ [ Qxd7+ ] (Time: 2013 ms)
+  89 of 160 tests passed.
+ 161) FAIL:      Nc4 [ Qxd8+ ] (Time: 3989 ms)
+  89 of 161 tests passed.
+ 162) PASS:      Bd5 [ Bd5 ] (Time: 33342 ms)
+  90 of 162 tests passed.
+ 163) FAIL:      Bh5 [ Qg2+ ] (Time: 4164 ms)
+  90 of 163 tests passed.
+ 164) FAIL:     Rd2+ [ Rxc4+ ] (Time: 872 ms)
+  90 of 164 tests passed.
+ 165) FAIL:     Qd8+ [ Re2 ] (Time: 8475 ms)
+  90 of 165 tests passed.
+ 166) PASS:       d4 [ d4 ] (Time: 4924 ms)
+  91 of 166 tests passed.
+ 167) FAIL:     Rf1+ [ Rxg2+ ] (Time: 1223 ms)
+  91 of 167 tests passed.
+ 168) FAIL:      Qa4 [ Qd2+ ] (Time: 7134 ms)
+  91 of 168 tests passed.
+ 169) FAIL:     dxc5 [ Bh6 ] (Time: 6176 ms)
+  91 of 169 tests passed.
+ 170) FAIL:     Rf7+ [ Qxc4 ] (Time: 886 ms)
+  91 of 170 tests passed.
+ 171) FAIL:       h5 [ Bh6+ ] (Time: 3990 ms)
+  91 of 171 tests passed.
+ 172) FAIL:     Ne2+ [ Qe1+ ] (Time: 1537 ms)
+  91 of 172 tests passed.
+ 173) PASS:     Qh6+ [ Qh6+ ] (Time: 966 ms)
+  92 of 173 tests passed.
+ 174) FAIL:      Rc3 [ Nxg2 ] (Time: 11944 ms)
+  92 of 174 tests passed.
+ 175) PASS:      Nh5 [ Nh5 ] (Time: 8083 ms)
+  93 of 175 tests passed.
+ 176) FAIL:       g5 [ Rxh2+ ] (Time: 16367 ms)
+  93 of 176 tests passed.
+ 177) PASS:     Qa3+ [ Qa3+ ] (Time: 4085 ms)
+  94 of 177 tests passed.
+ 178) FAIL:    Qxh7+ [ Nxe6 ] (Time: 628 ms)
+  94 of 178 tests passed.
+ 179) FAIL:      Qd2 [ Qg1+ ] (Time: 11868 ms)
+  94 of 179 tests passed.
+ 180) FAIL:    Nfxe4 [ Nxd5 ] (Time: 7918 ms)
+  94 of 180 tests passed.
+ 181) PASS:      Ng4 [ Ng4 ] (Time: 3650 ms)
+  95 of 181 tests passed.
+ 182) FAIL:      Qf3 [ Qh5 ] (Time: 5838 ms)
+  95 of 182 tests passed.
+ 183) FAIL:      Rc6 [ Bf6 ] (Time: 2912 ms)
+  95 of 183 tests passed.
+ 184) PASS:     Qe7+ [ Qe7+ ] (Time: 383 ms)
+  96 of 184 tests passed.
+ 185) FAIL:      Qd1 [ Qxh7+ ] (Time: 1662 ms)
+  96 of 185 tests passed.
+ 186) FAIL:     Be3+ [ Bf8+ ] (Time: 1154 ms)
+  96 of 186 tests passed.
+ 187) PASS:     Nh3+ [ Nh3+ ] (Time: 327 ms)
+  97 of 187 tests passed.
+ 188) PASS:     Qg7+ [ Qg7+ ] (Time: 9746 ms)
+  98 of 188 tests passed.
+ 189) FAIL:      Re1 [ Re8+ ] (Time: 104 ms)
+  98 of 189 tests passed.
+ 190) FAIL:     Nf2+ [ Bh3 ] (Time: 2132 ms)
+  98 of 190 tests passed.
+ 191) PASS:      Qc4 [ Qc4 ] (Time: 1724 ms)
+  99 of 191 tests passed.
+ 192) PASS:     Nd3+ [ Nd3+ ] (Time: 6081 ms)
+ 100 of 192 tests passed.
+ 193) FAIL:      Qe6 [ Qxe3 ] (Time: 6308 ms)
+ 100 of 193 tests passed.
+ 194) PASS:     Nh6+ [ Nh6+ ] (Time: 1471 ms)
+ 101 of 194 tests passed.
+ 195) PASS:       g3 [ g3 ] (Time: 4016 ms)
+ 102 of 195 tests passed.
+ 196) FAIL:      Ng4 [ Nb4 ] (Time: 14160 ms)
+ 102 of 196 tests passed.
+ 197) PASS:     Qf1+ [ Qf1+ ] (Time: 321 ms)
+ 103 of 197 tests passed.
+ 198) FAIL:      Nd3 [ Rd3 ] (Time: 15087 ms)
+ 103 of 198 tests passed.
+ 199) PASS:     Rfd1 [ Bxc6 Rcd1 Rfd1 ] (Time: 8354 ms)
+ 104 of 199 tests passed.
+ 200) FAIL:     dxe6 [ Bxf6 ] (Time: 4284 ms)
+ 104 of 200 tests passed.
+ 201) PASS:      Ra7 [ Ra7 ] (Time: 1193 ms)
+ 105 of 201 tests passed.
+ 202) FAIL:     Rxb8 [ Rxa2 ] (Time: 357 ms)
+ 105 of 202 tests passed.
+ 203) FAIL:      Qg4 [ Qh6 ] (Time: 1095 ms)
+ 105 of 203 tests passed.
+ 204) FAIL:      Nb6 [ Rxe5 ] (Time: 6131 ms)
+ 105 of 204 tests passed.
+ 205) FAIL:      Be3 [ Qxg5 ] (Time: 3378 ms)
+ 105 of 205 tests passed.
+ 206) PASS:      Rc6 [ Rc6 ] (Time: 4399 ms)
+ 106 of 206 tests passed.
+ 207) FAIL:      Qe4 [ Qxg7+ ] (Time: 4910 ms)
+ 106 of 207 tests passed.
+ 208) FAIL:      Rf2 [ Bf7+ ] (Time: 574 ms)
+ 106 of 208 tests passed.
+ 209) FAIL:      Qb3 [ Rxe5+ ] (Time: 1318 ms)
+ 106 of 209 tests passed.
+ 210) FAIL:      Qh4 [ Rh1 ] (Time: 1411 ms)
+ 106 of 210 tests passed.
+ 211) FAIL:      Nh6 [ Qxf7+ ] (Time: 1822 ms)
+ 106 of 211 tests passed.
+ 212) FAIL:     Ng6+ [ Qxg7+ ] (Time: 299 ms)
+ 106 of 212 tests passed.
+ 213) FAIL:      Qd2 [ Rxh7+ ] (Time: 6040 ms)
+ 106 of 213 tests passed.
+ 214) FAIL:      Rf3 [ Ng5 ] (Time: 6486 ms)
+ 106 of 214 tests passed.
+ 215) FAIL:     Rxc1 [ Qh7+ ] (Time: 2082 ms)
+ 106 of 215 tests passed.
+ 216) FAIL:      Bg5 [ Nxf7 a4 ] (Time: 2309 ms)
+ 106 of 216 tests passed.
+ 217) FAIL:      Ng5 [ Qd7+ ] (Time: 3126 ms)
+ 106 of 217 tests passed.
+ 218) PASS:      Bh6 [ Bh6 ] (Time: 1531 ms)
+ 107 of 218 tests passed.
+ 219) PASS:     Qf1+ [ Qf1+ ] (Time: 146 ms)
+ 108 of 219 tests passed.
+ 220) FAIL:      Nf6 [ Qxf1+ ] (Time: 14509 ms)
+ 108 of 220 tests passed.
+ 221) PASS:     Rd8+ [ Rd8+ ] (Time: 122 ms)
+ 109 of 221 tests passed.
+ 222) FAIL:     bxa3 [ Bf6 ] (Time: 9850 ms)
+ 109 of 222 tests passed.
+ 223) FAIL:      Be5 [ Nxe4 ] (Time: 9342 ms)
+ 109 of 223 tests passed.
+ 224) PASS:       e4 [ Rh6 e4 ] (Time: 5021 ms)
+ 110 of 224 tests passed.
+ 225) FAIL:      Qf7 [ Qh4+ ] (Time: 2914 ms)
+ 110 of 225 tests passed.
+ 226) FAIL:      Qe7 [ Nf7 ] (Time: 11050 ms)
+ 110 of 226 tests passed.
+ 227) FAIL:      Qh4 [ d5 ] (Time: 7224 ms)
+ 110 of 227 tests passed.
+ 228) FAIL:      Be5 [ Bxe4 ] (Time: 9537 ms)
+ 110 of 228 tests passed.
+ 229) FAIL:      Rh8 [ Rxh4 b4 ] (Time: 380 ms)
+ 110 of 229 tests passed.
+ 230) FAIL:      Rf7 [ Rb4 ] (Time: 106 ms)
+ 110 of 230 tests passed.
+ 231) FAIL:     Rxd7 [ Bg5 ] (Time: 4035 ms)
+ 110 of 231 tests passed.
+ 232) PASS:     Rxe8 [ Qb5 Rxe8 ] (Time: 3416 ms)
+ 111 of 232 tests passed.
+ 233) FAIL:    Rxf2+ [ Nb3 ] (Time: 1490 ms)
+ 111 of 233 tests passed.
+ 234) PASS:      Rb3 [ Rb3 ] (Time: 4703 ms)
+ 112 of 234 tests passed.
+ 235) PASS:    Rxf7+ [ Qe4 Qxf7+ Rxf7+ ] (Time: 1279 ms)
+ 113 of 235 tests passed.
+ 236) FAIL:    Bxh3+ [ Rc1 ] (Time: 5903 ms)
+ 113 of 236 tests passed.
+ 237) FAIL:     Rd2+ [ Rc1+ ] (Time: 2435 ms)
+ 113 of 237 tests passed.
+ 238) FAIL:    Rxb7+ [ Bxb7 ] (Time: 7127 ms)
+ 113 of 238 tests passed.
+ 239) PASS:     Qf1+ [ Qf1+ ] (Time: 593 ms)
+ 114 of 239 tests passed.
+ 240) FAIL:      Nf3 [ Qxc6 ] (Time: 3937 ms)
+ 114 of 240 tests passed.
+ 241) FAIL:    Bxf7+ [ Qxh7+ ] (Time: 2802 ms)
+ 114 of 241 tests passed.
+ 242) FAIL:      Nd6 [ Rxd7 ] (Time: 1575 ms)
+ 114 of 242 tests passed.
+ 243) PASS:      Qe2 [ Qe2 ] (Time: 3629 ms)
+ 115 of 243 tests passed.
+ 244) FAIL:      Qd2 [ Qxc5+ ] (Time: 4784 ms)
+ 115 of 244 tests passed.
+ 245) FAIL:      Nb5 [ Qxg6+ ] (Time: 1453 ms)
+ 115 of 245 tests passed.
+ 246) PASS:     Qh5+ [ Qh5+ ] (Time: 2781 ms)
+ 116 of 246 tests passed.
+ 247) FAIL:     Qc5+ [ Rxb5 ] (Time: 833 ms)
+ 116 of 247 tests passed.
+ 248) FAIL:      Qa6 [ Qc5+ ] (Time: 4850 ms)
+ 116 of 248 tests passed.
+ 249) PASS:       c5 [ c5 d5 ] (Time: 1719 ms)
+ 117 of 249 tests passed.
+ 250) FAIL:      Re1 [ Re8+ ] (Time: 6261 ms)
+ 117 of 250 tests passed.
+ 251) PASS:      Qf4 [ Qe5 Qf4 ] (Time: 1229 ms)
+ 118 of 251 tests passed.
+ 252) PASS:      Bg4 [ Bg4 Re2 ] (Time: 6857 ms)
+ 119 of 252 tests passed.
+ 253) FAIL:      c7+ [ Qe8+ ] (Time: 3177 ms)
+ 119 of 253 tests passed.
+ 254) PASS:     Nxh3 [ Nxh3 ] (Time: 7068 ms)
+ 120 of 254 tests passed.
+ 255) PASS:   Rfxg6+ [ Rfxg6+ ] (Time: 2901 ms)
+ 121 of 255 tests passed.
+ 256) FAIL:      Qg4 [ Nf5 ] (Time: 2935 ms)
+ 121 of 256 tests passed.
+ 257) FAIL:      Qc3 [ Rxd4 ] (Time: 6972 ms)
+ 121 of 257 tests passed.
+ 258) FAIL:      Rd1 [ Bxg6 ] (Time: 677 ms)
+ 121 of 258 tests passed.
+ 259) PASS:      Qh5 [ Qh5 ] (Time: 6224 ms)
+ 122 of 259 tests passed.
+ 260) PASS:     Qe6+ [ Qe6+ ] (Time: 5572 ms)
+ 123 of 260 tests passed.
+ 261) FAIL:    Qxg2+ [ Nd4 ] (Time: 2735 ms)
+ 123 of 261 tests passed.
+ 262) FAIL:      Bg5 [ Rh6 ] (Time: 5757 ms)
+ 123 of 262 tests passed.
+ 263) FAIL:      Qh5 [ Qg8+ ] (Time: 3395 ms)
+ 123 of 263 tests passed.
+ 264) FAIL:     Rxd4 [ Qe5 Rab8 ] (Time: 14995 ms)
+ 123 of 264 tests passed.
+ 265) FAIL:     Qxe4 [ exf6 ] (Time: 6028 ms)
+ 123 of 265 tests passed.
+ 266) FAIL:      Bd4 [ Rxh2+ ] (Time: 12374 ms)
+ 123 of 266 tests passed.
+ 267) FAIL:      Nf3 [ Nc7+ ] (Time: 2304 ms)
+ 123 of 267 tests passed.
+ 268) FAIL:      Re1 [ Re8+ ] (Time: 4898 ms)
+ 123 of 268 tests passed.
+ 269) FAIL:      O-O [ axb4 ] (Time: 9361 ms)
+ 123 of 269 tests passed.
+ 270) FAIL:    Rxe8+ [ Qg4 ] (Time: 801 ms)
+ 123 of 270 tests passed.
+ 271) FAIL:     g8=Q [ Rd6 ] (Time: 873 ms)
+ 123 of 271 tests passed.
+ 272) PASS:     Bxc5 [ Bxc5 ] (Time: 1211 ms)
+ 124 of 272 tests passed.
+ 273) FAIL:      Bd5 [ Ng3+ g3 ] (Time: 9955 ms)
+ 124 of 273 tests passed.
+ 274) PASS:     Rg5+ [ Rb6 Rg5+ ] (Time: 89 ms)
+ 125 of 274 tests passed.
+ 275) FAIL:     Nh3+ [ Nc5 Nxg2 b5 ] (Time: 5594 ms)
+ 125 of 275 tests passed.
+ 276) FAIL:    Rxg7+ [ Qd5+ ] (Time: 5210 ms)
+ 125 of 276 tests passed.
+ 277) FAIL:     Bxd3 [ Rg3 Rxg2 ] (Time: 3953 ms)
+ 125 of 277 tests passed.
+ 278) FAIL:      Qe3 [ Bf7+ ] (Time: 4910 ms)
+ 125 of 278 tests passed.
+ 279) PASS:     Nxf5 [ Nxf5 Rc3 ] (Time: 670 ms)
+ 126 of 279 tests passed.
+ 280) FAIL:     Qxe2 [ Bxa3 ] (Time: 23714 ms)
+ 126 of 280 tests passed.
+ 281) FAIL:      Rc2 [ Rxh7+ ] (Time: 2219 ms)
+ 126 of 281 tests passed.
+ 282) PASS:     Rh8+ [ Rh8+ ] (Time: 237 ms)
+ 127 of 282 tests passed.
+ 283) FAIL:      Nf2 [ Ng5 ] (Time: 2095 ms)
+ 127 of 283 tests passed.
+ 284) PASS:      Nf5 [ Nf5 ] (Time: 6298 ms)
+ 128 of 284 tests passed.
+ 285) FAIL:      Rg1 [ Qxg7+ ] (Time: 5261 ms)
+ 128 of 285 tests passed.
+ 286) FAIL:     Be2+ [ Rxd5+ ] (Time: 443 ms)
+ 128 of 286 tests passed.
+ 287) PASS:      Qh5 [ Qg4 Qh5 ] (Time: 6625 ms)
+ 129 of 287 tests passed.
+ 288) FAIL:      Ng3 [ Nf6+ ] (Time: 3890 ms)
+ 129 of 288 tests passed.
+ 289) FAIL:     Nd3+ [ Qe5 ] (Time: 6041 ms)
+ 129 of 289 tests passed.
+ 290) FAIL:     Qxa4 [ Ne2+ ] (Time: 7179 ms)
+ 129 of 290 tests passed.
+ 291) PASS:       h3 [ h3 ] (Time: 5850 ms)
+ 130 of 291 tests passed.
+ 292) PASS:      d6+ [ d6+ ] (Time: 500 ms)
+ 131 of 292 tests passed.
+ 293) FAIL:      Bh3 [ Nfg5 ] (Time: 1433 ms)
+ 131 of 293 tests passed.
+ 294) FAIL:      Qf5 [ Bf8 Nf5 Qf4 ] (Time: 12948 ms)
+ 131 of 294 tests passed.
+ 295) FAIL:      Rd4 [ Rxd5+ ] (Time: 3124 ms)
+ 131 of 295 tests passed.
+ 296) FAIL:      Bd7 [ Rd4+ Rf8 ] (Time: 2617 ms)
+ 131 of 296 tests passed.
+ 297) FAIL:      Qg5 [ Bxg2 Bxh2+ ] (Time: 10921 ms)
+ 131 of 297 tests passed.
+ 298) FAIL:      Qd7 [ Qh8+ ] (Time: 1182 ms)
+ 131 of 298 tests passed.
+ 299) FAIL:     Nd5+ [ Nca4 ] (Time: 475 ms)
+ 131 of 299 tests passed.
+ 300) PASS:       g6 [ g6 ] (Time: 1929 ms)
+ 132 of 300 tests passed.
+ 301) FAIL:       g4 [ d6 ] (Time: 4269 ms)
+ 132 of 301 tests passed.
+ 302) PASS:      Bb4 [ Bb4 ] (Time: 2494 ms)
+ 133 of 302 tests passed.
+ 303) FAIL:      Qg2 [ Qc5 ] (Time: 5888 ms)
+ 133 of 303 tests passed.
+ 304) FAIL:     bxc4 [ e5 ] (Time: 680 ms)
+ 133 of 304 tests passed.
+ 305) FAIL:      Qg7 [ Bb5 ] (Time: 16718 ms)
+ 133 of 305 tests passed.
+ 306) FAIL:     Rxd4 [ e5 ] (Time: 6223 ms)
+ 133 of 306 tests passed.
+ 307) FAIL:      Rd1 [ Nd1 ] (Time: 2463 ms)
+ 133 of 307 tests passed.
+ 308) FAIL:       f4 [ Bh3 ] (Time: 1872 ms)
+ 133 of 308 tests passed.
+ 309) FAIL:      Re1 [ Qd4 ] (Time: 7391 ms)
+ 133 of 309 tests passed.
+ 310) FAIL:     Nxd4 [ Bf8 ] (Time: 1856 ms)
+ 133 of 310 tests passed.
+ 311) FAIL:     gxh5 [ h4 ] (Time: 848 ms)
+ 133 of 311 tests passed.
+ 312) FAIL:     Rxc3 [ Rb6 ] (Time: 15896 ms)
+ 133 of 312 tests passed.
+ 313) FAIL:      Qf6 [ Nxa2 ] (Time: 5085 ms)
+ 133 of 313 tests passed.
+ 314) FAIL:       a3 [ d5 ] (Time: 4111 ms)
+ 133 of 314 tests passed.
+ 315) FAIL:      Rf4 [ Nxd6 ] (Time: 980 ms)
+ 133 of 315 tests passed.
+ 316) FAIL:    Nxf6+ [ Qxh7+ ] (Time: 2286 ms)
+ 133 of 316 tests passed.
+ 317) FAIL:     Bxb5 [ Qf3 ] (Time: 13755 ms)
+ 133 of 317 tests passed.
+ 318) FAIL:      Nf3 [ exf6 ] (Time: 2541 ms)
+ 133 of 318 tests passed.
+ 319) FAIL:      Bf5 [ Rxh7+ ] (Time: 2850 ms)
+ 133 of 319 tests passed.
+ 320) FAIL:     Qxe4 [ exf6 ] (Time: 6348 ms)
+ 133 of 320 tests passed.
+ 321) FAIL:      Qh5 [ Rxc3 ] (Time: 5447 ms)
+ 133 of 321 tests passed.
+ 322) FAIL:      Ra1 [ Nf6+ ] (Time: 5408 ms)
+ 133 of 322 tests passed.
+ 323) PASS:     Rxd2 [ Rxd2 ] (Time: 2201 ms)
+ 134 of 323 tests passed.
+ 324) FAIL:      Qh3 [ Bxh6 ] (Time: 3026 ms)
+ 134 of 324 tests passed.
+ 325) FAIL:      Qh4 [ Nxh7 ] (Time: 3370 ms)
+ 134 of 325 tests passed.
+ 326) FAIL:      Qg6 [ e5 ] (Time: 1965 ms)
+ 134 of 326 tests passed.
+ 327) PASS:       f6 [ f6 ] (Time: 31 ms)
+ 135 of 327 tests passed.
+ 328) FAIL:      Kf2 [ f5 ] (Time: 83 ms)
+ 135 of 328 tests passed.
+ 329) FAIL:      Kc7 [ Bxe4 ] (Time: 124 ms)
+ 135 of 329 tests passed.
+ 330) PASS:       h5 [ h3; am h5 ] (Time: 105 ms)
+ 136 of 330 tests passed.
+ 331) FAIL:      Nd3 [ a6 ] (Time: 488 ms)
+ 136 of 331 tests passed.
+ 332) PASS:       f4 [ f4 ] (Time: 680 ms)
+ 137 of 332 tests passed.
+ 333) FAIL:       a6 [ Bb4 ] (Time: 1111 ms)
+ 137 of 333 tests passed.
+ 334) FAIL:     Bxb6 [ c5 ] (Time: 69 ms)
+ 137 of 334 tests passed.
+ 335) FAIL:     fxg5 [ Kg4 ] (Time: 58 ms)
+ 137 of 335 tests passed.
+ 336) FAIL:      Ng5 [ Nf6+ ] (Time: 5636 ms)
+ 137 of 336 tests passed.
+ 337) FAIL:      Rc7 [ Nxd4 ] (Time: 17506 ms)
+ 137 of 337 tests passed.
+ 338) FAIL:      Qe3 [ Rd1 ] (Time: 6255 ms)
+ 137 of 338 tests passed.
+ 339) FAIL:       h3 [ Rxb2 ] (Time: 15455 ms)
+ 137 of 339 tests passed.
+ 340) FAIL:      Rb8 [ Qxc1 ] (Time: 13542 ms)
+ 137 of 340 tests passed.
+ 341) FAIL:      Rd8 [ Rxa2 ] (Time: 10787 ms)
+ 137 of 341 tests passed.
+ 342) FAIL:       e5 [ Bxe4 ] (Time: 8188 ms)
+ 137 of 342 tests passed.
+ 343) FAIL:      Nc8 [ h6 ] (Time: 4014 ms)
+ 137 of 343 tests passed.
+ 344) FAIL:      Rc1 [ Be2 ] (Time: 5775 ms)
+ 137 of 344 tests passed.
+ 345) FAIL:      Nf4 [ Nxc3 ] (Time: 7183 ms)
+ 137 of 345 tests passed.
+ 346) FAIL:      Rd2 [ Nf5 ] (Time: 1130 ms)
+ 137 of 346 tests passed.
+ 347) FAIL:      Rc8 [ Rd6 ] (Time: 6415 ms)
+ 137 of 347 tests passed.
+ 348) FAIL:      Be2 [ Nxd5 ] (Time: 1009 ms)
+ 137 of 348 tests passed.
+ 349) FAIL:      Bd2 [ Rxb2 ] (Time: 11559 ms)
+ 137 of 349 tests passed.
+ 350) FAIL:     Rad1 [ Bxf5 ] (Time: 2285 ms)
+ 137 of 350 tests passed.
+ 351) FAIL:      Ke3 [ b4 ] (Time: 40 ms)
+ 137 of 351 tests passed.
+ 352) PASS:       e5 [ e5 ] (Time: 2159 ms)
+ 138 of 352 tests passed.
+ 353) FAIL:      Re8 [ Qc8 ] (Time: 2707 ms)
+ 138 of 353 tests passed.
+ 354) FAIL:      Qb4 [ Qxd7 ] (Time: 1419 ms)
+ 138 of 354 tests passed.
+ 355) FAIL:      Bg2 [ Bg4 ] (Time: 204 ms)
+ 138 of 355 tests passed.
+ 356) PASS:     Kxb5 [ Kxb5 ] (Time: 85 ms)
+ 139 of 356 tests passed.
+ 357) FAIL:      Bg3 [ Ba7 ] (Time: 110 ms)
+ 139 of 357 tests passed.
+ 358) PASS:      Ba6 [ Ba6 ] (Time: 5019 ms)
+ 140 of 358 tests passed.
+ 359) PASS:     Bxc6 [ Bxc6 ] (Time: 201 ms)
+ 141 of 359 tests passed.
+ 360) FAIL:       d4 [ Bxd7 ] (Time: 85 ms)
+ 141 of 360 tests passed.
+ 361) FAIL:       b6 [ Qd1+ ] (Time: 5129 ms)
+ 141 of 361 tests passed.
+ 362) FAIL:       f5 [ d5 ] (Time: 493 ms)
+ 141 of 362 tests passed.
+ 363) FAIL:      Qb7 [ f5 ] (Time: 791 ms)
+ 141 of 363 tests passed.
+ 364) FAIL:      Nf3 [ e6 ] (Time: 3211 ms)
+ 141 of 364 tests passed.
+ 365) FAIL:      Qb6 [ Nd5 a4 ] (Time: 4696 ms)
+ 141 of 365 tests passed.
+ 366) FAIL:      Kg2 [ g6 ] (Time: 145 ms)
+ 141 of 366 tests passed.
+ 367) FAIL:     Bxe7 [ Nf6 ] (Time: 1909 ms)
+ 141 of 367 tests passed.
+ 368) FAIL:      Nc3 [ f5 ] (Time: 39 ms)
+ 141 of 368 tests passed.
+ 369) FAIL:      Bb5 [ f5 ] (Time: 844 ms)
+ 141 of 369 tests passed.
+ 370) FAIL:      Qb5 [ Ne5 ] (Time: 7034 ms)
+ 141 of 370 tests passed.
+ 371) PASS:       f4 [ f4 ] (Time: 1949 ms)
+ 142 of 371 tests passed.
+ 372) PASS:      Bf5 [ Bf5 ] (Time: 274 ms)
+ 143 of 372 tests passed.
+ 373) FAIL:      Bf4 [ b4 ] (Time: 1286 ms)
+ 143 of 373 tests passed.
+ 374) PASS:      Qd2 [ Qd2 Qe1 ] (Time: 8850 ms)
+ 144 of 374 tests passed.
+ 375) PASS:    Qxg7+ [ Qxg7+ ] (Time: 2365 ms)
+ 145 of 375 tests passed.
+ 376) FAIL:      Qh5 [ Ne4 ] (Time: 1530 ms)
+ 145 of 376 tests passed.
+ 377) FAIL:      Nc5 [ h5 ] (Time: 2224 ms)
+ 145 of 377 tests passed.
+ 378) FAIL:      Qb6 [ Nb3 ] (Time: 18270 ms)
+ 145 of 378 tests passed.
+ 379) FAIL:      Qb5 [ Rxe4 ] (Time: 13438 ms)
+ 145 of 379 tests passed.
+ 380) FAIL:      Qh5 [ g4 ] (Time: 1682 ms)
+ 145 of 380 tests passed.
+ 381) FAIL:      Qf3 [ Nh6 ] (Time: 2086 ms)
+ 145 of 381 tests passed.
+ 382) FAIL:       e5 [ Bxe4 ] (Time: 7709 ms)
+ 145 of 382 tests passed.
+ 383) FAIL:      Qa5 [ f6 ] (Time: 10201 ms)
+ 145 of 383 tests passed.
+ 384) FAIL:     bxc5 [ f4 ] (Time: 791 ms)
+ 145 of 384 tests passed.
