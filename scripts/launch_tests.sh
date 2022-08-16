@@ -4,7 +4,7 @@ SRC_PATH="src"
 EXEC_PATH="bin/release/main"
 LOG_DIR="timings"
 
-for depth in {4..10}; do
+for depth in {4..8}; do
 
     # set the new MAX_DEPTH
     sed -e "7s/[0-9]* *$/$depth/" -i $SRC_PATH/config.h
@@ -18,7 +18,7 @@ for depth in {4..10}; do
         # recompile everything
         make 
         # launch tests
-        exec $EXEC_PATH > $LOG_DIR/$LOG_FILE
+        ./bin/release/main > $LOG_DIR/$LOG_FILE
 
     done
 done
