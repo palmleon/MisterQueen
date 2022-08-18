@@ -588,7 +588,6 @@ int do_search(Board *board, int uci, Move *move)
     int alpha = score - lo;
     int beta = score + hi;
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-    // score = root_search(board, depth, 0, alpha, beta, &search->move);
     score = root_search(board, s, d, alpha, beta, move);
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
     int millis = compute_interval_ms(&start, &end);

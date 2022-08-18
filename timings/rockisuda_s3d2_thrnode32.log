@@ -1,0 +1,37 @@
+Tables transferred to the GPU! (Time: 107 ms)
+-------------------
+insert a command:
+square: load a board in square format
+fen: load a board in fen format
+bm: generate the best move
+bk: do bk tests
+pb: print the board
+q: quit
+-------------------
+Launching tests!
+   2) FAIL:      Kg7 [ Rxb2 ] (Time: 277 ms)
+   0 of 1 tests passed.
+   3) PASS:      Rg3 [ Rg3 ] (Time: 5399 ms)
+   1 of 2 tests passed.
+   5) PASS:     Qc4+ [ Qc4+ ] (Time: 844 ms)
+   2 of 3 tests passed.
+   6) PASS:      Rb7 [ Rb7 ] (Time: 87 ms)
+   3 of 4 tests passed.
+   7) FAIL:      Qh4 [ Ne3 ] (Time: 1844 ms)
+   3 of 5 tests passed.
+   8) FAIL:     Nf7+ [ Rf7 ] (Time: 945 ms)
+   3 of 6 tests passed.
+   9) PASS:     Bh2+ [ Bh2+ ] (Time: 4197 ms)
+   4 of 7 tests passed.
+  10) PASS:     Rxh7 [ Rxh7 ] (Time: 2026 ms)
+   5 of 8 tests passed.
+  11) FAIL:      Bd4 [ Bxc6 ] (Time: 3421 ms)
+   5 of 9 tests passed.
+  12) PASS:    Qxf3+ [ Qxf3+ ] (Time: 315 ms)
+   6 of 10 tests passed.
+  13) PASS:    Qxf8+ [ Qxf8+ ] (Time: 3358 ms)
+   7 of 11 tests passed.
+  14) FAIL:       b4 [ Qxh7+ ] (Time: 3759 ms)
+   7 of 12 tests passed.
+  15) PASS:     Rxb7 [ Rxb7 ] (Time: 538 ms)
+   8 of 13 tests passed.

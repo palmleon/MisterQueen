@@ -2,12 +2,12 @@
 #define CONFIG_H
 
 #define MAX_MOVES 256
-#define THREADS_PER_NODE 16
+#define THREADS_PER_NODE 32
 #define LEN_POSITIONS 3
 
 // Total Search Depth = MAX_DEPTH_SEQ + MAX_DEPTH_PAR
 // MAX_DEPTH_SEQ MUST BE GREATER THAN 0
-#define MAX_DEPTH_SEQ 3
-#define MAX_DEPTH_PAR 1
+#define MAX_DEPTH_SEQ 5
+#define MAX_DEPTH_PAR 3
 
 #endif
