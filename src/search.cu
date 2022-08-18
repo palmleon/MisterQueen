@@ -63,11 +63,9 @@ int initial_sort_moves_rec(Board *board, int *positions, int len, int ply, int a
                     positions[j] = best_indexes[j-1];
                 }
             }
-            //}
         }
         result = alpha;
         if (!can_move) {
-            //if (is_check(board)) {
             if (is_check(board)) {
                 result = -MATE + ply;
             } else {
@@ -169,7 +167,6 @@ int alpha_beta_cpu(Board *board, int depth, int ply, int alpha, int beta, int *p
         }
         result = alpha;
         if (!can_move) {
-            //if (is_check(board)) {
             if (is_check(board)) {
                 result = -MATE + ply;
             } else {

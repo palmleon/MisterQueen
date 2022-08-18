@@ -37,7 +37,7 @@ void board_reset(Board *board) {
 }
 
 // Updates also the score of the board (score_move only computes it on the fly)
-__device__ __host__ char board_get_piece(Board *board, int sq) {
+char board_get_piece(Board *board, int sq) {
     int sq_shift[2] = {4,0};
     char sq_masks[2] = {0xf0, 0x0f};
     unsigned char before_shift = board->squares[sq/2] & sq_masks[sq % 2];
@@ -45,20 +45,16 @@ __device__ __host__ char board_get_piece(Board *board, int sq) {
     return after_shift;
 }
 
-__device__ __host__ void board_set_piece(Board *board, int sq, char piece) {
+void board_set_piece(Board *board, int sq, char piece) {
     int sq_shift[2] = {4,0};
     char sq_masks[2] = {0x0f, 0xf0};
     board->squares[sq/2] = (piece << sq_shift[sq % 2]) | (board->squares[sq/2] & sq_masks[sq % 2]);
 }
 
-__device__ __host__ void board_set(Board *board, int sq, char piece) {   
+void board_set(Board *board, int sq, char piece) {   
     const int materials[6] = {MATERIAL_PAWN, MATERIAL_KNIGHT, MATERIAL_BISHOP, MATERIAL_ROOK, MATERIAL_QUEEN, MATERIAL_KING};
     const int coeff[2] = {1, -1};
-    #ifdef __CUDA_ARCH__
-    const int* position_tables[12] = {d_POSITION_WHITE_PAWN, d_POSITION_WHITE_KNIGHT, d_POSITION_WHITE_BISHOP, d_POSITION_WHITE_ROOK, d_POSITION_WHITE_QUEEN, d_POSITION_WHITE_KING, d_POSITION_BLACK_PAWN, d_POSITION_BLACK_KNIGHT, d_POSITION_BLACK_BISHOP, d_POSITION_BLACK_ROOK, d_POSITION_BLACK_QUEEN, d_POSITION_BLACK_KING};
-    #else
     const int* position_tables[12] = {POSITION_WHITE_PAWN, POSITION_WHITE_KNIGHT, POSITION_WHITE_BISHOP, POSITION_WHITE_ROOK, POSITION_WHITE_QUEEN, POSITION_WHITE_KING, POSITION_BLACK_PAWN, POSITION_BLACK_KNIGHT, POSITION_BLACK_BISHOP, POSITION_BLACK_ROOK, POSITION_BLACK_QUEEN, POSITION_BLACK_KING};
-    #endif
     
     bb* piece_masks[6] = {&(board->pawns), &(board->knights), &(board->bishops), &(board->rooks), &(board->queens), &(board->kings)};
     bb* color_masks[2] = {&(board->white), &(board->black)};
