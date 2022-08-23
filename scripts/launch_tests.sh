@@ -4,7 +4,7 @@ SRC_PATH="src"
 EXEC_PATH="bin/release/main"
 LOG_DIR="timings"
 
-for depth_tot in {4..10}; do
+for depth_tot in {4..8}; do
 
     for d in {1..3}; do
 
@@ -29,7 +29,7 @@ for depth_tot in {4..10}; do
 
             #launch tests
             echo -e "\033[0;32mLaunching tests!\033[0m"
-            exec $EXEC_PATH > $LOG_DIR/$LOG_FILE
+            ./bin/release/main > $LOG_DIR/$LOG_FILE
 
         done
 

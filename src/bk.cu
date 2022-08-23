@@ -424,14 +424,14 @@ void bk_tests() {
     int passed = 0;
     printf("Launching tests!\n");
     for (int i = 0; i < NTESTS; i++) {
-        //if (i > 8 && i < 10){
+        if ((i > 0 && i < 3) || i > 3 && i < 15){
             char *fen = TESTS[i * 2];
             char *bm = TESTS[i * 2 + 1];
             int result = bk_test(i, fen, bm);
             passed += result;
             count += 1;
             printf("%4d of %d tests passed.\n", passed, count);
-        //}
+        }
     }
 }
 
