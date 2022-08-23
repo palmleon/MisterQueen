@@ -201,10 +201,12 @@ __device__  __forceinline__ int gen_moves_ab(Board *board, Move *moves, char *sh
     
     const unsigned int thr_idx = threadIdx.x;
 
-    Move *ptr = moves;
+    Move *ptr = (Move *) shmem;
 
-    bb *dsts_array = (bb*) (shmem);
-    char *pieces = (char*) shmem + 64 * sizeof(bb);
+    Move *moves_sh = (Move *) shmem;
+    bb *dsts_array = (bb*) ((Move*) (shmem) + MAX_MOVES);
+    char *pieces = (char*) (dsts_array + 64);
+    int *nmoves = (int*) (pieces + 64);
 
     const int color_bit = board->color / 8;
     const bb players_pieces[2] = {board->white, board->black}; // array defined to avoid an if-else
@@ -285,7 +287,7 @@ __device__  __forceinline__ int gen_moves_ab(Board *board, Move *moves, char *sh
         dsts_array[sq] = dsts;
     }
     __syncthreads();
-    //if (thr_idx == 0){
+    if (thr_idx == 0){
         for (int sq = 0; sq < 64; sq++) {
             // Emit all the moves
             dsts = dsts_array[sq];
@@ -294,15 +296,15 @@ __device__  __forceinline__ int gen_moves_ab(Board *board, Move *moves, char *sh
                 int dst;
                 POP_LSB(dst, dsts);
                 if ((PIECE(piece) == PAWN) && (BIT(dst) & promo[color_bit])){
-                    EMIT_PROMOTIONS(moves, sq, dst);
+                    EMIT_PROMOTIONS(moves_sh, sq, dst);
                 }
                 else {
-                    EMIT_MOVE(moves, sq, dst);
+                    EMIT_MOVE(moves_sh, sq, dst);
                 }
             }
         }
-    //}
-    //__syncthreads();
+    }
+    __syncthreads();
 
     // GENERATE CASTLES
     mask = ~opponent_pieces;
@@ -352,8 +354,7 @@ __device__  __forceinline__ int gen_moves_ab(Board *board, Move *moves, char *sh
             for (int sq = 1; sq < 64; sq++) {
                 dsts_array[0] |= dsts_array[sq];
             }
-        }
-        __syncthreads();
+        
             for (int i = 0; i < 2; i++) {
                 // check if the player can castle and, if that is the case,
                 // where it can castle and whether there are pieces
@@ -365,15 +366,23 @@ __device__  __forceinline__ int gen_moves_ab(Board *board, Move *moves, char *sh
                         // which do not attack the king during castle (mask)
                         // emit the castle
                     if (!(dsts_array[0] & mask)) {
-                        EMIT_MOVE(moves, castle_king_pos_before[color_bit], castle_king_pos_after[color_bit*2+i]);
+                        EMIT_MOVE(moves_sh, castle_king_pos_before[color_bit], castle_king_pos_after[color_bit*2+i]);
                     }
                 }
             }
-        //}
+        }
+    }
+    if (thr_idx == 0){
+        *nmoves = moves_sh - ptr;
     }
     __syncthreads();
+    unsigned int nmoves_reg = *nmoves, i = thr_idx % nmoves_reg;
+    for (unsigned int cnt = 0; cnt < nmoves_reg ; cnt++){
+        moves[i] = ptr[i];
+        i = (i+1) % nmoves_reg;
+    }
 
-    return moves - ptr; // incompatible with parallel code, for now it is just for refactoring
+    return nmoves_reg; // incompatible with parallel code, for now it is just for refactoring
 }
 
 /*  Iterative Alpha-Beta Pruning on GPU
@@ -530,140 +539,4 @@ __global__ void alpha_beta_gpu_kernel(Board *board, Move *first_moves, int depth
 {
     extern __shared__ char shmem[];
     alpha_beta_gpu_iter(board, first_moves, NULL, NULL, scores, depth, alpha, beta, -1, 0, shmem);
-}
-
-__device__ __host__ __forceinline__ int gen_moves_ab_old(Board *board, Move *moves){
-    Move *ptr = moves;
-    const int color_bit = board->color / 8;
-    const bb players_pieces[2] = {board->white, board->black}; // array defined to avoid an if-else
-    const bb promo[2] = {0xff00000000000000L, 0x00000000000000ffL}; // representation of the promotion rank
-    const bb third_rank[2] = {0x0000000000ff0000L, 0x0000ff0000000000L}; // used for initial double move of pawn
-    const bb front_right_mask[2] = {0xfefefefefefefefeL, 0x7f7f7f7f7f7f7f7fL};
-    const bb front_left_mask[2] = {0x7f7f7f7f7f7f7f7fL, 0xfefefefefefefefeL};
-    const bb own_pieces = players_pieces[color_bit];
-    const bb opponent_pieces = players_pieces[color_bit ^ 1];
-    bb mask = ~own_pieces;
-    const bb mask_pawn = opponent_pieces | board->ep;
-    const bb mask_pawn_opp = own_pieces | board->ep;
-    const char castles[4] = {CASTLE_WHITE_KING, CASTLE_WHITE_QUEEN, CASTLE_BLACK_KING, CASTLE_BLACK_QUEEN};
-    const bb castle_masks_1[4] = {0x0000000000000060L, 0x000000000000000eL, 0x6000000000000000L, 0x0e00000000000000L};
-    const bb castle_masks_2[4] = {0x0000000000000070L, 0x000000000000001cL, 0x7000000000000000L, 0x1c00000000000000L};
-    const int castle_king_pos_before[2] = {4, 60};
-    const int castle_king_pos_after[4] = {6, 2, 62, 58};
-
-    for(int sq = 0; sq < 64; sq++){
-        char piece = board_get_piece(board, sq);
-        bb dsts = 0;
-        // move a piece only if it is of the current moving player!
-        if (COLOR(piece) == board->color){
-            bb pawn_bb;
-            switch(PIECE(piece)){
-                case PAWN: {
-                    pawn_bb = BIT(sq);
-                    bb p1_vec[2] = {pawn_bb << 8, pawn_bb >> 8};
-                    bb p1 = p1_vec[color_bit] & ~board->all;
-                    bb p2 = p1 & third_rank[color_bit];
-                    bb p2_vec[2] = {p2 << 8, p2 >> 8};
-                    p2 = p2_vec[color_bit] & ~board->all;
-                    bb a1 = pawn_bb & front_right_mask[color_bit];
-                    bb a1_vec[2] = {a1 << 7, a1 >> 7};
-                    a1 = a1_vec[color_bit] & mask_pawn;
-                    bb a2 = pawn_bb & front_left_mask[color_bit];
-                    bb a2_vec[2] = {a2 << 9, a2 >> 9};
-                    a2 = a2_vec[color_bit] & mask_pawn;
-                    dsts |= p1;
-                    dsts |= p2;
-                    dsts |= a1;
-                    dsts |= a2;
-                    }
-                    break;
-                case KNIGHT:
-                    dsts |= d_BB_KNIGHT[sq] & mask;
-                    break;
-                case BISHOP:
-                    dsts = bb_bishop(sq, board->all) & mask;
-                    break;
-                case ROOK:
-                    dsts = bb_rook(sq, board->all) & mask;
-                    break;
-                case QUEEN:
-                    dsts = bb_queen(sq, board->all) & mask;
-                    break;
-                case KING:
-                    dsts |= d_BB_KING[sq] & mask;
-                    break;
-                default: // empty piece
-                    break;
-            }
-            // Emit all the moves
-            while (dsts) {
-                int dst;
-                POP_LSB(dst, dsts);
-                if ((PIECE(piece) == PAWN) && (BIT(dst) & promo[color_bit])){
-                    EMIT_PROMOTIONS(moves, sq, dst);
-                }
-                else {
-                    EMIT_MOVE(moves, sq, dst);
-                }
-            }
-        }
-    }
-    // GENERATE CASTLES
-    mask = ~opponent_pieces;
-    // look for opponent attacks in the squares where the king should move
-    bb dsts = 0;
-    if ((board->castle & castles[color_bit*2]) || board->castle & castles[color_bit*2+1]){
-        for (int sq = 0; sq < 64; sq++){
-            char piece = board_get_piece(board, sq);
-            if (COLOR(piece) != board->color){
-                switch(PIECE(piece)){
-                    case PAWN: {
-                        bb pawn_bb = BIT(sq);
-                        bb a1 = pawn_bb & front_right_mask[color_bit ^ 1];
-                        bb a1_vec[2] = {a1 << 7, a1 >> 7};
-                        a1 = a1_vec[color_bit^1] & mask_pawn_opp;
-                        bb a2 = pawn_bb & front_left_mask[color_bit ^ 1];
-                        bb a2_vec[2] = {a2 << 9, a2 >> 9};
-                        a2 = a2_vec[color_bit^1] & mask_pawn_opp;
-                        dsts |= a1 | a2;
-                        }
-                        break;
-                    case KNIGHT:
-                        dsts |= d_BB_KNIGHT[sq] & mask;
-                        break;
-                    case BISHOP:
-                        dsts |= bb_bishop(sq, board->all) & mask;
-                        break;
-                    case ROOK:
-                        dsts |= bb_rook(sq, board->all) & mask;
-                        break;
-                    case QUEEN:
-                        dsts |= bb_queen(sq, board->all) & mask;
-                        break;
-                    case KING:
-                        dsts |= d_BB_KING[sq] & mask;
-                        break;
-                    default: // empty piece
-                        break;
-                }
-            }
-        }
-        for (int i = 0; i < 2; i++) {
-            // check if the player can castle and, if that is the case,
-            // where it can castle and whether there are pieces
-            // between the king and the rook
-            bb mask = castle_masks_2[color_bit*2+i];
-            if ((board->castle & castles[color_bit*2+i])
-                && (!(board->all & castle_masks_1[color_bit*2+i]))){
-                    // if the opponent can only move to squares (dsts)
-                    // which do not attack the king during castle (mask)
-                    // emit the castle
-                if (!(dsts & mask)) {
-                    EMIT_MOVE(moves, castle_king_pos_before[color_bit], castle_king_pos_after[color_bit*2+i]);
-                }
-            }
-        }
-    }
-
-    return moves - ptr; // incompatible with parallel code, for now it is just for refactoring
 }

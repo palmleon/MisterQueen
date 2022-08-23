@@ -252,8 +252,8 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int cou
         Board *d_board;
 
         // Define the number of streams (TODO try different configurations)
-        const int num_streams = node->nchild;
-        //const int num_streams = 1;
+        //const int num_streams = node->nchild;
+        const int num_streams = min(5, node->nchild);
         //int num_streams = 0;
         int stream_idx;
 
@@ -319,8 +319,7 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int cou
         // Launch the Search
         for (int i = 0; i < num_streams; i++) {
             //alpha_beta_gpu_kernel<<<1, nodes_per_stream, 0, streams[i]>>>(d_board, d_first_moves, d_second_moves, d_pos_parent, d_scores, d, alpha, beta, count, i*nodes_per_stream);
-            alpha_beta_gpu_kernel<<<nodes_per_stream, THREADS_PER_NODE, 64 * (sizeof(bb) + sizeof(char)), streams[i]>>>(d_board, d_first_moves, d_second_moves, d_pos_parent, d_scores, d, alpha, beta, count, i*nodes_per_stream);
-            
+            alpha_beta_gpu_kernel<<<nodes_per_stream, THREADS_PER_NODE, sizeof(int) + MAX_MOVES * sizeof(Move) + 64 * (sizeof(bb) + sizeof(char)), streams[i]>>>(d_board, d_first_moves, d_second_moves, d_pos_parent, d_scores, d, alpha, beta, count, i*nodes_per_stream);
         }
 
         // Retrieve the results
@@ -384,7 +383,7 @@ void alpha_beta_parallel(STNode node, int s, int d, int alpha, int beta, int cou
             checkCudaErrors(cudaMemcpy(d_board, &(node->board), sizeof(Board), cudaMemcpyHostToDevice));
             checkCudaErrors(cudaMemcpy(d_moves, moves, node->nchild * sizeof(Move), cudaMemcpyHostToDevice));
 
-            alpha_beta_gpu_kernel<<<node->nchild, THREADS_PER_NODE>>>(d_board, d_moves, d, alpha, beta, d_scores);
+            alpha_beta_gpu_kernel<<<node->nchild, THREADS_PER_NODE, sizeof(int) + MAX_MOVES * sizeof(Move) + 64 * (sizeof(bb) + sizeof(char))>>>(d_board, d_moves, d, alpha, beta, d_scores);
             //alpha_beta_gpu_kernel<<<1, node->nchild>>>(d_board, d_moves, d, alpha, beta, d_scores);
 
             checkCudaErrors(cudaMemcpy(scores, d_scores, node->nchild * sizeof(int), cudaMemcpyDeviceToHost));
