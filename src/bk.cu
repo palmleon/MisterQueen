@@ -406,8 +406,6 @@ int bk_test(int index, char *fen, char *bm) {
     Board board;
     board_load_fen(&board, fen);
     //board_print(&board);
-    //printf("Curr color: %s\n", board.color? "BLACK": "WHITE");
-    //board_print(&board);
     Move move;
     struct timespec start, end;
     int elapsed = do_search(&board, 0, &move);
@@ -426,7 +424,7 @@ void bk_tests() {
     int passed = 0;
     printf("Launching tests!\n");
     for (int i = 0; i < NTESTS; i++) {
-        //if (i == 181){
+        //if (i > 8 && i < 10){
             char *fen = TESTS[i * 2];
             char *bm = TESTS[i * 2 + 1];
             int result = bk_test(i, fen, bm);
